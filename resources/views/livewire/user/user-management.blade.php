@@ -1,6 +1,119 @@
 <div>
 
+    <x-toast-notification />
 
+
+    <div class="row">
+        <div class="col-xxl-3 col-sm-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="fw-medium text-muted mb-0">Total Users</p>
+                            <h2 class="mt-4 ff-secondary fw-semibold">
+                                <span class="counter-value" data-target="{{ $this->totalUsers }}">0</span>
+                            </h2>
+                            <p class="mb-0 text-muted">
+                                <span class="badge bg-light text-info mb-0">
+                                    <i class="ri-user-line align-middle"></i> All users
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-4">
+                                    <i class="ri-user-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- end card body -->
+            </div> <!-- end card-->
+        </div>
+        <!--end col-->
+        <div class="col-xxl-3 col-sm-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="fw-medium text-muted mb-0">Active Users</p>
+                            <h2 class="mt-4 ff-secondary fw-semibold">
+                                <span class="counter-value" data-target="{{ $this->totalActiveUsers }}">0</span>
+                            </h2>
+                            <p class="mb-0 text-muted">
+                                <span class="badge bg-light text-success mb-0">
+                                    <i class="ri-checkbox-circle-line align-middle"></i> Active
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-success-subtle text-success rounded-circle fs-4">
+                                    <i class="ri-checkbox-circle-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- end card body -->
+            </div>
+        </div>
+        <!--end col-->
+        <div class="col-xxl-3 col-sm-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="fw-medium text-muted mb-0">Inactive Users</p>
+                            <h2 class="mt-4 ff-secondary fw-semibold">
+                                <span class="counter-value" data-target="{{ $this->totalInactiveUsers }}">0</span>
+                            </h2>
+                            <p class="mb-0 text-muted">
+                                <span class="badge bg-light text-secondary mb-0">
+                                    <i class="ri-close-circle-line align-middle"></i> Inactive
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-secondary-subtle text-secondary rounded-circle fs-4">
+                                    <i class="ri-close-circle-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- end card body -->
+            </div>
+        </div>
+        <!--end col-->
+        <div class="col-xxl-3 col-sm-6">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="fw-medium text-muted mb-0">Active Percentage</p>
+                            <h2 class="mt-4 ff-secondary fw-semibold">
+                                <span class="counter-value"
+                                    data-target="{{ $this->totalUsers > 0 ? round(($this->totalActiveUsers / $this->totalUsers) * 100, 1) : 0 }}">0</span>%
+                            </h2>
+                            <p class="mb-0 text-muted">
+                                <span class="badge bg-light text-primary mb-0">
+                                    <i class="ri-percent-line align-middle"></i> Of total users
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-info-subtle text-info rounded-circle fs-4">
+                                    <i class="ri-bar-chart-line"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- end card body -->
+            </div>
+        </div>
+        <!--end col-->
+    </div>
     <div class="row">
         <div class="col-lg-12">
             <div class="card" id="usersList">
@@ -13,10 +126,80 @@
                                     wire:click="openInviteModal" wire-target="openInviteModal">
                                     Invite User
                                 </x-button>
+                                @if (!empty($selected))
+                                    <x-button color="danger" icon="ri-delete-bin-line" icon-position="left"
+                                        wire:click="deleteMultiple" wire-target="deleteMultiple">
+                                        Delete ({{ count($selected) }})
+                                    </x-button>
+                                @endif
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="card-body border border-dashed border-end-0 border-start-0">
+                    <form wire:submit.prevent>
+                        <div class="row g-3">
+                            <div class="col-xxl-5 col-sm-12">
+                                <div class="search-box">
+                                    <input type="text" class="form-control search bg-light border-light"
+                                        placeholder="Search by name or email..."
+                                        wire:model.live.debounce.300ms="search">
+                                    <i class="ri-search-line search-icon"></i>
+                                </div>
+                            </div>
+                            <!--end col-->
+
+                            <div class="col-xxl-3 col-sm-4">
+                                <input type="text" class="form-control bg-light border-light" id="user-date-filter"
+                                    placeholder="Select date range" x-data="{
+                                        init() {
+                                            const fp = flatpickr(this.$el, {
+                                                mode: 'range',
+                                                dateFormat: 'd M, Y',
+                                                onChange: (selectedDates, dateStr, instance) => {
+                                                    if (selectedDates.length === 2) {
+                                                        @this.set('dateFrom', selectedDates[0].toISOString().split('T')[0]);
+                                                        @this.set('dateTo', selectedDates[1].toISOString().split('T')[0]);
+                                                    } else if (selectedDates.length === 0) {
+                                                        @this.set('dateFrom', null);
+                                                        @this.set('dateTo', null);
+                                                    }
+                                                }
+                                            });
+                                            // Clear on reset
+                                            Livewire.hook('message.processed', (message, component) => {
+                                                if (@this.dateFrom === null && @this.dateTo === null) {
+                                                    fp.clear();
+                                                }
+                                            });
+                                        }
+                                    }">
+                            </div>
+                            <!--end col-->
+
+                            <div class="col-xxl-3 col-sm-4">
+                                <div class="input-light">
+                                    <select class="form-control" wire:model.live="status" id="userStatusFilter">
+                                        <option value="all">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <!--end col-->
+                            <div class="col-xxl-1 col-sm-4">
+                                <x-button color="primary" icon="ri-equalizer-fill" icon-position="left"
+                                    wire:click="resetFilters" wire-target="resetFilters">
+                                    Reset
+                                </x-button>
+                            </div>
+                            <!--end col-->
+                        </div>
+                        <!--end row-->
+                    </form>
+                </div>
+
                 <div class="card-body">
                     @if ($selectPage && !$selectAll && $users->total() > $users->count())
                         <div class="alert alert-info py-2 mb-3">
@@ -31,55 +214,92 @@
                         </div>
                     @endif
 
-                    <div class="table-responsive table-card mb-4">
-                        <table class="table align-middle table-nowrap mb-0" id="usersTable">
-                            <thead>
-                                <tr>
-                                    <th scope="col" style="width: 40px;">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox"
-                                                wire:model.live="selectPage">
-                                        </div>
-                                    </th>
-                                    <th scope="col" style="width: 80px;">ID</th>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Status</th>
-                                    <th>Joined</th>
-                                </tr>
-                            </thead>
-                            <tbody class="list" id="user-list-data">
-                                @forelse ($users as $user)
-                                    <tr wire:key="user-row-{{ $user->id }}">
-                                        <th scope="row">
+                    @if($users->isEmpty() && $this->hasActiveFilters)
+                        {{-- No results found with active filters --}}
+                        <div class="noresult">
+                            <div class="text-center py-5">
+                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                    colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
+                                </lord-icon>
+                                <h5 class="mt-2">Sorry! No Result Found</h5>
+                                <p class="text-muted mb-0">
+                                    We've searched through all users but did not find any users matching your search
+                                    criteria.
+                                </p>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-primary" wire:click="resetFilters">
+                                        <i class="ri-refresh-line me-1 align-bottom"></i>
+                                        Reset Filters
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="table-responsive table-card mb-4">
+                            <table class="table align-middle table-nowrap mb-0" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" style="width: 40px;">
                                             <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" wire:model.live="selected"
-                                                    value="{{ $user->id }}">
+                                                <input class="form-check-input" type="checkbox"
+                                                    wire:model.live="selectPage">
                                             </div>
                                         </th>
-                                        <td>#{{ $user->id }}</td>
-                                        <td class="name fw-medium">{{ $user->name }}</td>
-                                        <td class="email">{{ $user->email }}</td>
-                                        <td class="status">
-                                            <span
-                                                class="badge {{ $user->active_status ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
-                                                {{ $user->active_status ? 'Active' : 'Inactive' }}
-                                            </span>
-                                        </td>
-                                        <td class="created">{{ $user->created_at?->format('d M, Y') }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">
-                                            No users found.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
 
-                    <x-pagination :paginator="$users" :show-summary="true" />
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Joined</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="list" id="user-list-data">
+                                    @forelse ($users as $user)
+                                        <tr wire:key="user-row-{{ $user->id }}">
+                                            <th scope="row">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" wire:model.live="selected"
+                                                        value="{{ $user->id }}">
+                                                </div>
+                                            </th>
+
+                                            <td class="name fw-medium">{{ $user->name }}</td>
+                                            <td class="email">{{ $user->email }}</td>
+                                            <td class="status">
+                                                <span
+                                                    class="badge {{ $user->active_status ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
+                                                    {{ $user->active_status ? 'Active' : 'Inactive' }}
+                                                </span>
+                                            </td>
+                                            <td class="created">{{ $user->created_at?->format('d M, Y') }}</td>
+                                            <td>
+                                                <div class="d-flex gap-2">
+                                                    <x-button color="info" icon="ri-edit-line" icon-position="left" size="sm"
+                                                        :iconOnly="true" tooltip="Edit User" tooltip-placement="top"
+                                                        wire:click="editUser({{ $user->id }})"
+                                                        wire:target="editUser({{ $user->id }})">
+                                                    </x-button>
+                                                    <x-button color="danger" icon="ri-delete-bin-line" icon-position="left"
+                                                        size="sm" :iconOnly="true" tooltip="Delete User" tooltip-placement="top"
+                                                        wire:click="deleteUser({{ $user->id }})"
+                                                        wire:target="deleteUser({{ $user->id }})">
+                                                    </x-button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted py-4">
+                                                No users found.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <x-pagination :paginator="$users" :show-summary="true" />
+                    @endif
                 </div>
                 <!--end card-body-->
             </div>
@@ -89,58 +309,14 @@
     </div>
 
     <!-- Invite User Modal -->
-    <x-modal id="invite-user-modal" wire:model="showInviteModal" title="Invite User" size="lg" :centered="true"
-        :show-footer="true">
-        <form wire:submit.prevent="saveUser">
-            <div class="row g-3">
-                <div class="col-md-12">
-                    <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
-                        wire:model="name" placeholder="Enter full name">
-                    @error('name')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
+    @include('livewire.user.modals.invite-user-modal')
 
-                <div class="col-md-12">
-                    <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
-                        wire:model="email" placeholder="Enter email address">
-                    @error('email')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
+    <!-- Delete User Modal -->
+    @include('livewire.user.modals.delete-modal')
 
-                <div class="col-md-12">
-                    <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                    <input type="password" class="form-control @error('password') is-invalid @enderror" id="password"
-                        wire:model="password" placeholder="Enter password (min. 8 characters)">
-                    @error('password')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
+    <!-- Delete Multiple Users Modal -->
+    @include('livewire.user.modals.delete-multiple')
 
-                <div class="col-md-12">
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="active_status" wire:model="active_status">
-                        <label class="form-check-label" for="active_status">
-                            Active Status
-                        </label>
-                    </div>
-                    <small class="text-muted">Uncheck to create user as inactive</small>
-                </div>
-            </div>
-        </form>
-
-        <x-slot:footer>
-            <button type="button" class="btn btn-light" x-on:click="show = false">Cancel</button>
-            <x-button color="primary" wire:click="saveUser" wire-target="saveUser">
-                <span wire:loading.remove wire:target="saveUser">Invite User</span>
-                <span wire:loading wire:target="saveUser">Inviting...</span>
-            </x-button>
-        </x-slot:footer>
-    </x-modal>
-
-
+    <!-- Toast Notification Component (Listens for 'show-toast' browser events) -->
 
 </div>
