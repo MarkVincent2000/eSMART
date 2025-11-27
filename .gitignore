@@ -21,3 +21,7 @@ Homestead.yaml
 Homestead.json
 /.vagrant
 .phpunit.result.cache
+storage/framework/views/e0d1a104dd22e6ae73da85697e443a92.php
+storage/framework/views/17c92682fc6b9b73fd3858d4f011d6dc.php
+storage/framework/views/7d11103ae262fba4b4835c2c8a2fd891.php
+storage/framework/views/d8be63943ff865e3d57c3e7d61236cd7.php
