@@ -13,6 +13,7 @@
 @section('content')
     <x-breadcrumb title="Users" li_1="Admin Management" />
 
+    @livewire('user.user-management')
 
 
 @endsection
