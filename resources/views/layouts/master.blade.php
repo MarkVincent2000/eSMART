@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-layout="vertical" data-topbar="light" data-sidebar="dark"
-    data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default"
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-layout="vertical" data-topbar="light"
+    data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default"
     data-theme-colors="default">
 
 <head>
@@ -12,6 +12,7 @@
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
     @include('layouts.head-css')
+    @livewireStyles
 </head>
 
 <body>
@@ -40,6 +41,7 @@
 
     <!-- JAVASCRIPT -->
     @include('layouts.vendor-scripts')
+    @livewireScripts
 </body>
 
 </html>
