@@ -94,19 +94,19 @@
 
                 <x-sidebar.dropdown id="sidebarDashboards" title="Dashboards" icon="ri-dashboard-2-line"
                     :active="request()->is('dashboard-*') || request()->is('index')">
-                        <ul class="nav nav-sm flex-column">
+                    <ul class="nav nav-sm flex-column">
                         <x-sidebar.item href="index" title="Ecommerce" />
-                        </ul>
+                    </ul>
                 </x-sidebar.dropdown> <!-- end Dashboard Menu -->
 
 
                 <!-- User Management -->
                 <x-sidebar.title title="Admin Management" />
                 <x-sidebar.dropdown id="sidebarUserManagement" title="User" icon="ri-user-line"
-                    :active="request()->is('user-management-*')">
-                        <ul class="nav nav-sm flex-column">
+                    :active="request()->is('user-management*')">
+                    <ul class="nav nav-sm flex-column">
                         <x-sidebar.item href="user-management.index" title="Users" />
-                                    </ul>
+                    </ul>
                 </x-sidebar.dropdown>
 
 

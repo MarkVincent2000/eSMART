@@ -21,7 +21,6 @@ Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang'
 Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');
 
 // Custom grouped routes
-require __DIR__ . '/customroutes/user.php';
 
 //Update User Details
 Route::post('/update-profile/{id}', [App\Http\Controllers\HomeController::class, 'updateProfile'])->name('updateProfile');

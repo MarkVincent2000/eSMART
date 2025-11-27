@@ -255,3 +255,4 @@ See `resources/views/components/toast-notification-example.blade.php` for comple
 - All text values are automatically escaped for security using `htmlspecialchars()`
 - Boolean props should be passed using `:close="true"` syntax in Blade templates
 
+
