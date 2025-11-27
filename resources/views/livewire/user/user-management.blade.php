@@ -263,7 +263,20 @@
                                                 </div>
                                             </th>
 
-                                            <td class="name fw-medium">{{ $user->name }}</td>
+                                            <td class="name fw-medium">
+                                                @php
+                                                    $nameParts = array_filter([
+                                                        $user->first_name,
+                                                        $user->middle_name,
+                                                        $user->last_name
+                                                    ]);
+                                                    $fullName = implode(' ', $nameParts);
+                                                    if (!empty($user->name_extension)) {
+                                                        $fullName .= ', ' . $user->name_extension;
+                                                    }
+                                                @endphp
+                                                {{ $fullName ?: ($user->name ?? '-') }}
+                                            </td>
                                             <td class="email">{{ $user->email }}</td>
                                             <td class="status">
                                                 <span
@@ -289,7 +302,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-center text-muted py-4">
+                                            <td colspan="6" class="text-center text-muted py-4">
                                                 No users found.
                                             </td>
                                         </tr>

@@ -19,12 +19,41 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
+        'middle_name',
+        'name_extension',
         'email',
         'password',
         'avatar',
         'photo_path',
+        'cover_photo_path',
         'active_status',
     ];
+
+    /**
+     * Get the addresses for the user.
+     */
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    /**
+     * Get the primary/default address for the user.
+     */
+    public function primaryAddress()
+    {
+        return $this->hasOne(Address::class)->latest();
+    }
+
+    /**
+     * Get the login histories for the user.
+     */
+    public function loginHistories()
+    {
+        return $this->hasMany(LoginHistory::class)->latest('login_at');
+    }
 
     /**
      * The attributes that should be hidden for serialization.

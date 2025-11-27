@@ -29,6 +29,10 @@ class UserManagement extends Component
     
     // Form fields
     public $name = '';
+    public $first_name = '';
+    public $last_name = '';
+    public $middle_name = '';
+    public $name_extension = '';
     public $email = '';
     public $password = '';
     public $active_status = true;
@@ -43,12 +47,15 @@ class UserManagement extends Component
     public function users()
     {
         $query = User::query()
-            ->select('id', 'name', 'email', 'active_status', 'created_at');
+            ->select('id', 'name', 'first_name', 'last_name', 'middle_name', 'name_extension', 'email', 'active_status', 'created_at');
         
-        // Search filter - search in name and email
+        // Search filter - search in name fields and email
         if (!empty($this->search)) {
             $query->where(function($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
+                  ->orWhere('first_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('middle_name', 'like', '%' . $this->search . '%')
                   ->orWhere('email', 'like', '%' . $this->search . '%');
             });
         }
@@ -162,6 +169,9 @@ class UserManagement extends Component
         if (!empty($this->search)) {
             $query->where(function($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
+                  ->orWhere('first_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                  ->orWhere('middle_name', 'like', '%' . $this->search . '%')
                   ->orWhere('email', 'like', '%' . $this->search . '%');
             });
         }
@@ -195,6 +205,10 @@ class UserManagement extends Component
         
         $this->userId = $user->id;
         $this->name = $user->name;
+        $this->first_name = $user->first_name ?? '';
+        $this->last_name = $user->last_name ?? '';
+        $this->middle_name = $user->middle_name ?? '';
+        $this->name_extension = $user->name_extension ?? '';
         $this->email = $user->email;
         $this->password = ''; // Don't load password, leave it empty for user to optionally change
         $this->active_status = $user->active_status;
@@ -213,6 +227,10 @@ class UserManagement extends Component
     {
         $this->userId = null;
         $this->name = '';
+        $this->first_name = '';
+        $this->last_name = '';
+        $this->middle_name = '';
+        $this->name_extension = '';
         $this->email = '';
         $this->password = '';
         $this->active_status = true;
@@ -225,7 +243,10 @@ class UserManagement extends Component
         
         // Validation rules
         $rules = [
-            'name' => 'required|string|max:255',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'name_extension' => 'nullable|string|max:50',
             'email' => 'required|string|email|max:255|unique:users,email' . ($isEditing ? ',' . $this->userId : ''),
             'active_status' => 'boolean',
         ];
@@ -242,8 +263,19 @@ class UserManagement extends Component
 
         $this->validate($rules);
 
+        // Build full name from components
+        $nameParts = array_filter([$this->first_name, $this->middle_name, $this->last_name]);
+        $fullName = implode(' ', $nameParts);
+        if (!empty($this->name_extension)) {
+            $fullName .= ', ' . $this->name_extension;
+        }
+
         $userData = [
-            'name' => $this->name,
+            'name' => $fullName ?: $this->first_name . ' ' . $this->last_name,
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
+            'middle_name' => $this->middle_name ?: null,
+            'name_extension' => $this->name_extension ?: null,
             'email' => $this->email,
             'active_status' => $this->active_status,
         ];
