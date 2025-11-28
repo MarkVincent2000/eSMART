@@ -13,7 +13,7 @@
 @section('content')
     <x-breadcrumb title="Roles" li_1="Admin Management" />
 
-    @can('view-admin-management')
+    @can('view-role-management')
         @livewire('role.role-management')
     @else
         <div class="alert alert-danger alert-dismissible alert-additional fade show mb-xl-0 material-shadow" role="alert">

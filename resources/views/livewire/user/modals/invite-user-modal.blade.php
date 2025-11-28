@@ -1,5 +1,4 @@
-<x-modal id="invite-user-modal" wire:model="showInviteModal" :title="$userId ? 'Edit User' : 'Invite User'" size="lg"
-    :centered="true" :show-footer="true">
+<x-modal id="invite-user-modal" wire:model="showInviteModal" overflow="visible" :title="$userId ? 'Edit User' : 'Invite User'" size="lg" :centered="false" vertical-align="top" :show-footer="true">
     <form wire:submit.prevent="saveUser">
         <div class="row g-3">
             <div class="col-md-6">
@@ -95,6 +94,8 @@
             </div>
         </div>
     </form>
+
+
 
     <x-slot:footer>
         <button type="button" class="btn btn-light" x-on:click="show = false">Cancel</button>

@@ -13,7 +13,9 @@
 @section('content')
     <x-breadcrumb title="Profile Settings" li_1="User Management" />
 
-    @livewire('user.user-profile-settings')
+    <div id="user-profile-settings-wrapper">
+        @livewire('user.user-profile-settings')
+    </div>
 
 
 @endsection
@@ -47,7 +49,20 @@
                 initializeTabHandlers();
             }
 
+            function getProfileComponent() {
+                const wrapper = document.getElementById('user-profile-settings-wrapper');
+                if (!wrapper) return null;
+                return wrapper.querySelector('[data-component="user-profile-settings"][wire\\:id]');
+            }
+
             function initializeTabHandlers() {
+                const livewireElement = getProfileComponent();
+
+                if (!livewireElement) {
+                    setTimeout(initializeTabHandlers, 100);
+                    return;
+                }
+
                 // Update URL when tab changes
                 function updateUrlTab(tab) {
                     const url = new URL(window.location);
@@ -56,19 +71,14 @@
 
                     // Update Livewire component if available
                     if (typeof Livewire !== 'undefined') {
-                        // Find the Livewire component instance by looking for wire:id attribute
-                        const livewireElements = document.querySelectorAll('[wire\\:id]');
-                        if (livewireElements.length > 0) {
-                            const livewireElement = livewireElements[0];
-                            const componentId = livewireElement.getAttribute('wire:id');
-                            try {
-                                const component = Livewire.find(componentId);
-                                if (component && typeof component.set === 'function') {
-                                    component.set('activeTab', tab);
-                                }
-                            } catch (e) {
-                                console.log('Livewire component not found yet');
+                        const componentId = livewireElement.getAttribute('wire:id');
+                        try {
+                            const component = Livewire.find(componentId);
+                            if (component && typeof component.set === 'function') {
+                                component.set('activeTab', tab);
                             }
+                        } catch (e) {
+                            console.log('Livewire component not found yet');
                         }
                     }
                 }
@@ -110,23 +120,21 @@
 
             // Global function for onclick handlers
             window.updateUrlTab = function (tab) {
+                const livewireElement = getProfileComponent();
+
                 const url = new URL(window.location);
                 url.searchParams.set('tab', tab);
                 window.history.pushState({}, '', url);
 
-                if (typeof Livewire !== 'undefined') {
-                    const livewireElements = document.querySelectorAll('[wire\\:id]');
-                    if (livewireElements.length > 0) {
-                        const livewireElement = livewireElements[0];
-                        const componentId = livewireElement.getAttribute('wire:id');
-                        try {
-                            const component = Livewire.find(componentId);
-                            if (component && typeof component.set === 'function') {
-                                component.set('activeTab', tab);
-                            }
-                        } catch (e) {
-                            console.log('Livewire component not found');
+                if (livewireElement && typeof Livewire !== 'undefined') {
+                    const componentId = livewireElement.getAttribute('wire:id');
+                    try {
+                        const component = Livewire.find(componentId);
+                        if (component && typeof component.set === 'function') {
+                            component.set('activeTab', tab);
                         }
+                    } catch (e) {
+                        console.log('Livewire component not found');
                     }
                 }
             };

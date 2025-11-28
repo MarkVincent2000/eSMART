@@ -13,6 +13,7 @@
     'maxWidth' => null,
     'zIndex' => 1055,
     'overflow' => 'hidden',
+    'verticalAlign' => 'center', // center or top
 ])
 
 @php
@@ -40,6 +41,10 @@
     if ($scrollable) {
         $dialogClasses->push('modal-dialog-scrollable');
     }
+    
+    // Validate vertical alignment
+    $validAlignments = ['center', 'top'];
+    $verticalAlign = in_array($verticalAlign, $validAlignments, true) ? $verticalAlign : 'center';
     
     // Check if wire:model is provided via attributes
     $hasWireModel = $attributes->whereStartsWith('wire:model')->isNotEmpty();
@@ -80,7 +85,7 @@
     ></div>
 
     <!-- Modal Dialog Container -->
-    <div style="position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; overflow-y: auto;">
+    <div style="position: relative; z-index: 1; display: flex; align-items: {{ $verticalAlign === 'top' ? 'flex-start' : 'center' }}; justify-content: center; min-height: 100vh; padding: 1rem; {{ $verticalAlign === 'top' ? 'padding-top: 2rem;' : '' }} overflow-y: auto;">
         <div
             x-show="show"
             x-trap.noscroll="show"

@@ -1,4 +1,4 @@
-<div>
+<div data-component="user-profile-settings">
     <x-toast-notification />
 
     <div class="position-relative mx-n4 mt-n4">

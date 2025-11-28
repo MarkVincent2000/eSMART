@@ -13,7 +13,7 @@
 @section('content')
     <x-breadcrumb title="Permission Management" li_1="Admin Management" />
 
-    @can('view-admin-management')
+    @can('view-permission-management')
         @livewire('permission.permission-management')
     @else
         <div class="alert alert-danger alert-dismissible alert-additional fade show mb-xl-0 material-shadow" role="alert">

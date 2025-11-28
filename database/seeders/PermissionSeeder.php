@@ -13,25 +13,25 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create the permission
-        $permission = Permission::firstOrCreate(
-            ['name' => 'view-admin-management', 'guard_name' => 'web'],
-            [
-                'created_at' => '2025-11-28 04:34:17',
-                'updated_at' => '2025-11-28 04:34:17',
-            ]
-        );
+        $permissionMatrix = [
+            'view-user-management' => ['super-admin'],
+            'view-role-management' => ['super-admin'],
+            'view-permission-management' => ['super-admin'],
+        ];
 
-        // Assign permission to role_id 1 (super-admin)
-        $role1 = Role::find(1);
-        if ($role1 && !$role1->hasPermissionTo($permission)) {
-            $role1->givePermissionTo($permission);
-        }
+        foreach ($permissionMatrix as $permissionName => $roleNames) {
+            $permission = Permission::firstOrCreate([
+                'name' => $permissionName,
+                'guard_name' => 'web',
+            ]);
 
-        // Assign permission to role_id 2 (admin)
-        $role2 = Role::find(2);
-        if ($role2 && !$role2->hasPermissionTo($permission)) {
-            $role2->givePermissionTo($permission);
+            $roles = Role::whereIn('name', $roleNames)->get();
+
+            foreach ($roles as $role) {
+                if (!$role->hasPermissionTo($permission)) {
+                    $role->givePermissionTo($permission);
+                }
+            }
         }
     }
 }

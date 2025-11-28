@@ -11,10 +11,21 @@ class NotificationDropdown extends Component
 {
     public $selected = [];
     public $limit = 10;
+    public $isOpen = false;
 
     public function mount()
     {
         // Initialize component
+    }
+
+    public function togglePanel()
+    {
+        $this->isOpen = !$this->isOpen;
+    }
+
+    public function closePanel()
+    {
+        $this->isOpen = false;
     }
 
     #[Computed]
