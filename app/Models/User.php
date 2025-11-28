@@ -34,19 +34,20 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the addresses for the user.
+     * Get the personal details for the user.
      */
-    public function addresses()
+    public function personalDetails()
     {
-        return $this->hasMany(Address::class);
+        return $this->hasOne(UserPersonalDetails::class);
     }
 
     /**
-     * Get the primary/default address for the user.
+     * Get the primary/default address for the user (from personal details).
+     * @deprecated Use personalDetails() instead
      */
     public function primaryAddress()
     {
-        return $this->hasOne(Address::class)->latest();
+        return $this->hasOne(UserPersonalDetails::class)->latest();
     }
 
     /**

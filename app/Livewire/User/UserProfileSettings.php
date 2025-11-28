@@ -3,8 +3,11 @@
 namespace App\Livewire\User;
 
 use App\Models\User;
-use App\Models\Address;
+use App\Models\UserPersonalDetails;
 use App\Models\LoginHistory;
+use App\Enums\Sex;
+use App\Enums\Religion;
+use App\Enums\GuardianRelationship;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -13,6 +16,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class UserProfileSettings extends Component
 {
@@ -26,10 +30,21 @@ class UserProfileSettings extends Component
     public $name_extension = '';
     public $email = '';
     
-    // Address fields
-    public $address_id = null;
-    public $phone = '';
+    // Personal Details fields
+    public $personal_details_id = null;
+    public $sex = '';
     public $address = '';
+    public $contact_no = '';
+    public $date_of_birth = '';
+    public $religion = '';
+    
+    // Guardian fields
+    public $guardian_first_name = '';
+    public $guardian_last_name = '';
+    public $guardian_middle_name = '';
+    public $guardian_suffix = '';
+    public $guardian_relationship = '';
+    public $guardian_contact_no = '';
     
     // Password change fields
     public $current_password = '';
@@ -67,12 +82,25 @@ class UserProfileSettings extends Component
             $this->name_extension = $user->name_extension ?? '';
             $this->email = $user->email ?? '';
             
-            // Load address data from Address model
-            $primaryAddress = $user->primaryAddress;
-            if ($primaryAddress) {
-                $this->address_id = $primaryAddress->id;
-                $this->phone = $primaryAddress->phone ?? '';
-                $this->address = $primaryAddress->address ?? '';
+            // Load personal details
+            $personalDetails = $user->personalDetails;
+            if ($personalDetails) {
+                $this->personal_details_id = $personalDetails->id;
+                $this->sex = $personalDetails->sex ?? '';
+                $this->address = $personalDetails->address ?? '';
+                $this->contact_no = $personalDetails->contact_no ?? '';
+                $this->date_of_birth = $personalDetails->date_of_birth 
+                    ? Carbon::parse($personalDetails->date_of_birth)->format('Y-m-d')
+                    : '';
+                $this->religion = $personalDetails->religion ?? '';
+                
+                // Guardian fields
+                $this->guardian_first_name = $personalDetails->guardian_first_name ?? '';
+                $this->guardian_last_name = $personalDetails->guardian_last_name ?? '';
+                $this->guardian_middle_name = $personalDetails->guardian_middle_name ?? '';
+                $this->guardian_suffix = $personalDetails->guardian_suffix ?? '';
+                $this->guardian_relationship = $personalDetails->guardian_relationship ?? '';
+                $this->guardian_contact_no = $personalDetails->guardian_contact_no ?? '';
             }
         }
     }
@@ -92,8 +120,17 @@ class UserProfileSettings extends Component
             'middle_name' => 'nullable|string|max:255',
             'name_extension' => 'nullable|string|max:50',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:255',
+            'sex' => 'nullable|string|in:' . implode(',', array_column(Sex::cases(), 'value')),
             'address' => 'nullable|string',
+            'contact_no' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'religion' => 'nullable|string|in:' . implode(',', array_column(Religion::cases(), 'value')),
+            'guardian_first_name' => 'nullable|string|max:255',
+            'guardian_last_name' => 'nullable|string|max:255',
+            'guardian_middle_name' => 'nullable|string|max:255',
+            'guardian_suffix' => 'nullable|string|max:50',
+            'guardian_relationship' => 'nullable|string|in:' . implode(',', array_column(GuardianRelationship::cases(), 'value')),
+            'guardian_contact_no' => 'nullable|string|max:255',
         ]);
 
         // Build full name from components
@@ -113,28 +150,37 @@ class UserProfileSettings extends Component
             'email' => $this->email,
         ]);
 
-        // Update or create address
-        if ($this->address_id) {
-            // Update existing address
-            $address = Address::where('id', $this->address_id)
+        // Update or create personal details
+        $personalDetailsData = [
+            'sex' => $this->sex ?: null,
+            'address' => $this->address ?: null,
+            'contact_no' => $this->contact_no ?: null,
+            'date_of_birth' => $this->date_of_birth ?: null,
+            'religion' => $this->religion ?: null,
+            'guardian_first_name' => $this->guardian_first_name ?: null,
+            'guardian_last_name' => $this->guardian_last_name ?: null,
+            'guardian_middle_name' => $this->guardian_middle_name ?: null,
+            'guardian_suffix' => $this->guardian_suffix ?: null,
+            'guardian_relationship' => $this->guardian_relationship ?: null,
+            'guardian_contact_no' => $this->guardian_contact_no ?: null,
+        ];
+
+        if ($this->personal_details_id) {
+            // Update existing personal details
+            $personalDetails = UserPersonalDetails::where('id', $this->personal_details_id)
                 ->where('user_id', $user->id)
                 ->first();
             
-            if ($address) {
-                $address->update([
-                    'phone' => $this->phone ?: null,
-                    'address' => $this->address ?: null,
-                ]);
+            if ($personalDetails) {
+                $personalDetails->update($personalDetailsData);
             }
         } else {
-            // Create new address if any field has data
-            if (!empty($this->phone) || !empty($this->address)) {
-                $address = Address::create([
+            // Create new personal details if any field has data
+            if (array_filter($personalDetailsData)) {
+                $personalDetails = UserPersonalDetails::create(array_merge([
                     'user_id' => $user->id,
-                    'phone' => $this->phone ?: null,
-                    'address' => $this->address ?: null,
-                ]);
-                $this->address_id = $address->id;
+                ], $personalDetailsData));
+                $this->personal_details_id = $personalDetails->id;
             }
         }
 
@@ -343,24 +389,37 @@ class UserProfileSettings extends Component
 
         $percentage = 0;
         
-        // Required fields (15% each = 45% total)
-        if (!empty($user->first_name)) $percentage += 15;
-        if (!empty($user->last_name)) $percentage += 15;
-        if (!empty($user->email)) $percentage += 15;
+        // Required fields (10% each = 30% total)
+        if (!empty($user->first_name)) $percentage += 10;
+        if (!empty($user->last_name)) $percentage += 10;
+        if (!empty($user->email)) $percentage += 10;
         
-        // Optional name fields (15% total)
-        if (!empty($user->middle_name)) $percentage += 10;
-        if (!empty($user->name_extension)) $percentage += 5;
+        // Optional name fields (10% total)
+        if (!empty($user->middle_name)) $percentage += 7;
+        if (!empty($user->name_extension)) $percentage += 3;
         
-        // Photo fields (25% total)
-        if (!empty($user->photo_path) || !empty($user->avatar)) $percentage += 15;
-        if (!empty($user->cover_photo_path)) $percentage += 10;
+        // Photo fields (20% total)
+        if (!empty($user->photo_path) || !empty($user->avatar)) $percentage += 12;
+        if (!empty($user->cover_photo_path)) $percentage += 8;
         
-        // Address fields (15% total)
-        $primaryAddress = $user->primaryAddress;
-        if ($primaryAddress) {
-            if (!empty($primaryAddress->phone)) $percentage += 7.5;
-            if (!empty($primaryAddress->address)) $percentage += 7.5;
+        // Personal details fields (25% total)
+        $personalDetails = $user->personalDetails;
+        if ($personalDetails) {
+            if (!empty($personalDetails->sex)) $percentage += 5;
+            if (!empty($personalDetails->date_of_birth)) $percentage += 5;
+            if (!empty($personalDetails->religion)) $percentage += 5;
+            if (!empty($personalDetails->contact_no)) $percentage += 5;
+            if (!empty($personalDetails->address)) $percentage += 5;
+        }
+        
+        // Guardian information fields (15% total)
+        if ($personalDetails) {
+            if (!empty($personalDetails->guardian_first_name)) $percentage += 3;
+            if (!empty($personalDetails->guardian_last_name)) $percentage += 3;
+            if (!empty($personalDetails->guardian_relationship)) $percentage += 3;
+            if (!empty($personalDetails->guardian_contact_no)) $percentage += 3;
+            if (!empty($personalDetails->guardian_middle_name)) $percentage += 2;
+            if (!empty($personalDetails->guardian_suffix)) $percentage += 1;
         }
         
         return (int) round($percentage);
@@ -446,6 +505,30 @@ class UserProfileSettings extends Component
             'message' => 'Logged out from all other devices successfully!',
             'type' => 'success'
         ]);
+    }
+
+    /**
+     * Get all sex enum cases for dropdown
+     */
+    public function getSexOptionsProperty()
+    {
+        return Sex::cases();
+    }
+
+    /**
+     * Get all religion enum cases for dropdown
+     */
+    public function getReligionOptionsProperty()
+    {
+        return Religion::cases();
+    }
+
+    /**
+     * Get all guardian relationship enum cases for dropdown
+     */
+    public function getGuardianRelationshipOptionsProperty()
+    {
+        return GuardianRelationship::cases();
     }
 
     public function render()

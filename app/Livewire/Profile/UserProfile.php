@@ -38,32 +38,44 @@ class UserProfile extends Component
 
     public function getProfileCompletionPercentageProperty()
     {
-        $user = $this->userProfile;
-
+        $user = Auth::user();
         if (!$user) {
             return 0;
         }
 
         $percentage = 0;
         
-        // Required fields (15% each = 45% total)
-        if (!empty($user->first_name)) $percentage += 15;
-        if (!empty($user->last_name)) $percentage += 15;
-        if (!empty($user->email)) $percentage += 15;
+        // Required fields (10% each = 30% total)
+        if (!empty($user->first_name)) $percentage += 10;
+        if (!empty($user->last_name)) $percentage += 10;
+        if (!empty($user->email)) $percentage += 10;
         
-        // Optional name fields (15% total)
-        if (!empty($user->middle_name)) $percentage += 10;
-        if (!empty($user->name_extension)) $percentage += 5;
+        // Optional name fields (10% total)
+        if (!empty($user->middle_name)) $percentage += 7;
+        if (!empty($user->name_extension)) $percentage += 3;
         
-        // Photo fields (25% total)
-        if (!empty($user->photo_path) || !empty($user->avatar)) $percentage += 15;
-        if (!empty($user->cover_photo_path)) $percentage += 10;
+        // Photo fields (20% total)
+        if (!empty($user->photo_path) || !empty($user->avatar)) $percentage += 12;
+        if (!empty($user->cover_photo_path)) $percentage += 8;
         
-        // Address fields (15% total)
-        $primaryAddress = $user->primaryAddress;
-        if ($primaryAddress) {
-            if (!empty($primaryAddress->phone)) $percentage += 7.5;
-            if (!empty($primaryAddress->address)) $percentage += 7.5;
+        // Personal details fields (25% total)
+        $personalDetails = $user->personalDetails;
+        if ($personalDetails) {
+            if (!empty($personalDetails->sex)) $percentage += 5;
+            if (!empty($personalDetails->date_of_birth)) $percentage += 5;
+            if (!empty($personalDetails->religion)) $percentage += 5;
+            if (!empty($personalDetails->contact_no)) $percentage += 5;
+            if (!empty($personalDetails->address)) $percentage += 5;
+        }
+        
+        // Guardian information fields (15% total)
+        if ($personalDetails) {
+            if (!empty($personalDetails->guardian_first_name)) $percentage += 3;
+            if (!empty($personalDetails->guardian_last_name)) $percentage += 3;
+            if (!empty($personalDetails->guardian_relationship)) $percentage += 3;
+            if (!empty($personalDetails->guardian_contact_no)) $percentage += 3;
+            if (!empty($personalDetails->guardian_middle_name)) $percentage += 2;
+            if (!empty($personalDetails->guardian_suffix)) $percentage += 1;
         }
         
         return (int) round($percentage);
@@ -89,10 +101,13 @@ class UserProfile extends Component
             $hasMoreActivityLogs = $totalLogs > $activityLogs->count();
         }
 
+        $personalDetails = $user ? $user->personalDetails : null;
+
         return view('livewire.profile.user-profile', [
             'user' => $user,
             'activityLogs' => $activityLogs,
             'hasMoreActivityLogs' => $hasMoreActivityLogs,
+            'personalDetails' => $personalDetails,
         ]);
     }
 }

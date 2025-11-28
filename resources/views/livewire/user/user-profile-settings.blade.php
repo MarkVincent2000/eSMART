@@ -203,11 +203,12 @@
                                     <!--end col-->
                                     <div class="col-lg-6">
                                         <div class="mb-3">
-                                            <label for="phonenumberInput" class="form-label">Phone Number</label>
-                                            <input type="text" class="form-control @error('phone') is-invalid @enderror"
-                                                id="phonenumberInput" placeholder="Enter your phone number"
-                                                wire:model="phone">
-                                            @error('phone')
+                                            <label for="emailInput" class="form-label">Email Address <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="email"
+                                                class="form-control @error('email') is-invalid @enderror"
+                                                id="emailInput" placeholder="Enter your email" wire:model="email">
+                                            @error('email')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -215,12 +216,86 @@
                                     <!--end col-->
                                     <div class="col-lg-6">
                                         <div class="mb-3">
-                                            <label for="emailInput" class="form-label">Email Address <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="email"
-                                                class="form-control @error('email') is-invalid @enderror"
-                                                id="emailInput" placeholder="Enter your email" wire:model="email">
-                                            @error('email')
+                                            <label for="sexInput" class="form-label">Sex</label>
+                                            <select class="form-select @error('sex') is-invalid @enderror" id="sexInput"
+                                                wire:model="sex">
+                                                <option value="" disabled {{ empty($sex) ? 'selected' : '' }}>Select Sex
+                                                </option>
+                                                @foreach($this->sexOptions as $sexOption)
+                                                    <option value="{{ $sexOption->value }}">{{ ucfirst($sexOption->value) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('sex')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="contactNoInput" class="form-label">Contact Number</label>
+                                            <input type="text"
+                                                class="form-control @error('contact_no') is-invalid @enderror"
+                                                id="contactNoInput" placeholder="Enter your contact number"
+                                                wire:model="contact_no">
+                                            @error('contact_no')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="dateOfBirthInput" class="form-label">Date of Birth</label>
+                                            <input type="text"
+                                                class="form-control @error('date_of_birth') is-invalid @enderror"
+                                                id="dateOfBirthInput" placeholder="Select date of birth" x-data="{
+                                                    init() {
+                                                        const fp = flatpickr(this.$el, {
+                                                            dateFormat: 'Y-m-d',
+                                                            altInput: true,
+                                                            altFormat: 'd M, Y',
+                                                            maxDate: 'today',
+                                                            defaultDate: @js($date_of_birth ?: null),
+                                                            onChange: (selectedDates, dateStr, instance) => {
+                                                                if (selectedDates.length > 0) {
+                                                                    @this.set('date_of_birth', dateStr);
+                                                                } else {
+                                                                    @this.set('date_of_birth', '');
+                                                                }
+                                                            }
+                                                        });
+                                                        // Sync with Livewire updates
+                                                        Livewire.hook('message.processed', (message, component) => {
+                                                            if (@this.date_of_birth) {
+                                                                fp.setDate(@this.date_of_birth, false);
+                                                            } else {
+                                                                fp.clear();
+                                                            }
+                                                        });
+                                                    }
+                                                }">
+                                            @error('date_of_birth')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="religionInput" class="form-label">Religion</label>
+                                            <select class="form-select @error('religion') is-invalid @enderror"
+                                                id="religionInput" wire:model="religion">
+                                                <option value="" disabled {{ empty($religion) ? 'selected' : '' }}>
+                                                    Select Religion</option>
+                                                @foreach($this->religionOptions as $religionOption)
+                                                    <option value="{{ $religionOption->value }}">
+                                                        {{ ucfirst($religionOption->value) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('religion')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
@@ -237,6 +312,108 @@
                                             @enderror
                                         </div>
                                     </div>
+
+                                    <div class="border border-dashed border-end-0 border-start-0 my-4"></div>
+                                    <!--end col-->
+
+                                    <!-- Guardian Information Section -->
+                                    <div class="col-lg-12">
+                                        <div class="mb-3">
+                                            <h4 class="mb-3 ">Guardian Information</h4>
+
+                                        </div>
+
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="guardianFirstNameInput" class="form-label">Guardian First
+                                                Name</label>
+                                            <input type="text"
+                                                class="form-control @error('guardian_first_name') is-invalid @enderror"
+                                                id="guardianFirstNameInput" placeholder="Enter guardian first name"
+                                                wire:model="guardian_first_name">
+                                            @error('guardian_first_name')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="guardianLastNameInput" class="form-label">Guardian Last
+                                                Name</label>
+                                            <input type="text"
+                                                class="form-control @error('guardian_last_name') is-invalid @enderror"
+                                                id="guardianLastNameInput" placeholder="Enter guardian last name"
+                                                wire:model="guardian_last_name">
+                                            @error('guardian_last_name')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="guardianMiddleNameInput" class="form-label">Guardian Middle
+                                                Name</label>
+                                            <input type="text"
+                                                class="form-control @error('guardian_middle_name') is-invalid @enderror"
+                                                id="guardianMiddleNameInput" placeholder="Enter guardian middle name"
+                                                wire:model="guardian_middle_name">
+                                            @error('guardian_middle_name')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="guardianSuffixInput" class="form-label">Guardian Suffix</label>
+                                            <input type="text"
+                                                class="form-control @error('guardian_suffix') is-invalid @enderror"
+                                                id="guardianSuffixInput" placeholder="e.g., Jr., Sr., III"
+                                                wire:model="guardian_suffix">
+                                            @error('guardian_suffix')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="guardianRelationshipInput" class="form-label">Guardian
+                                                Relationship</label>
+                                            <select
+                                                class="form-select @error('guardian_relationship') is-invalid @enderror"
+                                                id="guardianRelationshipInput" wire:model="guardian_relationship">
+                                                <option value="" disabled {{ empty($guardian_relationship) ? 'selected' : '' }}>Select Relationship</option>
+                                                @foreach($this->guardianRelationshipOptions as $relationship)
+                                                    <option value="{{ $relationship->value }}">
+                                                        {{ ucfirst($relationship->value) }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('guardian_relationship')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <!--end col-->
+                                    <div class="col-lg-6">
+                                        <div class="mb-3">
+                                            <label for="guardianContactNoInput" class="form-label">Guardian Contact
+                                                Number</label>
+                                            <input type="text"
+                                                class="form-control @error('guardian_contact_no') is-invalid @enderror"
+                                                id="guardianContactNoInput" placeholder="Enter guardian contact number"
+                                                wire:model="guardian_contact_no">
+                                            @error('guardian_contact_no')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <!--end col-->
 
                                     <!--end col-->
                                     <div class="col-lg-12">
