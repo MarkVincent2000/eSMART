@@ -7,6 +7,7 @@ use App\Models\Address;
 use App\Models\LoginHistory;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
 class UserProfileSettings extends Component
 {
     use WithFileUploads;
+    use WithPagination;
 
     // Profile fields
     public $first_name = '';
@@ -42,6 +44,8 @@ class UserProfileSettings extends Component
 
     // Active tab
     public $activeTab = 'personalDetails';
+    public $loginHistoryPerPage = 5;
+    protected $paginationTheme = 'bootstrap';
 
     public function mount()
     {
@@ -71,6 +75,11 @@ class UserProfileSettings extends Component
                 $this->address = $primaryAddress->address ?? '';
             }
         }
+    }
+
+    public function updatingActiveTab()
+    {
+        $this->resetPage('loginHistoryPage');
     }
 
     public function updateProfile()
@@ -440,7 +449,11 @@ class UserProfileSettings extends Component
     public function render()
     {
         $user = Auth::user();
-        $loginHistories = $user ? $user->loginHistories()->take(10)->get() : collect();
+        $loginHistories = $user
+            ? $user->loginHistories()
+                ->latest('login_at')
+                ->paginate($this->loginHistoryPerPage, ['*'], 'loginHistoryPage')
+            : collect();
 
         return view('livewire.user.user-profile-settings', [
             'user' => $user,

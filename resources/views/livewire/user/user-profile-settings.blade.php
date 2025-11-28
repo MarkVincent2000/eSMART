@@ -376,6 +376,13 @@
                                     <p class="text-muted mb-0">No login history available.</p>
                                 </div>
                             @endforelse
+
+
+                            <div class="mt-4">
+
+                                <x-pagination :paginator="$loginHistories" :show-summary="true" />
+                            </div>
+
                         </div>
                         <!--end tab-pane-->
                     </div>

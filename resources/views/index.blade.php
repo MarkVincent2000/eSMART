@@ -342,8 +342,7 @@
                                                                 alt="" class="img-fluid d-block" />
                                                         </div>
                                                         <div>
-                                                            <h5 class="fs-14 my-1"><a
-                                                                    href="apps-ecommerce-product-details"
+                                                            <h5 class="fs-14 my-1"><a href="apps-ecommerce-product-details"
                                                                     class="text-reset">Branded T-Shirts</a></h5>
                                                             <span class="text-muted">24 Apr 2021</span>
                                                         </div>
@@ -374,8 +373,7 @@
                                                                 alt="" class="img-fluid d-block" />
                                                         </div>
                                                         <div>
-                                                            <h5 class="fs-14 my-1"><a
-                                                                    href="apps-ecommerce-product-details"
+                                                            <h5 class="fs-14 my-1"><a href="apps-ecommerce-product-details"
                                                                     class="text-reset">Bentwood Chair</a></h5>
                                                             <span class="text-muted">19 Mar 2021</span>
                                                         </div>
@@ -408,8 +406,7 @@
                                                                 alt="" class="img-fluid d-block" />
                                                         </div>
                                                         <div>
-                                                            <h5 class="fs-14 my-1"><a
-                                                                    href="apps-ecommerce-product-details"
+                                                            <h5 class="fs-14 my-1"><a href="apps-ecommerce-product-details"
                                                                     class="text-reset">Borosil Paper Cup</a></h5>
                                                             <span class="text-muted">01 Mar 2021</span>
                                                         </div>
@@ -440,8 +437,7 @@
                                                                 alt="" class="img-fluid d-block" />
                                                         </div>
                                                         <div>
-                                                            <h5 class="fs-14 my-1"><a
-                                                                    href="apps-ecommerce-product-details"
+                                                            <h5 class="fs-14 my-1"><a href="apps-ecommerce-product-details"
                                                                     class="text-reset">One Seater Sofa</a></h5>
                                                             <span class="text-muted">11 Feb 2021</span>
                                                         </div>
@@ -474,8 +470,7 @@
                                                                 alt="" class="img-fluid d-block" />
                                                         </div>
                                                         <div>
-                                                            <h5 class="fs-14 my-1"><a
-                                                                    href="apps-ecommerce-product-details"
+                                                            <h5 class="fs-14 my-1"><a href="apps-ecommerce-product-details"
                                                                     class="text-reset">Stillbird Helmet</a></h5>
                                                             <span class="text-muted">17 Jan 2021</span>
                                                         </div>
@@ -544,8 +539,7 @@
                                     <div class="dropdown card-header-dropdown">
                                         <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
                                             aria-haspopup="true" aria-expanded="false">
-                                            <span class="text-muted">Report<i
-                                                    class="mdi mdi-chevron-down ms-1"></i></span>
+                                            <span class="text-muted">Report<i class="mdi mdi-chevron-down ms-1"></i></span>
                                         </a>
                                         <div class="dropdown-menu dropdown-menu-end">
                                             <a class="dropdown-item" href="#">Download Report</a>
@@ -765,8 +759,7 @@
                                     <div class="dropdown card-header-dropdown">
                                         <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown"
                                             aria-haspopup="true" aria-expanded="false">
-                                            <span class="text-muted">Report<i
-                                                    class="mdi mdi-chevron-down ms-1"></i></span>
+                                            <span class="text-muted">Report<i class="mdi mdi-chevron-down ms-1"></i></span>
                                         </a>
                                         <div class="dropdown-menu dropdown-menu-end">
                                             <a class="dropdown-item" href="#">Download Report</a>
@@ -823,8 +816,7 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="flex-shrink-0 me-2">
                                                             <img src="{{ URL::asset('build/images/users/avatar-1.jpg') }}"
-                                                                alt=""
-                                                                class="avatar-xs rounded-circle material-shadow" />
+                                                                alt="" class="avatar-xs rounded-circle material-shadow" />
                                                         </div>
                                                         <div class="flex-grow-1">Alex Smith</div>
                                                     </div>
@@ -851,8 +843,7 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="flex-shrink-0 me-2">
                                                             <img src="{{ URL::asset('build/images/users/avatar-2.jpg') }}"
-                                                                alt=""
-                                                                class="avatar-xs rounded-circle material-shadow" />
+                                                                alt="" class="avatar-xs rounded-circle material-shadow" />
                                                         </div>
                                                         <div class="flex-grow-1">Jansh Brown</div>
                                                     </div>
@@ -879,8 +870,7 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="flex-shrink-0 me-2">
                                                             <img src="{{ URL::asset('build/images/users/avatar-3.jpg') }}"
-                                                                alt=""
-                                                                class="avatar-xs rounded-circle material-shadow" />
+                                                                alt="" class="avatar-xs rounded-circle material-shadow" />
                                                         </div>
                                                         <div class="flex-grow-1">Ayaan Bowen</div>
                                                     </div>
@@ -907,8 +897,7 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="flex-shrink-0 me-2">
                                                             <img src="{{ URL::asset('build/images/users/avatar-4.jpg') }}"
-                                                                alt=""
-                                                                class="avatar-xs rounded-circle material-shadow" />
+                                                                alt="" class="avatar-xs rounded-circle material-shadow" />
                                                         </div>
                                                         <div class="flex-grow-1">Prezy Mark</div>
                                                     </div>
@@ -935,8 +924,7 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="flex-shrink-0 me-2">
                                                             <img src="{{ URL::asset('build/images/users/avatar-6.jpg') }}"
-                                                                alt=""
-                                                                class="avatar-xs rounded-circle material-shadow" />
+                                                                alt="" class="avatar-xs rounded-circle material-shadow" />
                                                         </div>
                                                         <div class="flex-grow-1">Vihan Hudda</div>
                                                     </div>
@@ -1002,16 +990,16 @@
                                         <p class="text-muted mb-1">By Nesta Technologies</p>
                                         <div class="d-inline-flex gap-2 border border-dashed p-2 mb-2">
                                             <a href="apps-ecommerce-product-details" class="bg-light rounded p-1">
-                                                <img src="{{ URL::asset('build/images/products/img-8.png') }}"
-                                                    alt="" class="img-fluid d-block" />
+                                                <img src="{{ URL::asset('build/images/products/img-8.png') }}" alt=""
+                                                    class="img-fluid d-block" />
                                             </a>
                                             <a href="apps-ecommerce-product-details" class="bg-light rounded p-1">
-                                                <img src="{{ URL::asset('build/images/products/img-2.png') }}"
-                                                    alt="" class="img-fluid d-block" />
+                                                <img src="{{ URL::asset('build/images/products/img-2.png') }}" alt=""
+                                                    class="img-fluid d-block" />
                                             </a>
                                             <a href="apps-ecommerce-product-details" class="bg-light rounded p-1">
-                                                <img src="{{ URL::asset('build/images/products/img-10.png') }}"
-                                                    alt="" class="img-fluid d-block" />
+                                                <img src="{{ URL::asset('build/images/products/img-10.png') }}" alt=""
+                                                    class="img-fluid d-block" />
                                             </a>
                                         </div>
                                         <p class="mb-0 text-muted"><small>9:47 PM Yesterday</small></p>
@@ -1118,40 +1106,33 @@
                                             class="float-end">(10,294)</span></a>
                                 </li>
                                 <li class="py-1">
-                                    <a href="#" class="text-muted">Desktop <span
-                                            class="float-end">(6,256)</span></a>
+                                    <a href="#" class="text-muted">Desktop <span class="float-end">(6,256)</span></a>
                                 </li>
                                 <li class="py-1">
-                                    <a href="#" class="text-muted">Electronics <span
-                                            class="float-end">(3,479)</span></a>
+                                    <a href="#" class="text-muted">Electronics <span class="float-end">(3,479)</span></a>
                                 </li>
                                 <li class="py-1">
                                     <a href="#" class="text-muted">Home & Furniture <span
                                             class="float-end">(2,275)</span></a>
                                 </li>
                                 <li class="py-1">
-                                    <a href="#" class="text-muted">Grocery <span
-                                            class="float-end">(1,950)</span></a>
+                                    <a href="#" class="text-muted">Grocery <span class="float-end">(1,950)</span></a>
                                 </li>
                                 <li class="py-1">
-                                    <a href="#" class="text-muted">Fashion <span
-                                            class="float-end">(1,582)</span></a>
+                                    <a href="#" class="text-muted">Fashion <span class="float-end">(1,582)</span></a>
                                 </li>
                                 <li class="py-1">
-                                    <a href="#" class="text-muted">Appliances <span
-                                            class="float-end">(1,037)</span></a>
+                                    <a href="#" class="text-muted">Appliances <span class="float-end">(1,037)</span></a>
                                 </li>
                                 <li class="py-1">
                                     <a href="#" class="text-muted">Beauty, Toys & More <span
                                             class="float-end">(924)</span></a>
                                 </li>
                                 <li class="py-1">
-                                    <a href="#" class="text-muted">Food & Drinks <span
-                                            class="float-end">(701)</span></a>
+                                    <a href="#" class="text-muted">Food & Drinks <span class="float-end">(701)</span></a>
                                 </li>
                                 <li class="py-1">
-                                    <a href="#" class="text-muted">Toys & Games <span
-                                            class="float-end">(239)</span></a>
+                                    <a href="#" class="text-muted">Toys & Games <span class="float-end">(239)</span></a>
                                 </li>
                             </ol>
                             <div class="mt-3 text-center">
@@ -1387,9 +1368,8 @@
                                     <div class="col">
                                         <div class="p-1">
                                             <div class="progress animated-progress progress-sm">
-                                                <div class="progress-bar bg-success" role="progressbar"
-                                                    style="width: 4.98%" aria-valuenow="4.98" aria-valuemin="0"
-                                                    aria-valuemax="100"></div>
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: 4.98%"
+                                                    aria-valuenow="4.98" aria-valuemin="0" aria-valuemax="100"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -1411,9 +1391,8 @@
                                     <div class="col">
                                         <div class="p-1">
                                             <div class="progress animated-progress progress-sm">
-                                                <div class="progress-bar bg-danger" role="progressbar"
-                                                    style="width: 7.42%" aria-valuenow="7.42" aria-valuemin="0"
-                                                    aria-valuemax="100"></div>
+                                                <div class="progress-bar bg-danger" role="progressbar" style="width: 7.42%"
+                                                    aria-valuenow="7.42" aria-valuemin="0" aria-valuemax="100"></div>
                                             </div>
                                         </div>
                                     </div>

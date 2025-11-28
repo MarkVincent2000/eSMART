@@ -57,31 +57,37 @@
                                         <input type="hidden" name="token" value="{{ $token }}">
                                         <div class="mb-3">
                                             <label for="useremail" class="form-label">Email</label>
-                                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="useremail" name="email" placeholder="Enter email" value="{{ $email ?? old('email') }}" id="email">
+                                            <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                                id="useremail" name="email" placeholder="Enter email"
+                                                value="{{ $email ?? old('email') }}" id="email">
                                             @error('email')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
+                                                <span class="invalid-feedback" role="alert">
+                                                    <strong>{{ $message }}</strong>
+                                                </span>
                                             @enderror
                                         </div>
 
                                         <div class="mb-3">
                                             <label for="userpassword">Password</label>
-                                            <input type="password" class="form-control @error('password') is-invalid @enderror" name="password" id="userpassword" placeholder="Enter password">
+                                            <input type="password"
+                                                class="form-control @error('password') is-invalid @enderror" name="password"
+                                                id="userpassword" placeholder="Enter password">
                                             @error('password')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
+                                                <span class="invalid-feedback" role="alert">
+                                                    <strong>{{ $message }}</strong>
+                                                </span>
                                             @enderror
                                         </div>
 
                                         <div class="mb-3">
                                             <label for="userpassword">Confirm Password</label>
-                                            <input id="password-confirm" type="password" name="password_confirmation" class="form-control" placeholder="Enter confirm password">
+                                            <input id="password-confirm" type="password" name="password_confirmation"
+                                                class="form-control" placeholder="Enter confirm password">
                                         </div>
 
                                         <div class="text-end">
-                                            <button class="btn btn-primary w-md waves-effect waves-light" type="submit">Reset</button>
+                                            <button class="btn btn-primary w-md waves-effect waves-light"
+                                                type="submit">Reset</button>
                                         </div>
 
                                     </form><!-- end form -->
@@ -112,8 +118,8 @@
                         <div class="text-center">
                             <script>
                                 document.write(new Date().getFullYear())
-                            </script> Velzon. Crafted with <i
-                                    class="mdi mdi-heart text-danger"></i> by Themesbrand</p>
+                            </script> Velzon. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrandss
+                            </p>
                         </div>
                     </div>
                 </div>

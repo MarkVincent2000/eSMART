@@ -109,6 +109,8 @@ class LoginController extends Controller
         // Get location from IP (basic implementation, can be extended with IP geolocation service)
         $location = $this->getLocationFromIp($ipAddress);
 
+        $sessionId = $request->session()->getId();
+
         LoginHistory::create([
             'user_id' => $user->id,
             'ip_address' => $ipAddress,
@@ -117,7 +119,7 @@ class LoginController extends Controller
             'device_type' => $deviceInfo['type'],
             'city' => $location['city'] ?? null,
             'country' => $location['country'] ?? null,
-            'session_id' => $request->session()->getId(),
+            'session_id' => $sessionId,
             'login_at' => now(),
         ]);
     }
