@@ -3,7 +3,8 @@
     <x-toast-notification />
 
 
-    <div class="row">
+    <div class="row"
+        wire:key="stats-cards-{{ $this->totalUsers }}-{{ $this->totalActiveUsers }}-{{ $this->totalInactiveUsers }}">
         <div class="col-xxl-3 col-sm-6">
             <div class="card card-animate">
                 <div class="card-body">
@@ -11,7 +12,9 @@
                         <div>
                             <p class="fw-medium text-muted mb-0">Total Users</p>
                             <h2 class="mt-4 ff-secondary fw-semibold">
-                                <span class="counter-value" data-target="{{ $this->totalUsers }}">0</span>
+                                <span class="counter-value" data-target="{{ $this->totalUsers }}">
+                                    {{ $this->totalUsers }}
+                                </span>
                             </h2>
                             <p class="mb-0 text-muted">
                                 <span class="badge bg-light text-info mb-0">
@@ -38,7 +41,9 @@
                         <div>
                             <p class="fw-medium text-muted mb-0">Active Users</p>
                             <h2 class="mt-4 ff-secondary fw-semibold">
-                                <span class="counter-value" data-target="{{ $this->totalActiveUsers }}">0</span>
+                                <span class="counter-value" data-target="{{ $this->totalActiveUsers }}">
+                                    {{ $this->totalActiveUsers }}
+                                </span>
                             </h2>
                             <p class="mb-0 text-muted">
                                 <span class="badge bg-light text-success mb-0">
@@ -65,7 +70,9 @@
                         <div>
                             <p class="fw-medium text-muted mb-0">Inactive Users</p>
                             <h2 class="mt-4 ff-secondary fw-semibold">
-                                <span class="counter-value" data-target="{{ $this->totalInactiveUsers }}">0</span>
+                                <span class="counter-value" data-target="{{ $this->totalInactiveUsers }}">
+                                    {{ $this->totalInactiveUsers }}
+                                </span>
                             </h2>
                             <p class="mb-0 text-muted">
                                 <span class="badge bg-light text-secondary mb-0">
@@ -93,7 +100,9 @@
                             <p class="fw-medium text-muted mb-0">Active Percentage</p>
                             <h2 class="mt-4 ff-secondary fw-semibold">
                                 <span class="counter-value"
-                                    data-target="{{ $this->totalUsers > 0 ? round(($this->totalActiveUsers / $this->totalUsers) * 100, 1) : 0 }}">0</span>%
+                                    data-target="{{ $this->totalUsers > 0 ? round(($this->totalActiveUsers / $this->totalUsers) * 100, 1) : 0 }}">
+                                    {{ $this->totalUsers > 0 ? round(($this->totalActiveUsers / $this->totalUsers) * 100, 1) : 0 }}
+                                </span>%
                             </h2>
                             <p class="mb-0 text-muted">
                                 <span class="badge bg-light text-primary mb-0">
@@ -248,6 +257,7 @@
 
                                         <th>Name</th>
                                         <th>Email</th>
+                                        <th>Roles</th>
                                         <th>Status</th>
                                         <th>Joined</th>
                                         <th>Actions</th>
@@ -278,6 +288,19 @@
                                                 {{ $fullName ?: ($user->name ?? '-') }}
                                             </td>
                                             <td class="email">{{ $user->email }}</td>
+                                            <td class="roles">
+                                                @if($user->roles->isNotEmpty())
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        @foreach($user->roles as $role)
+                                                            <span class="badge bg-primary-subtle text-primary">
+                                                                {{ ucfirst(str_replace('-', ' ', $role->name)) }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted">No roles</span>
+                                                @endif
+                                            </td>
                                             <td class="status">
                                                 <span
                                                     class="badge {{ $user->active_status ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
@@ -302,7 +325,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center text-muted py-4">
+                                            <td colspan="7" class="text-center text-muted py-4">
                                                 No users found.
                                             </td>
                                         </tr>

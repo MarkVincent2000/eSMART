@@ -256,3 +256,4 @@ See `resources/views/components/toast-notification-example.blade.php` for comple
 - Boolean props should be passed using `:close="true"` syntax in Blade templates
 
 
+

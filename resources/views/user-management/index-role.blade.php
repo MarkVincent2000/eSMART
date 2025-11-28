@@ -1,6 +1,6 @@
 @extends('layouts.master')
 @section('title')
-    User Management
+    Role Management
 @endsection
 @section('css')
     <link href="{{ URL::asset('build/libs/dropzone/dropzone.css') }}" rel="stylesheet">
@@ -11,9 +11,9 @@
     <link href="{{ URL::asset('build/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 @section('content')
-    <x-breadcrumb title="Users" li_1="Admin Management" />
+    <x-breadcrumb title="Roles" li_1="Role Management" />
 
-    @livewire('user.user-management')
+    @livewire('role.role-management')
 
 
 @endsection

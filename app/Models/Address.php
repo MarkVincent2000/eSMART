@@ -19,6 +19,9 @@ class Address extends Model
         'user_id',
         'phone',
         'address',
+        'city',
+        'zip_code',
+        'country',
     ];
 
     /**

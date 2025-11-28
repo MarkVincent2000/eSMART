@@ -20,7 +20,6 @@ class LoginHistory extends Model
         'device_type',
         'city',
         'country',
-        'session_id',
         'login_at',
     ];
 

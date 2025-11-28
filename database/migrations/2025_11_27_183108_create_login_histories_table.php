@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('device_type')->nullable(); // mobile, tablet, desktop
             $table->string('city')->nullable();
             $table->string('country')->nullable();
-            $table->string('session_id')->nullable();
             $table->timestamp('login_at');
             $table->timestamps();
         });

@@ -106,6 +106,7 @@
                     :active="request()->is('user-management*')">
                     <ul class="nav nav-sm flex-column">
                         <x-sidebar.item href="user-management.index" title="Users" />
+                        <x-sidebar.item href="user-management.index-role" title="Roles" />
                     </ul>
                 </x-sidebar.dropdown>
 

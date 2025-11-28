@@ -1,6 +1,6 @@
 @extends('layouts.master')
 @section('title')
-    @lang('translation.dashboards')
+    Profile Settings
 @endsection
 @section('css')
     <link href="{{ URL::asset('build/libs/dropzone/dropzone.css') }}" rel="stylesheet">

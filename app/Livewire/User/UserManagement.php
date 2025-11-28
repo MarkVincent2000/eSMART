@@ -3,6 +3,7 @@
 namespace App\Livewire\User;
 
 use App\Models\User;
+use App\Models\Role;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
@@ -36,6 +37,7 @@ class UserManagement extends Component
     public $email = '';
     public $password = '';
     public $active_status = true;
+    public $selectedRoles = [];
     
     // Filter properties
     public $search = '';
@@ -43,11 +45,18 @@ class UserManagement extends Component
     public $dateTo = null;
     public $status = 'all'; // 'all', 'active', 'inactive'
 
+
+    public function mount()
+    {
+        // Computed properties are automatically calculated, no need to call them
+    }
+
     #[Computed]
     public function users()
     {
         $query = User::query()
-            ->select('id', 'name', 'first_name', 'last_name', 'middle_name', 'name_extension', 'email', 'active_status', 'created_at');
+            ->select('id', 'name', 'first_name', 'last_name', 'middle_name', 'name_extension', 'email', 'active_status', 'created_at')
+            ->with('roles'); // Eager load roles to avoid N+1 queries
         
         // Search filter - search in name fields and email
         if (!empty($this->search)) {
@@ -101,6 +110,12 @@ class UserManagement extends Component
     public function totalInactiveUsers()
     {
         return User::where('active_status', false)->count();
+    }
+    
+    #[Computed]
+    public function roles()
+    {
+        return Role::where('guard_name', 'web')->orderBy('name')->get();
     }
     
     public function updatedSearch()
@@ -213,6 +228,9 @@ class UserManagement extends Component
         $this->password = ''; // Don't load password, leave it empty for user to optionally change
         $this->active_status = $user->active_status;
         
+        // Load user's roles (get all roles as array of role names)
+        $this->selectedRoles = $user->roles->pluck('name')->toArray();
+        
         $this->resetErrorBag();
         $this->showInviteModal = true;
     }
@@ -234,6 +252,7 @@ class UserManagement extends Component
         $this->email = '';
         $this->password = '';
         $this->active_status = true;
+        $this->selectedRoles = [];
         $this->resetErrorBag();
     }
 
@@ -249,6 +268,8 @@ class UserManagement extends Component
             'name_extension' => 'nullable|string|max:50',
             'email' => 'required|string|email|max:255|unique:users,email' . ($isEditing ? ',' . $this->userId : ''),
             'active_status' => 'boolean',
+            'selectedRoles' => 'required|array|min:1',
+            'selectedRoles.*' => 'required|string|exists:roles,name',
         ];
         
         // Password is required only when creating, optional when editing
@@ -288,9 +309,23 @@ class UserManagement extends Component
         if ($isEditing) {
             $user = User::findOrFail($this->userId);
             $user->update($userData);
+            
+            // Sync multiple roles (remove all existing roles and assign the new ones)
+            $roles = Role::whereIn('name', $this->selectedRoles)->where('guard_name', 'web')->get();
+            if ($roles->isNotEmpty()) {
+                $user->syncRoles($roles);
+            }
+            
             $message = 'User updated successfully!';
         } else {
-            User::create($userData);
+            $user = User::create($userData);
+            
+            // Assign multiple roles to new user
+            $roles = Role::whereIn('name', $this->selectedRoles)->where('guard_name', 'web')->get();
+            if ($roles->isNotEmpty()) {
+                $user->syncRoles($roles);
+            }
+            
             $message = 'User invited successfully!';
             // Reset pagination to show the new user
             $this->resetPage();
@@ -397,10 +432,23 @@ class UserManagement extends Component
         $this->showDeleteMultipleModal = false;
     }
 
+    #[Computed]
+    public function roleOptions()
+    {
+        return $this->roles->map(function($role) {
+            return [
+                'value' => $role->name,
+                'label' => ucfirst(str_replace('-', ' ', $role->name))
+            ];
+        })->toArray();
+    }
+
     public function render()
     {
         return view('livewire.user.user-management', [
             'users' => $this->users,
+            'roles' => $this->roles,
+            'roleOptions' => $this->roleOptions,
         ]);
     }
 }
