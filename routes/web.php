@@ -22,6 +22,8 @@ Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('roo
 
 // Custom grouped routes
 
+//Notification
+
 //Update User Details
 Route::post('/update-profile/{id}', [App\Http\Controllers\HomeController::class, 'updateProfile'])->name('updateProfile');
 Route::post('/update-password/{id}', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('updatePassword');

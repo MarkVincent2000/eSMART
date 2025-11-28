@@ -52,21 +52,23 @@
                             </div>
 
                             <!-- Notification Content -->
-                            <div class="notification-item-content flex-grow-1">
-                                <a href="#!" class="notification-item-link"
-                                    wire:click.prevent="markAsRead({{ $notification->id }})" @click.stop>
+                            <a href="#" type="button" class="notification-item-link"
+                                wire:click.prevent="clickmarkAsRead({{ $notification->id }})">
+                                <div class="notification-item-content flex-grow-1">
+
                                     <h6 class="notification-item-title mt-0 mb-2 lh-base">
                                         {{ $notification->title }}
                                     </h6>
-                                </a>
-                                @if($notification->body)
-                                    <p class="notification-item-body mb-1 fs-13 text-muted">{{ $notification->body }}</p>
-                                @endif
-                                <p class="notification-item-time mb-0 fs-11 fw-medium text-uppercase text-muted">
-                                    <span><i class="mdi mdi-clock-outline"></i>
-                                        {{ $notification->created_at->diffForHumans() }}</span>
-                                </p>
-                            </div>
+
+                                    @if($notification->body)
+                                        <p class="notification-item-body mb-1 fs-13 text-muted">{{ $notification->body }}</p>
+                                    @endif
+                                    <p class="notification-item-time mb-0 fs-11 fw-medium text-uppercase text-muted">
+                                        <span><i class="mdi mdi-clock-outline"></i>
+                                            {{ $notification->created_at->diffForHumans() }}</span>
+                                    </p>
+                                </div>
+                            </a>
 
                             <!-- Notification Checkbox -->
                             <div class="notification-item-checkbox px-2 fs-15" @click.stop>
@@ -87,9 +89,10 @@
 
                 @if($this->allNotifications->count() > 0)
                     <div class="notification-view-all my-3 text-center">
-                        <button type="button" class="btn btn-soft-success waves-effect waves-light">
+                        <a type="button" href="notification.index-notification-page"
+                            class="btn btn-soft-success waves-effect waves-light">
                             View All Notifications <i class="ri-arrow-right-line align-middle"></i>
-                        </button>
+                        </a>
                     </div>
                 @endif
             </div>
@@ -127,10 +130,16 @@
         }
 
         /* Notification Badge */
-        .notification-badge {
+        /* .notification-badge {
             top: 0;
             right: 0;
-        }
+            transform: translate(45%, -45%);
+            min-width: 18px;
+            min-height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        } */
 
         /* Notification Panel Menu */
         .notification-panel-menu {

@@ -45,7 +45,7 @@ class NotificationDropdown extends Component
             ->get();
     }
 
-    public function markAsRead($notificationId)
+    public function clickmarkAsRead($notificationId)
     {
         $notification = Notification::where('user_id', Auth::id())
             ->findOrFail($notificationId);
@@ -128,6 +128,8 @@ class NotificationDropdown extends Component
             'type' => 'success'
         ]);
     }
+
+  
 
     public function render()
     {
