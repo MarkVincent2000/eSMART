@@ -79,12 +79,19 @@
 
             <div class="col-md-12">
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="active_status" wire:model="active_status">
+                    <input class="form-check-input" type="checkbox" id="active_status" wire:model="active_status"
+                        wire:key="active-status-{{ $userId ?? 'new' }}-{{ $active_status ? '1' : '0' }}">
                     <label class="form-check-label" for="active_status">
                         Active Status
                     </label>
                 </div>
-                <small class="text-muted">Uncheck to create user as inactive</small>
+                <small class="text-muted">
+                    @if($userId)
+                        {{ $active_status ? 'User is currently active' : 'User is currently inactive' }}
+                    @else
+                        Uncheck to create user as inactive
+                    @endif
+                </small>
             </div>
         </div>
     </form>

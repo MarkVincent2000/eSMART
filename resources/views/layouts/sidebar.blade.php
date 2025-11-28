@@ -30,9 +30,13 @@
         <button type="button" class="btn material-shadow-none" id="page-header-user-dropdown" data-bs-toggle="dropdown"
             aria-haspopup="true" aria-expanded="false">
             <span class="d-flex align-items-center gap-2">
-                <img class="rounded header-profile-user"
-                    src="@if (Auth::user()->avatar != '') {{ URL::asset('images/' . Auth::user()->avatar) }}@else{{ URL::asset('build/images/users/avatar-1.jpg') }} @endif"
-                    alt="Header Avatar">
+                @php
+                    $user = Auth::user();
+                    $photoPath = $user->photo_path
+                        ? (str_starts_with($user->photo_path, 'http') ? $user->photo_path : asset('storage/' . $user->photo_path))
+                        : ($user->avatar ? asset('build/images/users/' . $user->avatar) : asset('build/images/users/avatar-1.jpg'));
+                @endphp
+                <img class="rounded header-profile-user" src="{{ $photoPath }}" alt="Header Avatar">
                 <span class="text-start">
                     <span class="d-block fw-medium sidebar-user-name-text">{{ Auth::user()->name }}</span>
                     <span class="d-block fs-14 sidebar-user-name-sub-text"><i
@@ -47,26 +51,15 @@
             <a class="dropdown-item" href="pages-profile"><i
                     class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
                     class="align-middle">Profile</span></a>
-            <a class="dropdown-item" href="apps-chat"><i
-                    class="mdi mdi-message-text-outline text-muted fs-16 align-middle me-1"></i> <span
-                    class="align-middle">Messages</span></a>
-            <a class="dropdown-item" href="apps-tasks-kanban"><i
-                    class="mdi mdi-calendar-check-outline text-muted fs-16 align-middle me-1"></i> <span
-                    class="align-middle">Taskboard</span></a>
-            <a class="dropdown-item" href="pages-faqs"><i
-                    class="mdi mdi-lifebuoy text-muted fs-16 align-middle me-1"></i> <span
-                    class="align-middle">Help</span></a>
+
+
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="pages-profile"><i
-                    class="mdi mdi-wallet text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Balance :
-                    <b>$5971.67</b></span></a>
-            <a class="dropdown-item" href="pages-profile-settings"><span
+
+            <a class="dropdown-item" href="user-management.index-profile-settings"><span
                     class="badge bg-success-subtle text-success mt-1 float-end">New</span><i
                     class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span
                     class="align-middle">Settings</span></a>
-            <a class="dropdown-item" href="auth-lockscreen-basic"><i
-                    class="mdi mdi-lock text-muted fs-16 align-middle me-1"></i> <span class="align-middle">Lock
-                    screen</span></a>
+
 
             <a class="dropdown-item " href="javascript:void();"
                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i

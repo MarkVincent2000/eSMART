@@ -40,9 +40,29 @@
                             <div class="card-body p-4">
                                 <div class="text-center mt-2">
                                     <h5 class="text-primary">Welcome Back !</h5>
-                                    <p class="text-muted">Sign in to continue to Velzon.</p>
+                                    <p class="text-muted">Sign in to continue to eSMART Campus.</p>
                                 </div>
                                 <div class="p-2 mt-4">
+                                    @if (session('status'))
+                                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                            <i class="ri-check-line me-2"></i>
+                                            {{ session('status') }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Close"></button>
+                                        </div>
+                                    @endif
+
+                                    @error('email')
+                                        @if (str_contains($message, 'inactive'))
+                                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                                <i class="ri-alert-line me-2"></i>
+                                                <strong>Account Inactive:</strong> {{ $message }}
+                                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                        @endif
+                                    @enderror
+
                                     <form action="{{ route('login') }}" method="POST">
                                         @csrf
                                         <div class="mb-3">
@@ -92,7 +112,7 @@
                                             <button class="btn btn-success w-100" type="submit">Sign In</button>
                                         </div>
 
-                                        <div class="mt-4 text-center">
+                                        {{-- <div class="mt-4 text-center">
                                             <div class="signin-other-title">
                                                 <h5 class="fs-13 mb-4 title">Sign In with</h5>
                                             </div>
@@ -110,7 +130,7 @@
                                                     class="btn btn-info btn-icon waves-effect waves-light"><i
                                                         class="ri-twitter-fill fs-16"></i></button>
                                             </div>
-                                        </div>
+                                        </div> --}}
                                     </form>
                                 </div>
                             </div>
@@ -138,8 +158,8 @@
                     <div class="col-lg-12">
                         <div class="text-center">
                             <p class="mb-0 text-muted">&copy;
-                                <script>document.write(new Date().getFullYear())</script> Velzon. Crafted with <i
-                                    class="mdi mdi-heart text-danger"></i> by Themesbrand
+                                <script>document.write(new Date().getFullYear())</script> eSMART Campus. Crafted with <i
+                                    class="mdi mdi-heart text-danger"></i> by eSMART Campus Team
                             </p>
                         </div>
                     </div>

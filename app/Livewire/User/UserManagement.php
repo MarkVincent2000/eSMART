@@ -226,7 +226,9 @@ class UserManagement extends Component
         $this->name_extension = $user->name_extension ?? '';
         $this->email = $user->email;
         $this->password = ''; // Don't load password, leave it empty for user to optionally change
-        $this->active_status = $user->active_status;
+        
+        // Explicitly cast to boolean and ensure it's set correctly
+        $this->active_status = $user->active_status ? true : false;
         
         // Load user's roles (get all roles as array of role names)
         $this->selectedRoles = $user->roles->pluck('name')->toArray();
