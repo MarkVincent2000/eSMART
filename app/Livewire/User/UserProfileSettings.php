@@ -241,6 +241,8 @@ class UserProfileSettings extends Component
 
         $this->uploadProfilePhoto($user);
 
+        $this->dispatch('refresh-page');
+
         $this->dispatch('show-toast', [
             'message' => 'Profile photo updated successfully!',
             'type' => 'success'

@@ -34,7 +34,7 @@
                     $user = Auth::user();
                     $photoPath = $user->photo_path
                         ? (str_starts_with($user->photo_path, 'http') ? $user->photo_path : asset('storage/' . $user->photo_path))
-                        : ($user->avatar ? asset('build/images/users/' . $user->avatar) : asset('build/images/users/avatar-1.jpg'));
+                        : ($user->avatar ? asset('build/images/users/' . $user->avatar) : asset('build/images/users/user-dummy-img.jpg'));
                 @endphp
                 <img class="rounded header-profile-user" src="{{ $photoPath }}" alt="Header Avatar">
                 <span class="text-start">
@@ -48,17 +48,16 @@
         <div class="dropdown-menu dropdown-menu-end">
             <!-- item-->
             <h6 class="dropdown-header">Welcome {{ Auth::user()->name }}!</h6>
-            <a class="dropdown-item" href="pages-profile"><i
+            <a class="dropdown-item" href="profile.index"><i
                     class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
                     class="align-middle">Profile</span></a>
 
 
             <div class="dropdown-divider"></div>
 
-            <a class="dropdown-item" href="user-management.index-profile-settings"><span
-                    class="badge bg-success-subtle text-success mt-1 float-end">New</span><i
+            <a class="dropdown-item" href="profile.index-profile-settings"><span
                     class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span
-                    class="align-middle">Settings</span></a>
+                        class="align-middle">Settings</span></a>
 
 
             <a class="dropdown-item " href="javascript:void();"
@@ -83,14 +82,14 @@
                 </ul>
             </div>
             <ul class="navbar-nav" id="navbar-nav">
-                <x-sidebar.title title="Menu" />
+                {{-- <x-sidebar.title title="Menu" />
 
                 <x-sidebar.dropdown id="sidebarDashboards" title="Dashboards" icon="ri-dashboard-2-line"
                     :active="request()->is('dashboard-*') || request()->is('index')">
                     <ul class="nav nav-sm flex-column">
                         <x-sidebar.item href="index" title="Ecommerce" />
                     </ul>
-                </x-sidebar.dropdown> <!-- end Dashboard Menu -->
+                </x-sidebar.dropdown> --}}
 
 
                 <!-- User Management -->

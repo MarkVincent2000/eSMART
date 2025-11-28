@@ -141,4 +141,11 @@
         });
     </script>
 
+
+    <script>
+        document.addEventListener('refresh-page', function () {
+            window.location.reload();
+        });
+    </script>
+
 @endsection

@@ -181,9 +181,10 @@
                         <span class="d-flex align-items-center">
                             @php
                                 $user = Auth::user();
-                                $photoPath = $user->photo_path
-                                    ? (str_starts_with($user->photo_path, 'http') ? $user->photo_path : asset('storage/' . $user->photo_path))
-                                    : ($user->avatar ? asset('build/images/users/' . $user->avatar) : asset('build/images/users/avatar-1.jpg'));
+                                $photo = data_get($user, 'photo_path');
+                                $photoPath = $photo
+                                    ? (str_starts_with($photo, 'http') ? $photo : asset('storage/' . $photo))
+                                    : asset('build/images/users/user-dummy-img.jpg');
                             @endphp
                             <img class="rounded-circle header-profile-user" src="{{ $photoPath }}" alt="Header Avatar">
                             <span class="text-start ms-xl-2">
@@ -202,11 +203,10 @@
                     <div class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
                         <h6 class="dropdown-header">Welcome {{ Auth::user()->name }}!</h6>
-                        <a class="dropdown-item" href="pages-profile"><i
+                        <a class="dropdown-item" href="profile.index"><i
                                 class="mdi mdi-account-circle text-muted fs-16 align-middle me-1"></i> <span
                                 class="align-middle">Profile</span></a>
-                        <a class="dropdown-item" href="user-management.index-profile-settings"><span
-                                class="badge bg-success-subtle text-success mt-1 float-end">New</span><i
+                        <a class="dropdown-item" href="profile.index-profile-settings"><i
                                 class="mdi mdi-cog-outline text-muted fs-16 align-middle me-1"></i> <span
                                 class="align-middle">Settings</span></a>
 

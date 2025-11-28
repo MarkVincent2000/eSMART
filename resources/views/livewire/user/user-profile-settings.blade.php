@@ -47,7 +47,7 @@
                             @php
                                 $photoPath = $profile_photo_preview ?? ($user->photo_path
                                     ? (str_starts_with($user->photo_path, 'http') ? $user->photo_path : asset('storage/' . $user->photo_path))
-                                    : ($user->avatar ? asset('build/images/users/' . $user->avatar) : asset('build/images/users/avatar-1.jpg')));
+                                    : ($user->avatar ? asset('build/images/users/user-dummy-img.jpg') : asset('build/images/users/user-dummy-img.jpg')));
                             @endphp
                             <img src="{{ $photoPath }}"
                                 class="rounded-circle avatar-xl img-thumbnail user-profile-image material-shadow"
