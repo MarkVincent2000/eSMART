@@ -101,15 +101,17 @@
 
 
                 <!-- User Management -->
-                <x-sidebar.title title="Admin Management" />
-                <x-sidebar.dropdown id="sidebarUserManagement" title="User" icon="ri-user-line"
-                    :active="request()->is('user-management*')">
-                    <ul class="nav nav-sm flex-column">
-                        <x-sidebar.item href="user-management.index" title="Users" />
-                        <x-sidebar.item href="user-management.index-role" title="Roles" />
-                    </ul>
-                </x-sidebar.dropdown>
-
+                @can('view-admin-management')
+                    <x-sidebar.title title="Admin Management" />
+                    <x-sidebar.dropdown id="sidebarUserManagement" title="User" icon="ri-user-line"
+                        :active="request()->is('user-management*')">
+                        <ul class="nav nav-sm flex-column">
+                            <x-sidebar.item href="user-management.index" title="Users" />
+                            <x-sidebar.item href="user-management.index-role" title="Roles" />
+                            <x-sidebar.item href="user-management.index-permission" title="Permissions" />
+                        </ul>
+                    </x-sidebar.dropdown>
+                @endcan
 
 
 

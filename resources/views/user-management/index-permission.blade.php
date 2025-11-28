@@ -1,6 +1,6 @@
 @extends('layouts.master')
 @section('title')
-    User Management
+    Permission Management
 @endsection
 @section('css')
     <link href="{{ URL::asset('build/libs/dropzone/dropzone.css') }}" rel="stylesheet">
@@ -11,10 +11,10 @@
     <link href="{{ URL::asset('build/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 @section('content')
-    <x-breadcrumb title="Users" li_1="Admin Management" />
+    <x-breadcrumb title="Permission Management" li_1="Admin Management" />
 
     @can('view-admin-management')
-        @livewire('user.user-management')
+        @livewire('permission.permission-management')
     @else
         <div class="alert alert-danger alert-dismissible alert-additional fade show mb-xl-0 material-shadow" role="alert">
             <div class="alert-body">

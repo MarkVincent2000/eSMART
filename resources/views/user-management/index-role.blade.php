@@ -11,9 +11,29 @@
     <link href="{{ URL::asset('build/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 @section('content')
-    <x-breadcrumb title="Roles" li_1="Role Management" />
+    <x-breadcrumb title="Roles" li_1="Admin Management" />
 
-    @livewire('role.role-management')
+    @can('view-admin-management')
+        @livewire('role.role-management')
+    @else
+        <div class="alert alert-danger alert-dismissible alert-additional fade show mb-xl-0 material-shadow" role="alert">
+            <div class="alert-body">
+
+                <div class="d-flex">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="ri-alert-line fs-16 align-middle"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="alert-heading">Permission Denied</h5>
+                        <p class="mb-0">You are not authorized to access this page.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="alert-content">
+                <p class="mb-0">You are not authorized to access this page.</p>
+            </div>
+        </div>
+    @endcan
 
 
 @endsection
