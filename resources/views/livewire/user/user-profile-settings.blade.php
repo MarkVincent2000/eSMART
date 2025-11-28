@@ -248,34 +248,10 @@
                                     <div class="col-lg-6">
                                         <div class="mb-3">
                                             <label for="dateOfBirthInput" class="form-label">Date of Birth</label>
-                                            <input type="text"
+                                            <input type="date"
                                                 class="form-control @error('date_of_birth') is-invalid @enderror"
-                                                id="dateOfBirthInput" placeholder="Select date of birth" x-data="{
-                                                    init() {
-                                                        const fp = flatpickr(this.$el, {
-                                                            dateFormat: 'Y-m-d',
-                                                            altInput: true,
-                                                            altFormat: 'd M, Y',
-                                                            maxDate: 'today',
-                                                            defaultDate: @js($date_of_birth ?: null),
-                                                            onChange: (selectedDates, dateStr, instance) => {
-                                                                if (selectedDates.length > 0) {
-                                                                    @this.set('date_of_birth', dateStr);
-                                                                } else {
-                                                                    @this.set('date_of_birth', '');
-                                                                }
-                                                            }
-                                                        });
-                                                        // Sync with Livewire updates
-                                                        Livewire.hook('message.processed', (message, component) => {
-                                                            if (@this.date_of_birth) {
-                                                                fp.setDate(@this.date_of_birth, false);
-                                                            } else {
-                                                                fp.clear();
-                                                            }
-                                                        });
-                                                    }
-                                                }">
+                                                id="dateOfBirthInput" wire:model="date_of_birth"
+                                                max="{{ date('Y-m-d') }}">
                                             @error('date_of_birth')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror

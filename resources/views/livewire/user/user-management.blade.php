@@ -274,18 +274,37 @@
                                             </th>
 
                                             <td class="name fw-medium">
-                                                @php
-                                                    $nameParts = array_filter([
-                                                        $user->first_name,
-                                                        $user->middle_name,
-                                                        $user->last_name
-                                                    ]);
-                                                    $fullName = implode(' ', $nameParts);
-                                                    if (!empty($user->name_extension)) {
-                                                        $fullName .= ', ' . $user->name_extension;
-                                                    }
-                                                @endphp
-                                                {{ $fullName ?: ($user->name ?? '-') }}
+                                                <ul class="list-group">
+
+
+                                                    @php
+                                                        $nameParts = array_filter([
+                                                            $user->first_name,
+                                                            $user->middle_name,
+                                                            $user->last_name
+                                                        ]);
+                                                        $fullName = implode(' ', $nameParts);
+                                                        if (!empty($user->name_extension)) {
+                                                            $fullName .= ', ' . $user->name_extension;
+                                                        }
+
+                                                        $photoPath = $user->photo_path
+                                                            ? (str_starts_with($user->photo_path, 'http') ? $user->photo_path : asset('storage/' . $user->photo_path))
+                                                            : asset('build/images/users/user-dummy-img.jpg');
+
+                                                    @endphp
+
+
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-shrink-0">
+                                                            <img wire:lazy loading="lazy" src="{{ $photoPath }}" alt=""
+                                                                class="avatar-xs rounded-circle">
+                                                        </div>
+                                                        <div class="flex-grow-1 ms-2">
+                                                            {{ $fullName ?: ($user->name ?? '-') }}
+                                                        </div>
+                                                    </div>
+
                                             </td>
                                             <td class="email">{{ $user->email }}</td>
                                             <td class="roles">

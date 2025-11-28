@@ -4,9 +4,14 @@ namespace App\Livewire\User;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\UserPersonalDetails;
+use App\Enums\Sex;
+use App\Enums\Religion;
+use App\Enums\GuardianRelationship;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
+use Carbon\Carbon;
 
 class UserManagement extends Component
 {
@@ -39,6 +44,21 @@ class UserManagement extends Component
     public $active_status = true;
     public $selectedRoles = [];
     
+    // Personal Details fields
+    public $sex = '';
+    public $address = '';
+    public $contact_no = '';
+    public $date_of_birth = '';
+    public $religion = '';
+    
+    // Guardian fields
+    public $guardian_first_name = '';
+    public $guardian_last_name = '';
+    public $guardian_middle_name = '';
+    public $guardian_suffix = '';
+    public $guardian_relationship = '';
+    public $guardian_contact_no = '';
+    
     // Filter properties
     public $search = '';
     public $dateFrom = null;
@@ -55,7 +75,7 @@ class UserManagement extends Component
     public function users()
     {
         $query = User::query()
-            ->select('id', 'name', 'first_name', 'last_name', 'middle_name', 'name_extension', 'email', 'active_status', 'created_at')
+            ->select('id', 'name', 'first_name', 'last_name', 'middle_name', 'name_extension', 'email', 'active_status', 'created_at', 'photo_path', 'avatar')
             ->with('roles'); // Eager load roles to avoid N+1 queries
         
         // Search filter - search in name fields and email
@@ -233,6 +253,37 @@ class UserManagement extends Component
         // Load user's roles (get all roles as array of role names)
         $this->selectedRoles = $user->roles->pluck('name')->toArray();
         
+        // Load personal details
+        $personalDetails = $user->personalDetails;
+        if ($personalDetails) {
+            $this->sex = $personalDetails->sex ?? '';
+            $this->address = $personalDetails->address ?? '';
+            $this->contact_no = $personalDetails->contact_no ?? '';
+            $this->date_of_birth = $personalDetails->date_of_birth ? Carbon::parse($personalDetails->date_of_birth)->format('Y-m-d') : '';
+            $this->religion = $personalDetails->religion ?? '';
+            
+            // Guardian fields
+            $this->guardian_first_name = $personalDetails->guardian_first_name ?? '';
+            $this->guardian_last_name = $personalDetails->guardian_last_name ?? '';
+            $this->guardian_middle_name = $personalDetails->guardian_middle_name ?? '';
+            $this->guardian_suffix = $personalDetails->guardian_suffix ?? '';
+            $this->guardian_relationship = $personalDetails->guardian_relationship ?? '';
+            $this->guardian_contact_no = $personalDetails->guardian_contact_no ?? '';
+        } else {
+            // Reset personal details if none exist
+            $this->sex = '';
+            $this->address = '';
+            $this->contact_no = '';
+            $this->date_of_birth = '';
+            $this->religion = '';
+            $this->guardian_first_name = '';
+            $this->guardian_last_name = '';
+            $this->guardian_middle_name = '';
+            $this->guardian_suffix = '';
+            $this->guardian_relationship = '';
+            $this->guardian_contact_no = '';
+        }
+        
         $this->resetErrorBag();
         $this->showInviteModal = true;
     }
@@ -255,6 +306,22 @@ class UserManagement extends Component
         $this->password = '';
         $this->active_status = true;
         $this->selectedRoles = [];
+        
+        // Reset personal details
+        $this->sex = '';
+        $this->address = '';
+        $this->contact_no = '';
+        $this->date_of_birth = '';
+        $this->religion = '';
+        
+        // Reset guardian fields
+        $this->guardian_first_name = '';
+        $this->guardian_last_name = '';
+        $this->guardian_middle_name = '';
+        $this->guardian_suffix = '';
+        $this->guardian_relationship = '';
+        $this->guardian_contact_no = '';
+        
         $this->resetErrorBag();
     }
 
@@ -272,6 +339,17 @@ class UserManagement extends Component
             'active_status' => 'boolean',
             'selectedRoles' => 'required|array|min:1',
             'selectedRoles.*' => 'required|string|exists:roles,name',
+            'sex' => 'nullable|string|in:' . implode(',', array_column(Sex::cases(), 'value')),
+            'address' => 'nullable|string',
+            'contact_no' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
+            'religion' => 'nullable|string|in:' . implode(',', array_column(Religion::cases(), 'value')),
+            'guardian_first_name' => 'nullable|string|max:255',
+            'guardian_last_name' => 'nullable|string|max:255',
+            'guardian_middle_name' => 'nullable|string|max:255',
+            'guardian_suffix' => 'nullable|string|max:50',
+            'guardian_relationship' => 'nullable|string|in:' . implode(',', array_column(GuardianRelationship::cases(), 'value')),
+            'guardian_contact_no' => 'nullable|string|max:255',
         ];
         
         // Password is required only when creating, optional when editing
@@ -331,6 +409,33 @@ class UserManagement extends Component
             $message = 'User invited successfully!';
             // Reset pagination to show the new user
             $this->resetPage();
+        }
+        
+        // Save or update personal details
+        $personalDetailsData = [
+            'sex' => $this->sex ?: null,
+            'address' => $this->address ?: null,
+            'contact_no' => $this->contact_no ?: null,
+            'date_of_birth' => $this->date_of_birth ?: null,
+            'religion' => $this->religion ?: null,
+            'guardian_first_name' => $this->guardian_first_name ?: null,
+            'guardian_last_name' => $this->guardian_last_name ?: null,
+            'guardian_middle_name' => $this->guardian_middle_name ?: null,
+            'guardian_suffix' => $this->guardian_suffix ?: null,
+            'guardian_relationship' => $this->guardian_relationship ?: null,
+            'guardian_contact_no' => $this->guardian_contact_no ?: null,
+        ];
+        
+        // Only save if at least one field has data
+        if (array_filter($personalDetailsData)) {
+            $personalDetails = $user->personalDetails;
+            if ($personalDetails) {
+                $personalDetails->update($personalDetailsData);
+            } else {
+                UserPersonalDetails::create(array_merge([
+                    'user_id' => $user->id,
+                ], $personalDetailsData));
+            }
         }
 
         $this->closeInviteModal();
@@ -443,6 +548,30 @@ class UserManagement extends Component
                 'label' => ucfirst(str_replace('-', ' ', $role->name))
             ];
         })->toArray();
+    }
+    
+    /**
+     * Get all sex enum cases for dropdown
+     */
+    public function getSexOptionsProperty()
+    {
+        return Sex::cases();
+    }
+
+    /**
+     * Get all religion enum cases for dropdown
+     */
+    public function getReligionOptionsProperty()
+    {
+        return Religion::cases();
+    }
+
+    /**
+     * Get all guardian relationship enum cases for dropdown
+     */
+    public function getGuardianRelationshipOptionsProperty()
+    {
+        return GuardianRelationship::cases();
     }
 
     public function render()

@@ -307,7 +307,7 @@
                                                     </div>
                                                 @endif
                                                 <small
-                                                    class="mb-0 text-muted">{{ $activityLog->created_at->format('d M Y H:i a') }}</small>
+                                                    class="mb-0 text-muted">{{ $activityLog->created_at->format('d M Y h:i a') }}</small>
                                             </div>
                                         </div>
                                     @empty

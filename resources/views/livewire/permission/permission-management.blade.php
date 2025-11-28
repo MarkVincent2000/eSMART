@@ -1,7 +1,10 @@
 <div>
     <x-toast-notification />
 
-    <div class="row">
+
+
+
+    <div class="row ">
         <div class="col-xxl-3 col-sm-6">
             <div class="card card-animate">
                 <div class="card-body">
@@ -27,7 +30,7 @@
                             </div>
                         </div>
                     </div>
-                </div><!-- end card body -->
+                </div><!-- end cards body -->
             </div> <!-- end card-->
         </div>
         <!--end col-->
@@ -63,7 +66,7 @@
     </div>
 
 
-    <div class="row g-4 mb-3">
+    <div class="row g-4 mb-3 ">
         <div class="col-sm-auto">
             <div>
                 <x-button color="success" icon="ri-add-line" icon-position="left" wire:click="openAddModal"
@@ -220,9 +223,10 @@
                     </div>
                 </div>
             @endforelse
+            <x-pagination :paginator="$permissions" :show-summary="true" />
         </div>
 
-        <x-pagination :paginator="$permissions" :show-summary="true" />
+
     @endif
 
     <!-- Create/Edit Permission Modal -->
