@@ -1,4 +1,4 @@
-<x-modal id="invite-user-modal" wire:model="showInviteModal" overflow="visible" :title="$userId ? 'Edit User' : 'Invite User'" size="xl" :centered="false" vertical-align="top" :show-footer="true">
+<x-modal id="invite-user-modal" wire:model="showInviteModal" overflow="visible" :title="$userId ? 'Edit User' : 'Invite User'" size="lg" :centered="false" vertical-align="top" :show-footer="true">
     <form wire:submit.prevent="saveUser">
         <div class="row g-3">
             <div class="col-md-6">
