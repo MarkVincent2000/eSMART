@@ -204,12 +204,12 @@
                                                     <x-button color="info" icon="ri-edit-line" icon-position="left" size="sm"
                                                         :iconOnly="true" tooltip="Edit Role" tooltip-placement="top"
                                                         wire:click="editRole({{ $role->id }})"
-                                                        wire:target="editRole({{ $role->id }})">
+                                                        wireTarget="editRole({{ $role->id }})">
                                                     </x-button>
                                                     <x-button color="danger" icon="ri-delete-bin-line" icon-position="left"
                                                         size="sm" :iconOnly="true" tooltip="Delete Role" tooltip-placement="top"
                                                         wire:click="deleteRole({{ $role->id }})"
-                                                        wire:target="deleteRole({{ $role->id }})">
+                                                        wireTarget="deleteRole({{ $role->id }})">
                                                     </x-button>
                                                 </div>
                                             </td>

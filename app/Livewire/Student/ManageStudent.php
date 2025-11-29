@@ -201,7 +201,11 @@ class ManageStudent extends Component
         $this->loadSections();
         $this->closeSectionModal();
         
-        session()->flash('message', $message);
+        $this->dispatch('show-toast', [
+            'message' => $message,
+            'type' => 'success',
+            'title' => $isEditing ? 'Section Updated' : 'Section Created'
+        ]);
     }
 
     public function deleteSection($sectionId)
@@ -222,7 +226,11 @@ class ManageStudent extends Component
             // Check if section has students
             if ($section->studentInfos()->count() > 0) {
                 $this->closeDeleteSectionModal();
-                session()->flash('error', 'Cannot delete section. It has students assigned.');
+                $this->dispatch('show-toast', [
+                    'message' => 'Cannot delete section. It has students assigned.',
+                    'type' => 'error',
+                    'title' => 'Delete Failed'
+                ]);
                 return;
             }
             
@@ -230,7 +238,11 @@ class ManageStudent extends Component
             $this->loadSections();
             $this->closeDeleteSectionModal();
             
-            session()->flash('message', 'Section "' . $sectionName . '" deleted successfully!');
+            $this->dispatch('show-toast', [
+                'message' => 'Section "' . $sectionName . '" deleted successfully!',
+                'type' => 'success',
+                'title' => 'Section Deleted'
+            ]);
         }
     }
 
@@ -353,7 +365,11 @@ class ManageStudent extends Component
         $this->loadPrograms();
         $this->closeProgramModal();
         
-        session()->flash('message', $message);
+        $this->dispatch('show-toast', [
+            'message' => $message,
+            'type' => 'success',
+            'title' => $isEditing ? 'Program Updated' : 'Program Created'
+        ]);
     }
 
     public function deleteProgram($programId)
@@ -374,7 +390,11 @@ class ManageStudent extends Component
             // Check if program has students
             if ($program->studentInfos()->count() > 0) {
                 $this->closeDeleteProgramModal();
-                session()->flash('error', 'Cannot delete program. It has students assigned.');
+                $this->dispatch('show-toast', [
+                    'message' => 'Cannot delete program. It has students assigned.',
+                    'type' => 'error',
+                    'title' => 'Delete Failed'
+                ]);
                 return;
             }
             
@@ -382,7 +402,11 @@ class ManageStudent extends Component
             $this->loadPrograms();
             $this->closeDeleteProgramModal();
             
-            session()->flash('message', 'Program "' . $programName . '" deleted successfully!');
+            $this->dispatch('show-toast', [
+                'message' => 'Program "' . $programName . '" deleted successfully!',
+                'type' => 'success',
+                'title' => 'Program Deleted'
+            ]);
         }
     }
 

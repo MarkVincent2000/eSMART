@@ -14,9 +14,12 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissionMatrix = [
-            'view-user-management' => ['super-admin'],
+            'view-user-management' => ['super-admin','admin'],
             'view-role-management' => ['super-admin'],
             'view-permission-management' => ['super-admin'],
+            'view-student-management' => ['super-admin','admin'],
+            'view-enrollment-management' => ['super-admin','admin'],
+            'view-semester-management' => ['super-admin'],
         ];
 
         foreach ($permissionMatrix as $permissionName => $roleNames) {

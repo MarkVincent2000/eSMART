@@ -82,10 +82,17 @@
                 </ul>
             </div>
             <ul class="navbar-nav" id="navbar-nav">
-                <x-sidebar.title title="Student Management" />
 
-                <x-sidebar.nav-link href="enrollment.manage-enroll-index" icon="ri-user-star-line"
-                    title="Manage Students" />
+                @can('view-student-management')
+                    <x-sidebar.title title="Student Management" />
+
+                    @can('view-enrollment-management')
+                        <x-sidebar.nav-link href="enrollment.manage-enroll-index" icon="ri-user-star-line" title="Students" />
+                    @endcan
+                    @can('view-semester-management')
+                        <x-sidebar.nav-link href="enrollment.semester-index" icon="ri-calendar-line" title="Semesters" />
+                    @endcan
+                @endcan
 
 
                 <!-- User Management -->

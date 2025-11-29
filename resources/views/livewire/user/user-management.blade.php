@@ -332,12 +332,12 @@
                                                     <x-button color="info" icon="ri-edit-line" icon-position="left" size="sm"
                                                         :iconOnly="true" tooltip="Edit User" tooltip-placement="top"
                                                         wire:click="editUser({{ $user->id }})"
-                                                        wire:target="editUser({{ $user->id }})">
+                                                        wireTarget="editUser({{ $user->id }})">
                                                     </x-button>
                                                     <x-button color="danger" icon="ri-delete-bin-line" icon-position="left"
                                                         size="sm" :iconOnly="true" tooltip="Delete User" tooltip-placement="top"
                                                         wire:click="deleteUser({{ $user->id }})"
-                                                        wire:target="deleteUser({{ $user->id }})">
+                                                        wireTarget="deleteUser({{ $user->id }})">
                                                     </x-button>
                                                 </div>
                                             </td>

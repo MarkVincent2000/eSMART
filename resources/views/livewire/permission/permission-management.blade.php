@@ -91,7 +91,7 @@
 
                 @if($this->hasActiveFilters)
                     <x-button color="primary" icon="ri-equalizer-fill" icon-position="left" wire:click="resetFilters"
-                        wire-target="resetFilters">
+                        wireTarget="resetFilters">
                         Reset
                     </x-button>
                 @endif

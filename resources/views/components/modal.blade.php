@@ -65,11 +65,10 @@
     x-cloak
     id="{{ $modalId }}"
     class="custom-modal-overlay"
-    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999;"
+    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999;"
     tabindex="-1"
     role="dialog"
-    aria-modal="true"
-    :aria-hidden="show ? 'false' : 'true'"
+    :aria-modal="show ? 'true' : null"
 >
     <!-- Modal Backdrop -->
     <div

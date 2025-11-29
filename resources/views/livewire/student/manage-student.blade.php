@@ -26,9 +26,10 @@
                         <div>
                             <div class="d-flex justify-content-between mb-2">
                                 <p class="text-muted text-uppercase fs-12 fw-medium mb-2">Semester</p>
-                                <x-button color="primary" size="sm" icon="ri-settings-3-line"
-                                    tooltip="Configure Semesters" icon-position="left" :iconOnly="true"
-                                    wire:click="addSemester" wireTarget="addSemester"></x-button>
+                                <a href="enrollment.semester-index" type="button">
+                                    <x-button color="primary" size="sm" icon="ri-settings-3-line"
+                                        tooltip="Configure Semesters" icon-position="left" :iconOnly="true"></x-button>
+                                </a>
                             </div>
 
                             <div class="search-box search-box-sm d-flex flex-column gap-2">
@@ -52,8 +53,7 @@
                                                     class="text-muted">({{ $semester->school_year }})</span></span>
                                             @if($semester->is_active)
                                                 <span class="badge bg-success-subtle text-success">Active</span>
-                                            @else
-                                                <span class="badge bg-danger-subtle text-danger">Inactive</span>
+
                                             @endif
                                         </label>
                                     </div>
