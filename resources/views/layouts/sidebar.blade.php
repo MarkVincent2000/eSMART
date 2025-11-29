@@ -82,14 +82,10 @@
                 </ul>
             </div>
             <ul class="navbar-nav" id="navbar-nav">
-                {{-- <x-sidebar.title title="Menu" />
+                <x-sidebar.title title="Student Management" />
 
-                <x-sidebar.dropdown id="sidebarDashboards" title="Dashboards" icon="ri-dashboard-2-line"
-                    :active="request()->is('dashboard-*') || request()->is('index')">
-                    <ul class="nav nav-sm flex-column">
-                        <x-sidebar.item href="index" title="Ecommerce" />
-                    </ul>
-                </x-sidebar.dropdown> --}}
+                <x-sidebar.nav-link href="enrollment.manage-enroll-index" icon="ri-user-star-line"
+                    title="Manage Students" />
 
 
                 <!-- User Management -->

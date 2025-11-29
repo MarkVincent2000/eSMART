@@ -40,15 +40,15 @@
                                                     </div>
                                                     <div class="carousel-inner text-center text-white-50 pb-5">
                                                         <div class="carousel-item active">
-                                                            <p class="fs-15 fst-italic">" Education is the passport to the
-                                                                future, and we are glad you're here."</p>
+                                                            <p class="fs-15 fst-italic">" Sa Manongol High, Gaganda ang
+                                                                Buhay!"</p>
                                                         </div>
                                                         <div class="carousel-item">
                                                             <p class="fs-15 fst-italic">" Manage your campus tasks in one
                                                                 unified place."</p>
                                                         </div>
                                                         <div class="carousel-item">
-                                                            <p class="fs-15 fst-italic">" eSMART Campus keeps everyone
+                                                            <p class="fs-15 fst-italic">" SMART Campus keeps everyone
                                                                 connected and informed."</p>
                                                         </div>
                                                     </div>

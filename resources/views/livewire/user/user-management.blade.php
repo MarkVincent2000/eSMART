@@ -149,7 +149,7 @@
                 <div class="card-body border border-dashed border-end-0 border-start-0">
                     <form wire:submit.prevent>
                         <div class="row g-3">
-                            <div class="col-xxl-5 col-sm-12">
+                            <div class="col-xxl-4 col-sm-12">
                                 <div class="search-box">
                                     <input type="text" class="form-control search bg-light border-light"
                                         placeholder="Search by name or email..."
@@ -159,7 +159,7 @@
                             </div>
                             <!--end col-->
 
-                            <div class="col-xxl-3 col-sm-4">
+                            <div class="col-xxl-3 ms-auto col-sm-4">
                                 <input type="text" class="form-control bg-light border-light" id="user-date-filter"
                                     placeholder="Select date range" x-data="{
                                         init() {
@@ -187,7 +187,7 @@
                             </div>
                             <!--end col-->
 
-                            <div class="col-xxl-3 col-sm-4">
+                            <div class="col-xxl-2 col-sm-4">
                                 <div class="input-light">
                                     <select class="form-control" wire:model.live="status" id="userStatusFilter">
                                         <option value="all">All Status</option>
@@ -197,7 +197,7 @@
                                 </div>
                             </div>
                             <!--end col-->
-                            <div class="col-xxl-1 col-sm-4">
+                            <div class="col-xxl-2 col-sm-4">
                                 <x-button color="primary" icon="ri-equalizer-fill" icon-position="left"
                                     wire:click="resetFilters" wire-target="resetFilters">
                                     Reset

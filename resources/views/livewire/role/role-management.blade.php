@@ -108,7 +108,7 @@
                                 </div>
                             </div>
                             <!--end col-->
-                            <div class="col-xxl-1 col-sm-4">
+                            <div class="col-xxl-2 col-sm-4">
                                 <x-button color="primary" icon="ri-equalizer-fill" icon-position="left"
                                     wire:click="resetFilters" wire-target="resetFilters">
                                     Reset

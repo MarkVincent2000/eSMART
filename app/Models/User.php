@@ -84,4 +84,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
+
+    /**
+     * Get the student info for the user.
+     */
+    public function studentInfo()
+    {
+        return $this->hasOne(\App\Models\StudentDetails\StudentInfo::class);
+    }
 }
