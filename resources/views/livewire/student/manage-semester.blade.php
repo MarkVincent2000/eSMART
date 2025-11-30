@@ -169,7 +169,7 @@
         </div>
     </div>
 
-    <x-modal id="create-semester-modal" wire:model="showSemesterModal" :title="$semesterId ? 'Edit Semester' : 'Create Semester'" size="lg" :centered="true" :show-footer="true">
+    <x-modal id="create-semester-modal" wire:model="showSemesterModal" :title="$semesterId ? 'Edit Semester' : 'Create Semester'" size="lg" :centered="true" :show-footer="true" overflow="visible">
         <form wire:submit.prevent="saveSemester">
             <div class="row g-3">
                 <div class="col-md-12">
@@ -187,7 +187,7 @@
                 <div class="col-md-12">
                     <label for="schoolYear" class="form-label">School Year <span class="text-danger">*</span></label>
                     <input type="text" class="form-control @error('schoolYear') is-invalid @enderror" id="schoolYear"
-                        wire:model="schoolYear" placeholder="Enter school year (e.g., 2025-2026)">
+                        wire:model.blur="schoolYear" placeholder="Enter school year (e.g., 2025-2026)">
                     @error('schoolYear')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -230,6 +230,36 @@
     </x-modal>
 
 
+    <x-modal id="set-active-semester-modal" wire:model="showSetActiveModal" title="Set as Active Semester" size="md"
+        :centered="true" :show-footer="true">
+
+        <div class="text-center">
+            <div class="mb-4">
+                <i class="ri-checkbox-circle-line text-success" style="font-size: 4rem;"></i>
+            </div>
+            <h5 class="mb-3">Set as Active Semester?</h5>
+            <p class="text-muted">
+                You are about to set <strong>{{ $setActiveSemesterName ?? 'this semester' }}</strong>
+                @if($setActiveSchoolYear)
+                    ({{ $setActiveSchoolYear }})
+                @endif
+                as the active semester.
+            </p>
+            <div class="alert alert-info mt-3">
+                <i class="ri-information-line me-2"></i>
+                <strong>Note:</strong> This will deactivate the current active semester and activate this one instead.
+            </div>
+        </div>
+
+        <x-slot:footer>
+            <button type="button" class="btn btn-light" wire:click="closeSetActiveModal">Cancel</button>
+            <x-button color="success" wire:click="confirmSetActiveSemester" wireTarget="confirmSetActiveSemester">
+                <span wire:loading.remove wire:target="confirmSetActiveSemester">Set as Active</span>
+                <span wire:loading wire:target="confirmSetActiveSemester">Setting...</span>
+            </x-button>
+        </x-slot:footer>
+    </x-modal>
+
     <x-modal id="delete-semester-modal" wire:model="showDeleteSemesterModal" title="Delete Semester" size="md"
         :centered="true" :show-footer="true">
 
@@ -256,6 +286,7 @@
             </x-button>
         </x-slot:footer>
     </x-modal>
+
 
 
 

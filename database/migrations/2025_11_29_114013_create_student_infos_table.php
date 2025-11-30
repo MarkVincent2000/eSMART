@@ -39,6 +39,7 @@ return new class extends Migration
             $table->date('enrolled_at')->nullable();
 
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

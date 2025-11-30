@@ -5,17 +5,39 @@ namespace App\Livewire\Student;
 use App\Models\StudentDetails\Semester;
 use App\Models\StudentDetails\Section;
 use App\Models\StudentDetails\Program;
+use App\Models\StudentDetails\StudentInfo;
 use App\Enums\YearLevel;
 use Livewire\Component;
+use Livewire\WithPagination;
+use Livewire\Attributes\Computed;
 
 class ManageStudent extends Component
 {
+    use WithPagination;
+    
     public $semesters;
     public $sections;
     public $programs;
     public $totalSemesters = 0;
     public $totalSections = 0;
     public $totalPrograms = 0;
+    
+    // Student Info properties
+    public $studentSearch = '';
+    public $studentStatus = 'all'; // 'all', 'pending', 'enrolled', 'inactive', 'graduated'
+    
+    // Filter properties
+    public $selectedSemesters = [];
+    public $selectedSections = [];
+    public $selectedPrograms = [];
+    
+    /**
+     * Sync properties with URL query string
+     */
+    protected $queryString = [
+        'studentStatus' => ['except' => 'all'],
+        'studentSearch' => ['except' => ''],
+    ];
     
     // Section modal state
     public $showSectionModal = false;
@@ -34,6 +56,27 @@ class ManageStudent extends Component
     public $showDeleteProgramModal = false;
     public $deleteProgramId = null;
     public $deleteProgramName = null;
+    
+    // View student modal state
+    public $showViewStudentModal = false;
+    public $selectedStudentInfoId = null;
+    
+    // Edit student enrollment modal state
+    public $showEditStudentModal = false;
+    public $editStudentInfoId = null;
+    
+    // Delete student enrollment modal state
+    public $showDeleteStudentModal = false;
+    public $deleteStudentInfoId = null;
+    public $deleteStudentNumber = null;
+    
+    // Edit enrollment form fields
+    public $editStudentNumber = '';
+    public $editProgramId = null;
+    public $editYearLevel = null;
+    public $editSectionId = null;
+    public $editStatus = 'pending';
+    public $editEnrolledAt = null;
     
     // Section form fields
     public $sectionName = '';
@@ -415,6 +458,413 @@ class ManageStudent extends Component
         $this->showDeleteProgramModal = false;
         $this->deleteProgramId = null;
         $this->deleteProgramName = null;
+    }
+
+    // Student Info Methods
+    #[Computed]
+    public function studentInfos()
+    {
+        $query = StudentInfo::with(['user', 'program', 'section', 'semester']);
+        
+        // Search filter
+        if ($this->studentSearch) {
+            $query->where(function($q) {
+                $q->where('student_number', 'like', '%' . $this->studentSearch . '%')
+                  ->orWhere('school_year', 'like', '%' . $this->studentSearch . '%')
+                  ->orWhereHas('user', function($userQuery) {
+                      $userQuery->where('name', 'like', '%' . $this->studentSearch . '%')
+                                ->orWhere('email', 'like', '%' . $this->studentSearch . '%');
+                  })
+                  ->orWhereHas('program', function($programQuery) {
+                      $programQuery->where('name', 'like', '%' . $this->studentSearch . '%')
+                                   ->orWhere('code', 'like', '%' . $this->studentSearch . '%');
+                  })
+                  ->orWhereHas('section', function($sectionQuery) {
+                      $sectionQuery->where('name', 'like', '%' . $this->studentSearch . '%');
+                  });
+            });
+        }
+        
+        // Status filter
+        if ($this->studentStatus !== 'all') {
+            $query->where('status', $this->studentStatus);
+        }
+        
+        // Semester filter
+        if (!empty($this->selectedSemesters)) {
+            $semesterIds = array_filter(array_map('intval', $this->selectedSemesters));
+            if (!empty($semesterIds)) {
+                $query->whereIn('semester_id', $semesterIds);
+            }
+        }
+        
+        // Section filter
+        if (!empty($this->selectedSections)) {
+            $sectionIds = array_filter(array_map('intval', $this->selectedSections));
+            if (!empty($sectionIds)) {
+                $query->whereIn('section_id', $sectionIds);
+            }
+        }
+        
+        // Program filter
+        if (!empty($this->selectedPrograms)) {
+            $programIds = array_filter(array_map('intval', $this->selectedPrograms));
+            if (!empty($programIds)) {
+                $query->whereIn('program_id', $programIds);
+            }
+        }
+        
+        return $query->orderBy('created_at', 'desc')->paginate(10);
+    }
+
+    public function updatedStudentSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStudentStatus()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSelectedSemesters()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSelectedSections()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSelectedPrograms()
+    {
+        $this->resetPage();
+    }
+
+    public function clearAllFilters()
+    {
+        $this->selectedSemesters = [];
+        $this->selectedSections = [];
+        $this->selectedPrograms = [];
+        $this->studentSearch = '';
+        $this->studentStatus = 'all';
+        $this->resetPage();
+    }
+
+    public function getStatusCount($status)
+    {
+        $query = StudentInfo::query();
+        
+        // Apply search filter
+        if ($this->studentSearch) {
+            $query->where(function($q) {
+                $q->where('student_number', 'like', '%' . $this->studentSearch . '%')
+                  ->orWhere('school_year', 'like', '%' . $this->studentSearch . '%')
+                  ->orWhereHas('user', function($userQuery) {
+                      $userQuery->where('name', 'like', '%' . $this->studentSearch . '%')
+                                ->orWhere('email', 'like', '%' . $this->studentSearch . '%');
+                  })
+                  ->orWhereHas('program', function($programQuery) {
+                      $programQuery->where('name', 'like', '%' . $this->studentSearch . '%')
+                                   ->orWhere('code', 'like', '%' . $this->studentSearch . '%');
+                  })
+                  ->orWhereHas('section', function($sectionQuery) {
+                      $sectionQuery->where('name', 'like', '%' . $this->studentSearch . '%');
+                  });
+            });
+        }
+        
+        // Apply status filter
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+        
+        // Apply semester filter
+        if (!empty($this->selectedSemesters)) {
+            $semesterIds = array_filter(array_map('intval', $this->selectedSemesters));
+            if (!empty($semesterIds)) {
+                $query->whereIn('semester_id', $semesterIds);
+            }
+        }
+        
+        // Apply section filter
+        if (!empty($this->selectedSections)) {
+            $sectionIds = array_filter(array_map('intval', $this->selectedSections));
+            if (!empty($sectionIds)) {
+                $query->whereIn('section_id', $sectionIds);
+            }
+        }
+        
+        // Apply program filter
+        if (!empty($this->selectedPrograms)) {
+            $programIds = array_filter(array_map('intval', $this->selectedPrograms));
+            if (!empty($programIds)) {
+                $query->whereIn('program_id', $programIds);
+            }
+        }
+        
+        return $query->count();
+    }
+
+    public function viewStudent($studentInfoId)
+    {
+        $studentInfo = StudentInfo::with(['user', 'program', 'section', 'semester'])
+            ->find($studentInfoId);
+            
+        if (!$studentInfo) {
+            $this->dispatch('show-toast', [
+                'message' => 'Student enrollment not found.',
+                'type' => 'error',
+                'title' => 'Error'
+            ]);
+            return;
+        }
+        
+        $this->selectedStudentInfoId = $studentInfoId;
+        $this->showViewStudentModal = true;
+    }
+
+    public function closeViewStudentModal()
+    {
+        $this->showViewStudentModal = false;
+        $this->selectedStudentInfoId = null;
+    }
+
+    #[Computed]
+    public function selectedStudentInfo()
+    {
+        if (!$this->selectedStudentInfoId) {
+            return null;
+        }
+        
+        return StudentInfo::with(['user', 'program', 'section', 'semester'])
+            ->find($this->selectedStudentInfoId);
+    }
+
+    public function editStudent($studentInfoId)
+    {
+        $studentInfo = StudentInfo::with(['program', 'section', 'semester'])
+            ->find($studentInfoId);
+            
+        if (!$studentInfo) {
+            $this->dispatch('show-toast', [
+                'message' => 'Student enrollment not found.',
+                'type' => 'error',
+                'title' => 'Error'
+            ]);
+            return;
+        }
+        
+        $this->editStudentInfoId = $studentInfoId;
+        $this->editStudentNumber = $studentInfo->student_number;
+        $this->editProgramId = $studentInfo->program_id;
+        $this->editYearLevel = $studentInfo->year_level;
+        $this->editSectionId = $studentInfo->section_id;
+        $this->editStatus = $studentInfo->status;
+        $this->editEnrolledAt = $studentInfo->enrolled_at ? $studentInfo->enrolled_at->format('Y-m-d') : null;
+        
+        $this->resetErrorBag();
+        $this->showEditStudentModal = true;
+    }
+
+    public function closeEditStudentModal()
+    {
+        $this->showEditStudentModal = false;
+        $this->resetEditStudentForm();
+    }
+
+    public function resetEditStudentForm()
+    {
+        $this->editStudentInfoId = null;
+        $this->editStudentNumber = '';
+        $this->editProgramId = null;
+        $this->editYearLevel = null;
+        $this->editSectionId = null;
+        $this->editStatus = 'pending';
+        $this->editEnrolledAt = null;
+        $this->resetErrorBag();
+    }
+
+    public function updatedEditYearLevel()
+    {
+        // Reset section when year level changes
+        $this->editSectionId = null;
+    }
+
+    #[Computed]
+    public function editProgramOptions()
+    {
+        return Program::where('active', true)
+            ->orderBy('code')
+            ->orderBy('name')
+            ->get()
+            ->map(function($program) {
+                return [
+                    'value' => $program->id,
+                    'label' => $program->code . ' - ' . $program->name
+                ];
+            })->toArray();
+    }
+
+    #[Computed]
+    public function editSectionOptions()
+    {
+        if (!$this->editYearLevel) {
+            return [];
+        }
+        
+        return Section::where('active', true)
+            ->where('year_level', $this->editYearLevel)
+            ->orderBy('name')
+            ->get()
+            ->map(function($section) {
+                return [
+                    'value' => $section->id,
+                    'label' => $section->name
+                ];
+            })->toArray();
+    }
+
+    #[Computed]
+    public function semesterOptions()
+    {
+        return Semester::orderBy('is_active', 'desc')
+            ->orderBy('school_year', 'desc')
+            ->orderBy('name')
+            ->get()
+            ->map(function($semester) {
+                return [
+                    'value' => $semester->id,
+                    'label' => $semester->name . ' (' . $semester->school_year . ')'
+                ];
+            })->toArray();
+    }
+
+    public function saveEditStudent()
+    {
+        if (!$this->editStudentInfoId) {
+            return;
+        }
+        
+        $studentInfo = StudentInfo::findOrFail($this->editStudentInfoId);
+        
+        // Validation - Program is required for Grade 11-12, optional for Grade 7-10
+        $rules = [
+            'editStudentNumber' => 'required|string|max:255',
+            'editYearLevel' => 'required|integer|in:' . implode(',', YearLevel::values()),
+            'editProgramId' => $this->editYearLevel >= 11 ? 'required|exists:programs,id' : 'nullable|exists:programs,id',
+            'editSectionId' => 'nullable|exists:sections,id',
+            'editStatus' => 'required|in:pending,enrolled,inactive,graduated',
+            'editEnrolledAt' => 'nullable|date',
+        ];
+        
+        $this->validate($rules, [
+            'editStudentNumber.required' => 'Student number is required.',
+            'editYearLevel.required' => 'Year level is required.',
+            'editYearLevel.in' => 'Year level must be between Grade 7 and Grade 12.',
+            'editProgramId.required' => 'Program is required for Grade 11-12 students.',
+            'editProgramId.exists' => 'Selected program is invalid.',
+            'editSectionId.exists' => 'Selected section is invalid.',
+            'editStatus.required' => 'Status is required.',
+            'editStatus.in' => 'Status must be one of: pending, enrolled, inactive, graduated.',
+            'editEnrolledAt.date' => 'Enrolled at must be a valid date.',
+        ]);
+        
+        // Update StudentInfo record
+        $updateData = [
+            'student_number' => $this->editStudentNumber,
+            'year_level' => $this->editYearLevel,
+            'section_id' => $this->editSectionId ?: null,
+            'status' => $this->editStatus,
+            'enrolled_at' => $this->editEnrolledAt ? $this->editEnrolledAt : null,
+        ];
+        
+        // Only include program_id if it's provided
+        if ($this->editProgramId) {
+            $updateData['program_id'] = $this->editProgramId;
+        } else {
+            $updateData['program_id'] = null;
+        }
+        
+        $studentInfo->update($updateData);
+        
+        $this->closeEditStudentModal();
+        $this->resetPage(); // Reset pagination
+        
+        $this->dispatch('show-toast', [
+            'message' => 'Student enrollment updated successfully!',
+            'type' => 'success',
+            'title' => 'Enrollment Updated'
+        ]);
+    }
+
+    public function deleteStudent($studentInfoId)
+    {
+        $studentInfo = StudentInfo::with(['user'])
+            ->find($studentInfoId);
+            
+        if (!$studentInfo) {
+            $this->dispatch('show-toast', [
+                'message' => 'Student enrollment not found.',
+                'type' => 'error',
+                'title' => 'Error'
+            ]);
+            return;
+        }
+        
+        // Only allow deletion of pending enrollments
+        if ($studentInfo->status !== 'pending') {
+            $this->dispatch('show-toast', [
+                'message' => 'Only pending enrollments can be deleted.',
+                'type' => 'error',
+                'title' => 'Delete Failed'
+            ]);
+            return;
+        }
+        
+        $this->deleteStudentInfoId = $studentInfo->id;
+        $this->deleteStudentNumber = $studentInfo->student_number;
+        $this->showDeleteStudentModal = true;
+    }
+
+    public function confirmDeleteStudent()
+    {
+        if (!$this->deleteStudentInfoId) {
+            return;
+        }
+        
+        $studentInfo = StudentInfo::findOrFail($this->deleteStudentInfoId);
+        
+        // Double-check status before deletion
+        if ($studentInfo->status !== 'pending') {
+            $this->closeDeleteStudentModal();
+            $this->dispatch('show-toast', [
+                'message' => 'Only pending enrollments can be deleted.',
+                'type' => 'error',
+                'title' => 'Delete Failed'
+            ]);
+            return;
+        }
+        
+        $studentNumber = $studentInfo->student_number;
+        $studentInfo->delete();
+        
+        $this->closeDeleteStudentModal();
+        $this->resetPage(); // Reset pagination
+        
+        $this->dispatch('show-toast', [
+            'message' => 'Student enrollment "' . $studentNumber . '" deleted successfully!',
+            'type' => 'success',
+            'title' => 'Enrollment Deleted'
+        ]);
+    }
+
+    public function closeDeleteStudentModal()
+    {
+        $this->showDeleteStudentModal = false;
+        $this->deleteStudentInfoId = null;
+        $this->deleteStudentNumber = null;
     }
 
     public function render()

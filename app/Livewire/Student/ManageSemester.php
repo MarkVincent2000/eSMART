@@ -25,6 +25,12 @@ class ManageSemester extends Component
     public $deleteSemesterId = null;
     public $deleteSemesterName = null;
     
+    // Set Active confirmation modal state
+    public $showSetActiveModal = false;
+    public $setActiveSemesterId = null;
+    public $setActiveSemesterName = null;
+    public $setActiveSchoolYear = null;
+    
     // Semester form fields
     public $semesterName = '';
     public $schoolYear = '';
@@ -93,21 +99,43 @@ class ManageSemester extends Component
 
     public function setActiveSemester($semesterId)
     {
-        // Deactivate all semesters
-        Semester::where('is_active', true)->update(['is_active' => false]);
-        
-        // Activate the selected semester
         $semester = Semester::findOrFail($semesterId);
-        $semester->update(['is_active' => true]);
         
-        // Reload data
-        $this->loadActiveSemester();
-        
-        // Show success notification
-        $this->dispatch('show-toast', [
-            'type' => 'success',
-            'message' => $semester->name . ' (' . $semester->school_year . ') is now active'
-        ]);
+        $this->setActiveSemesterId = $semester->id;
+        $this->setActiveSemesterName = $semester->name;
+        $this->setActiveSchoolYear = $semester->school_year;
+        $this->showSetActiveModal = true;
+    }
+
+    public function confirmSetActiveSemester()
+    {
+        if ($this->setActiveSemesterId) {
+            // Deactivate all semesters
+            Semester::where('is_active', true)->update(['is_active' => false]);
+            
+            // Activate the selected semester
+            $semester = Semester::findOrFail($this->setActiveSemesterId);
+            $semester->update(['is_active' => true]);
+            
+            // Reload data
+            $this->loadActiveSemester();
+            $this->closeSetActiveModal();
+            
+            // Show success notification
+            $this->dispatch('show-toast', [
+                'type' => 'success',
+                'message' => $semester->name . ' (' . $semester->school_year . ') is now active',
+                'title' => 'Semester Activated'
+            ]);
+        }
+    }
+
+    public function closeSetActiveModal()
+    {
+        $this->showSetActiveModal = false;
+        $this->setActiveSemesterId = null;
+        $this->setActiveSemesterName = null;
+        $this->setActiveSchoolYear = null;
     }
 
     public function addSemester()
@@ -187,15 +215,17 @@ class ManageSemester extends Component
         $isEditing = !is_null($this->semesterId);
         
         $rules = [
-            'semesterName' => 'required|string|max:255',
-            'schoolYear' => 'required|string|max:255',
+            'semesterName' => ['required', 'string', 'max:255', 'regex:/^\d+(st|nd|rd|th)\s+Semester$/i'],
+            'schoolYear' => ['required', 'string', 'max:255', 'regex:/^\d{4}-\d{4}$/'],
             'startDate' => 'nullable|date',
             'endDate' => 'nullable|date|after_or_equal:startDate',
         ];
         
         $this->validate($rules, [
             'semesterName.required' => 'Semester name is required.',
+            'semesterName.regex' => 'Semester name must be in the format "1st Semester", "2nd Semester", "3rd Semester", etc.',
             'schoolYear.required' => 'School year is required.',
+            'schoolYear.regex' => 'School year must be in the format YYYY-YYYY (e.g., 2025-2026).',
             'endDate.after_or_equal' => 'End date must be after or equal to start date.',
         ]);
 

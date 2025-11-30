@@ -4,6 +4,9 @@
     @include('livewire.student.modals.delete-section')
     @include('livewire.student.modals.create-program')
     @include('livewire.student.modals.delete-program')
+    @include('livewire.student.modals.view-student-enrollment')
+    @include('livewire.student.modals.edit-student-enrollment')
+    @include('livewire.student.modals.delete-student-enrollment')
     <div class="row">
         <div class="col-xl-3 col-lg-4">
             <div class="card">
@@ -13,7 +16,8 @@
                             <h5 class="fs-16">Filters</h5>
                         </div>
                         <div class="flex-shrink-0">
-                            <a href="#" class="text-decoration-underline" id="clearall">Clear All</a>
+                            <a href="#" class="text-decoration-underline" id="clearall"
+                                wire:click.prevent="clearAllFilters">Clear All</a>
                         </div>
                     </div>
 
@@ -46,13 +50,13 @@
                                 @forelse($semesters as $semester)
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" value="{{ $semester->id }}"
-                                            id="semester_{{ $semester->id }}">
+                                            id="semester_{{ $semester->id }}" wire:model.change="selectedSemesters">
                                         <label class="form-check-label d-flex align-items-center gap-2"
                                             for="semester_{{ $semester->id }}">
-                                            <span>{{ $semester->name }} <span
+                                            <span class="small">{{ $semester->name }} <span
                                                     class="text-muted">({{ $semester->school_year }})</span></span>
                                             @if($semester->is_active)
-                                                <span class="badge bg-success-subtle text-success">Active</span>
+                                                <span class="badge bg-success-subtle text-success small">Active</span>
 
                                             @endif
                                         </label>
@@ -110,14 +114,15 @@
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div class="form-check flex-grow-1">
                                                 <input class="form-check-input" type="checkbox" value="{{ $section->id }}"
-                                                    id="section_{{ $section->id }}">
-                                                <label class="form-check-label d-flex align-items-center gap-2"
+                                                    id="section_{{ $section->id }}" wire:model.change="selectedSections">
+                                                <label class="form-check-label d-flex align-items-center gap-2 small"
                                                     for="section_{{ $section->id }}">
-                                                    <span>{{ $section->name }} ({{ $section->year_level->label() }})</span>
+                                                    <span class="small">{{ $section->name }}
+                                                        ({{ $section->year_level->label() }})</span>
                                                     @if($section->active)
-                                                        <span class="badge bg-success-subtle text-success">Active</span>
+                                                        <span class="badge bg-success-subtle text-success small">Active</span>
                                                     @else
-                                                        <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                                        <span class="badge bg-danger-subtle text-danger small">Inactive</span>
                                                     @endif
                                                 </label>
                                             </div>
@@ -189,10 +194,10 @@
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div class="form-check flex-grow-1">
                                                 <input class="form-check-input" type="checkbox" value="{{ $program->id }}"
-                                                    id="program_{{ $program->id }}">
-                                                <label class="form-check-label d-flex align-items-center gap-2"
+                                                    id="program_{{ $program->id }}" wire:model.change="selectedPrograms">
+                                                <label class="form-check-label d-flex align-items-center gap-2 small"
                                                     for="program_{{ $program->id }}">
-                                                    <span>{{ $program->code }}</span>
+                                                    <span class="small">{{ $program->code }}</span>
                                                     @if($program->active)
                                                         <span class="badge bg-success-subtle text-success">Active</span>
                                                     @else
@@ -249,17 +254,12 @@
                 <div class="card">
                     <div class="card-header border-0">
                         <div class="row g-4">
-                            <div class="col-sm-auto">
-                                <div>
-                                    <a href="apps-ecommerce-add-product" class="btn btn-success" id="addproduct-btn"><i
-                                            class="ri-add-line align-bottom me-1"></i> Add Product</a>
-                                </div>
-                            </div>
                             <div class="col-sm">
                                 <div class="d-flex justify-content-sm-end">
                                     <div class="search-box ms-2">
-                                        <input type="text" class="form-control" id="searchProductList"
-                                            placeholder="Search Products...">
+                                        <input type="text" class="form-control" id="searchStudentList"
+                                            placeholder="Search Students..."
+                                            wire:model.live.debounce.300ms="studentSearch">
                                         <i class="ri-search-line search-icon"></i>
                                     </div>
                                 </div>
@@ -272,65 +272,198 @@
                             <div class="col">
                                 <ul class="nav nav-tabs-custom card-header-tabs border-bottom-0" role="tablist">
                                     <li class="nav-item">
-                                        <a class="nav-link active fw-semibold" data-bs-toggle="tab"
-                                            href="#productnav-all" role="tab">
-                                            All <span
-                                                class="badge bg-danger-subtle text-danger align-middle rounded-pill ms-1">12</span>
+                                        <a class="nav-link fw-semibold {{ $studentStatus === 'all' ? 'active' : '' }}"
+                                            href="{{ request()->fullUrlWithQuery(['studentStatus' => null]) }}"
+                                            wire:click.prevent="$set('studentStatus', 'all')" role="tab"
+                                            style="cursor: pointer;">
+                                            All
+                                            @if($this->getStatusCount('all') > 0)
+                                                <span
+                                                    class="badge bg-danger-subtle text-danger align-middle rounded-pill ms-1">{{ $this->getStatusCount('all') }}</span>
+                                            @endif
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link fw-semibold" data-bs-toggle="tab"
-                                            href="#productnav-published" role="tab">
-                                            Published <span
-                                                class="badge bg-danger-subtle text-danger align-middle rounded-pill ms-1">5</span>
+                                        <a class="nav-link fw-semibold {{ $studentStatus === 'pending' ? 'active' : '' }}"
+                                            href="{{ request()->fullUrlWithQuery(['studentStatus' => 'pending']) }}"
+                                            wire:click.prevent="$set('studentStatus', 'pending')" role="tab"
+                                            style="cursor: pointer;">
+                                            Pending
+                                            @if($this->getStatusCount('pending') > 0)
+                                                <span
+                                                    class="badge bg-warning-subtle text-warning align-middle rounded-pill ms-1">{{ $this->getStatusCount('pending') }}</span>
+                                            @endif
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#productnav-draft"
-                                            role="tab">
-                                            Draft
+                                        <a class="nav-link fw-semibold {{ $studentStatus === 'enrolled' ? 'active' : '' }}"
+                                            href="{{ request()->fullUrlWithQuery(['studentStatus' => 'enrolled']) }}"
+                                            wire:click.prevent="$set('studentStatus', 'enrolled')" role="tab"
+                                            style="cursor: pointer;">
+                                            Enrolled
+                                            @if($this->getStatusCount('enrolled') > 0)
+                                                <span
+                                                    class="badge bg-success-subtle text-success align-middle rounded-pill ms-1">{{ $this->getStatusCount('enrolled') }}</span>
+                                            @endif
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link fw-semibold {{ $studentStatus === 'inactive' ? 'active' : '' }}"
+                                            href="{{ request()->fullUrlWithQuery(['studentStatus' => 'inactive']) }}"
+                                            wire:click.prevent="$set('studentStatus', 'inactive')" role="tab"
+                                            style="cursor: pointer;">
+                                            Inactive
+                                            @if($this->getStatusCount('inactive') > 0)
+                                                <span
+                                                    class="badge bg-danger-subtle text-danger align-middle rounded-pill ms-1">{{ $this->getStatusCount('inactive') }}</span>
+                                            @endif
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link fw-semibold {{ $studentStatus === 'graduated' ? 'active' : '' }}"
+                                            href="{{ request()->fullUrlWithQuery(['studentStatus' => 'graduated']) }}"
+                                            wire:click.prevent="$set('studentStatus', 'graduated')" role="tab"
+                                            style="cursor: pointer;">
+                                            Graduated
+                                            @if($this->getStatusCount('graduated') > 0)
+                                                <span
+                                                    class="badge bg-info-subtle text-info align-middle rounded-pill ms-1">{{ $this->getStatusCount('graduated') }}</span>
+                                            @endif
                                         </a>
                                     </li>
                                 </ul>
-                            </div>
-                            <div class="col-auto">
-                                <div id="selection-element">
-                                    <div class="my-n1 d-flex align-items-center text-muted">
-                                        Select <div id="select-content" class="text-body fw-semibold px-1"></div> Result
-                                        <button type="button"
-                                            class="btn btn-link link-danger p-0 ms-3 material-shadow-none"
-                                            data-bs-toggle="modal" data-bs-target="#removeItemModal">Remove</button>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
                     <!-- end card header -->
                     <div class="card-body">
-
-                        <div class="tab-content text-muted">
-                            <div class="tab-pane active" id="productnav-all" role="tabpanel">
-                                <div id="table-product-list-all" class="table-card gridjs-border-none"></div>
-                            </div>
-                            <!-- end tab pane -->
-
-                            <div class="tab-pane" id="productnav-published" role="tabpanel">
-                                <div id="table-product-list-published" class="table-card gridjs-border-none"></div>
-                            </div>
-                            <!-- end tab pane -->
-
-                            <div class="tab-pane" id="productnav-draft" role="tabpanel">
-                                <div class="py-4 text-center">
-                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
-                                        colors="primary:#405189,secondary:#0ab39c" style="width:72px;height:72px">
-                                    </lord-icon>
-                                    <h5 class="mt-4">Sorry! No Result Found</h5>
-                                </div>
-                            </div>
-                            <!-- end tab pane -->
+                        <div class="table-responsive">
+                            <table class="table align-middle table-nowrap mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">ID #</th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Program</th>
+                                        <th scope="col">Year Level</th>
+                                        <th scope="col">Section</th>
+                                        <th scope="col">Semester</th>
+                                        <th scope="col">School Year</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Enrolled At</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($this->studentInfos as $studentInfo)
+                                        <tr wire:key="student-{{ $studentInfo->id }}">
+                                            <td>
+                                                <strong>{{ $studentInfo->student_number }}</strong>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div>
+                                                        <h6 class="mb-0">{{ $studentInfo->user->name ?? 'N/A' }}</h6>
+                                                        <small
+                                                            class="text-muted">{{ $studentInfo->user->email ?? '' }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @if($studentInfo->program)
+                                                    <span class="badge bg-primary-subtle text-primary">
+                                                        {{ $studentInfo->program->code }} - {{ $studentInfo->program->name }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">N/A</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($studentInfo->year_level)
+                                                    <span class="badge bg-secondary-subtle text-secondary">
+                                                        Grade {{ $studentInfo->year_level }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">N/A</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($studentInfo->section)
+                                                    <span>{{ $studentInfo->section->name }}</span>
+                                                @else
+                                                    <span class="text-muted">N/A</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($studentInfo->semester)
+                                                    <span>{{ $studentInfo->semester->name }}</span>
+                                                @else
+                                                    <span class="text-muted">N/A</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $studentInfo->school_year }}</td>
+                                            <td>
+                                                @if($studentInfo->status === 'pending')
+                                                    <span class="badge bg-warning-subtle text-warning">Pending</span>
+                                                @elseif($studentInfo->status === 'enrolled')
+                                                    <span class="badge bg-success-subtle text-success">Enrolled</span>
+                                                @elseif($studentInfo->status === 'inactive')
+                                                    <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                                @elseif($studentInfo->status === 'graduated')
+                                                    <span class="badge bg-info-subtle text-info">Graduated</span>
+                                                @else
+                                                    <span
+                                                        class="badge bg-secondary-subtle text-secondary">{{ ucfirst($studentInfo->status) }}</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                {{ $studentInfo->enrolled_at ? $studentInfo->enrolled_at->format('M d, Y') : '-' }}
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-2">
+                                                    <x-button color="info" icon="ri-eye-line" icon-position="left" size="sm"
+                                                        :iconOnly="true" tooltip="View Details" tooltip-placement="top"
+                                                        wire:click="viewStudent({{ $studentInfo->id }})"
+                                                        wireTarget="viewStudent({{ $studentInfo->id }})">
+                                                    </x-button>
+                                                    <x-button color="primary" icon="ri-edit-line" icon-position="left"
+                                                        size="sm" :iconOnly="true" tooltip="Edit Enrollment"
+                                                        tooltip-placement="top"
+                                                        wire:click="editStudent({{ $studentInfo->id }})"
+                                                        wireTarget="editStudent({{ $studentInfo->id }})">
+                                                    </x-button>
+                                                    @if($studentInfo->status === 'pending')
+                                                        <x-button color="danger" icon="ri-delete-bin-line" icon-position="left"
+                                                            size="sm" :iconOnly="true" tooltip="Delete Enrollment"
+                                                            tooltip-placement="top"
+                                                            wire:click="deleteStudent({{ $studentInfo->id }})"
+                                                            wireTarget="deleteStudent({{ $studentInfo->id }})">
+                                                        </x-button>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="10" class="text-center text-muted py-4">
+                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                    colors="primary:#405189,secondary:#0ab39c"
+                                                    style="width:72px;height:72px">
+                                                </lord-icon>
+                                                <h5 class="mt-4">No Students Found</h5>
+                                                <p class="text-muted">Try adjusting your search or filters.</p>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
-                        <!-- end tab content -->
 
+                        {{-- Pagination --}}
+                        @if($this->studentInfos->hasPages())
+                            <div class="mt-4">
+                                <x-pagination :paginator="$this->studentInfos" :show-summary="true" />
+                            </div>
+                        @endif
                     </div>
                     <!-- end card body -->
                 </div>
@@ -339,4 +472,6 @@
         </div>
         <!-- end col -->
     </div>
+
+
 </div>

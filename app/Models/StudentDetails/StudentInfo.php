@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\User;
 use App\Traits\LoggerTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentInfo extends Model
 {
-    use HasFactory, LoggerTrait;
+    use HasFactory, LoggerTrait, SoftDeletes;
 
     /**
      * The table associated with the model.

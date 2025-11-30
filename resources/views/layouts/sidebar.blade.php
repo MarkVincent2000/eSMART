@@ -83,6 +83,14 @@
             </div>
             <ul class="navbar-nav" id="navbar-nav">
 
+                @can('view-my-info')
+                    <x-sidebar.title title="Info" />
+                    <x-sidebar.nav-link href="enrollment.my-info-index" icon="ri-book-open-line" title="My Enrollment" />
+                @endcan
+
+
+
+
                 @can('view-student-management')
                     <x-sidebar.title title="Student Management" />
 

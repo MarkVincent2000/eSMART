@@ -23,8 +23,8 @@ class UserSeeder extends Seeder
                 'last_name' => null,
                 'middle_name' => null,
                 'name_extension' => null,
-                'password' => '$2y$10$lz1DKp2cPnQlcA.AGuqirePg7uf/i4af.bQLbDrU.xmTdwTmo7LAi',
-                'avatar' => 'avatar-1.jpg',
+                'password' => Hash::make('12345678'),
+                'avatar' => null,
                 'photo_path' => null,
                 'cover_photo_path' => null,
                 'active_status' => true,
@@ -49,7 +49,7 @@ class UserSeeder extends Seeder
                 'last_name' => 'Quiao',
                 'middle_name' => null,
                 'name_extension' => null,
-                'password' => '$2y$10$UG6/qMvfCFRa6djC3IM.PuB2cu1v8A69aNnNmV3dPf5cMiGtcFTA6',
+                'password' => Hash::make('12345678'),
                 'avatar' => null,
                 'photo_path' => null,
                 'cover_photo_path' => null,
@@ -64,6 +64,33 @@ class UserSeeder extends Seeder
         $adminRole = Role::where('name', 'admin')->where('guard_name', 'web')->first();
         if ($adminRole && !$markVincent->hasRole('admin')) {
             $markVincent->assignRole($adminRole);
+        }
+
+
+        // User 3: John Doe with user role
+        $johnDoe = User::firstOrCreate(
+            ['email' => 'john.doe@example.com'],
+            [
+                'name' => 'John Doe',
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'middle_name' => null,
+                'name_extension' => null,
+                'password' => Hash::make('12345678'),
+                'avatar' => null,
+                'photo_path' => null,
+                'cover_photo_path' => null,
+                'active_status' => true,
+                'email_verified_at' => null,
+                'created_at' => '2025-11-27 18:37:31',
+                'updated_at' => '2025-11-27 18:37:31',
+            ]
+        );
+
+        // Assign user role to John Doe
+        $userRole = Role::where('name', 'user')->where('guard_name', 'web')->first();
+        if ($userRole && !$johnDoe->hasRole('user')) {
+            $johnDoe->assignRole($userRole);
         }
     }
 }

@@ -126,11 +126,11 @@
             x-show="open" 
             x-transition
             class="card position-absolute w-100 shadow mt-1 z-3" 
-            style="max-height: 300px; overflow-y: auto; display: none;"
+            style="max-height: 300px; display: none;"
         >
-            <div class="card-body p-2">
+            <div class="card-body p-0 d-flex flex-column" style="max-height: 300px;">
                 @if($searchable)
-                    <div class="mb-2">
+                    <div class="p-2 border-bottom">
                         <input 
                             x-ref="searchInput"
                             x-model="search" 
@@ -141,22 +141,24 @@
                     </div>
                 @endif
 
-                <ul class="list-group list-group-flush">
-                    <template x-for="option in filteredOptions" :key="option.value">
-                        <li 
-                            @click="select(option.value)"
-                            class="list-group-item list-group-item-action cursor-pointer d-flex justify-content-between align-items-center p-2 border-0 rounded"
-                            :class="{'bg-light text-primary fw-medium': isSelected(option.value)}"
-                            style="cursor: pointer;"
-                        >
-                            <span x-text="option.label"></span>
-                            <i x-show="isSelected(option.value)" class="ri-check-line text-primary"></i>
+                <div style="overflow-y: auto; flex: 1;">
+                    <ul class="list-group list-group-flush">
+                        <template x-for="option in filteredOptions" :key="option.value">
+                            <li 
+                                @click="select(option.value)"
+                                class="list-group-item list-group-item-action cursor-pointer d-flex justify-content-between align-items-center p-2 border-0 rounded"
+                                :class="{'bg-light text-primary fw-medium': isSelected(option.value)}"
+                                style="cursor: pointer;"
+                            >
+                                <span x-text="option.label"></span>
+                                <i x-show="isSelected(option.value)" class="ri-check-line text-primary"></i>
+                            </li>
+                        </template>
+                        <li x-show="filteredOptions.length === 0" class="list-group-item text-muted text-center p-2">
+                            No results found
                         </li>
-                    </template>
-                    <li x-show="filteredOptions.length === 0" class="list-group-item text-muted text-center p-2">
-                        No results found
-                    </li>
-                </ul>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

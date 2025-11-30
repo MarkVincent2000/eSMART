@@ -20,6 +20,7 @@ class PermissionSeeder extends Seeder
             'view-student-management' => ['super-admin','admin'],
             'view-enrollment-management' => ['super-admin','admin'],
             'view-semester-management' => ['super-admin'],
+            'view-my-info' => ['user'],
         ];
 
         foreach ($permissionMatrix as $permissionName => $roleNames) {
