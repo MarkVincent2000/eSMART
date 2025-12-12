@@ -89,7 +89,8 @@
                 @endcan
 
 
-
+                <x-sidebar.title title="Attendance" />
+                <x-sidebar.nav-link href="attendance.index" icon="ri-calendar-line" title="Attendance" />
 
                 @can('view-student-management')
                     <x-sidebar.title title="Student Management" />
