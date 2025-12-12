@@ -3,7 +3,8 @@
     Manage Semesters
 @endsection
 @section('css')
-
+    <link href="{{ URL::asset('build/libs/nouislider/nouislider.min.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ URL::asset('build/libs/gridjs/theme/mermaid.min.css') }}">
 @endsection
 @section('content')
 
@@ -32,7 +33,7 @@
 @endsection
 @section('script')
 
-
+    <script src="{{ URL::asset('build/js/app.js') }}"></script>
 
 
 @endsection
