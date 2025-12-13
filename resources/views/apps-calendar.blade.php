@@ -4,12 +4,12 @@
 @endsection
 @section('content')
     @component('components.breadcrumb')
-        @slot('li_1')
-            Apps
-        @endslot
-        @slot('title')
-            Calendar
-        @endslot
+    @slot('li_1')
+    Apps
+    @endslot
+    @slot('title')
+    Calendar
+    @endslot
     @endcomponent
     <div class="row">
         <div class="col-12">
@@ -90,8 +90,8 @@
                         <div class="modal-body p-4">
                             <form class="needs-validation" name="event-form" id="form-event" novalidate>
                                 <div class="text-end">
-                                    <a href="#" class="btn btn-sm btn-soft-primary" id="edit-event-btn"
-                                        data-id="edit-event" onclick="editEvent(this)" role="button">Edit</a>
+                                    <a href="#" class="btn btn-sm btn-soft-primary" id="edit-event-btn" data-id="edit-event"
+                                        onclick="editEvent(this)" role="button">Edit</a>
                                 </div>
                                 <div class="event-details">
                                     <div class="d-flex mb-2">
@@ -110,7 +110,8 @@
                                         </div>
                                         <div class="flex-grow-1">
                                             <h6 class="d-block fw-semibold mb-0"><span id="event-timepicker1-tag"></span> -
-                                                <span id="event-timepicker2-tag"></span></h6>
+                                                <span id="event-timepicker2-tag"></span>
+                                            </h6>
                                         </div>
                                     </div>
                                     <div class="d-flex align-items-center mb-2">
@@ -149,9 +150,8 @@
                                     <div class="col-12">
                                         <div class="mb-3">
                                             <label class="form-label">Event Name</label>
-                                            <input class="form-control d-none" placeholder="Enter event name"
-                                                type="text" name="title" id="event-title" required
-                                                value="" />
+                                            <input class="form-control d-none" placeholder="Enter event name" type="text"
+                                                name="title" id="event-title" required value="" />
                                             <div class="invalid-feedback">Please provide a valid event name</div>
                                         </div>
                                     </div>
@@ -161,10 +161,9 @@
                                             <label>Event Date</label>
                                             <div class="input-group d-none">
                                                 <input type="text" id="event-start-date"
-                                                    class="form-control flatpickr flatpickr-input"
-                                                    placeholder="Select date" readonly required>
-                                                <span class="input-group-text"><i
-                                                        class="ri-calendar-event-line"></i></span>
+                                                    class="form-control flatpickr flatpickr-input" placeholder="Select date"
+                                                    readonly required>
+                                                <span class="input-group-text"><i class="ri-calendar-event-line"></i></span>
                                             </div>
                                         </div>
                                     </div>
@@ -210,8 +209,8 @@
                                     <div class="col-12">
                                         <div class="mb-3">
                                             <label class="form-label">Description</label>
-                                            <textarea class="form-control d-none" id="event-description" placeholder="Enter a description" rows="3"
-                                                spellcheck="false"></textarea>
+                                            <textarea class="form-control d-none" id="event-description"
+                                                placeholder="Enter a description" rows="3" spellcheck="false"></textarea>
                                         </div>
                                     </div>
                                     <!--end col-->

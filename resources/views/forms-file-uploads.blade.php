@@ -10,12 +10,12 @@
 @endsection
 @section('content')
     @component('components.breadcrumb')
-        @slot('li_1')
-            Forms
-        @endslot
-        @slot('title')
-            File Upload
-        @endslot
+    @slot('li_1')
+    Forms
+    @endslot
+    @slot('title')
+    File Upload
+    @endslot
     @endcomponent
 
     <div class="row">
@@ -49,7 +49,8 @@
                                 <div class="d-flex p-2">
                                     <div class="flex-shrink-0 me-3">
                                         <div class="avatar-sm bg-light rounded">
-                                            <img data-dz-thumbnail class="img-fluid rounded d-block" src="{{URL::asset('build/images/new-document.png')}}"
+                                            <img data-dz-thumbnail class="img-fluid rounded d-block"
+                                                src="{{URL::asset('build/images/new-document.png')}}"
                                                 alt="Dropzone-Image" />
                                         </div>
                                     </div>
@@ -134,10 +135,10 @@
     </script>
     <script
         src="{{ URL::asset('build/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js') }}">
-    </script>
+        </script>
     <script
         src="{{ URL::asset('build/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js') }}">
-    </script>
+        </script>
     <script src="{{ URL::asset('build/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js') }}"></script>
 
     <script src="{{ URL::asset('build/js/pages/form-file-upload.init.js') }}"></script>

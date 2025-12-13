@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Attendance;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\LoggerTrait;
+use App\Models\User;
 
 class StudentAttendance extends Model
 {

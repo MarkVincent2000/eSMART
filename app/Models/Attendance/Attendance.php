@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Attendance;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\LoggerTrait;
 use App\Models\StudentDetails\Semester;
 use App\Models\StudentDetails\Section;
+use App\Models\User;
 
 class Attendance extends Model
 {

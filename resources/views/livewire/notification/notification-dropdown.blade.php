@@ -87,16 +87,18 @@
                     </div>
                 @endforelse
 
-                @if($this->allNotifications->count() > 0)
-                    <div class="notification-view-all my-3 text-center">
-                        <a type="button" href="notification.index-notification-page"
-                            class="btn btn-soft-success waves-effect waves-light">
-                            View All Notifications <i class="ri-arrow-right-line align-middle"></i>
-                        </a>
-                    </div>
-                @endif
+
             </div>
         </div>
+
+        @if($this->allNotifications->count() > 0)
+            <div class="notification-view-all my-3 text-center">
+                <a type="button" href="notification.index-notification-page"
+                    class="btn btn-soft-success waves-effect waves-light">
+                    View All Notifications <i class="ri-arrow-right-line align-middle"></i>
+                </a>
+            </div>
+        @endif
 
         <!-- Panel Actions (when items are selected) -->
         @if(count($selected) > 0)
