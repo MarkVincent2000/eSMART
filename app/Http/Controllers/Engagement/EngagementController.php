@@ -50,7 +50,7 @@ class EngagementController extends Controller
 
     public function getEvent($id)
     {
-        $event = Event::with(['semester', 'section', 'creator'])->find($id);
+        $event = Event::with(['semester', 'sections', 'creator'])->find($id);
         
         if (!$event) {
             return response()->json(['error' => 'Event not found.'], 404);
@@ -69,10 +69,10 @@ class EngagementController extends Controller
             'end_time' => $event->end_time ? $event->end_time->format('Y-m-d H:i:s') : null,
             'location' => $event->location,
             'semester_id' => $event->semester_id,
-            'section_id' => $event->section_id,
+            'section_ids' => $event->sections->pluck('id')->toArray(),
             'status' => $event->status,
             'semester_name' => $event->semester ? $event->semester->name . ' (' . $event->semester->school_year . ')' : null,
-            'section_name' => $event->section ? $event->section->name : null,
+            'section_names' => $event->sections->pluck('name')->toArray(),
             'created_by' => $event->created_by,
             'creator_name' => $event->creator ? $event->creator->name : null,
         ];
@@ -96,12 +96,14 @@ class EngagementController extends Controller
                     ];
                 })->toArray(),
             'sectionOptions' => Section::where('active', true)
+                ->orderBy('year_level')
                 ->orderBy('name')
                 ->get()
                 ->map(function($section) {
+                    $yearLevel = $section->year_level ? $section->year_level->label() : '';
                     return [
                         'value' => $section->id,
-                        'label' => $section->name
+                        'label' => $yearLevel ? "{$section->name} - {$yearLevel}" : $section->name
                     ];
                 })->toArray(),
             'eventTypeOptions' => collect(Event::getTypes())->map(function($type) {
@@ -135,7 +137,8 @@ class EngagementController extends Controller
             'end_time' => 'nullable|date_format:H:i' . ($request->start_time ? '|after:start_time' : ''),
             'location' => 'nullable|string|max:255',
             'semester_id' => 'nullable|exists:semesters,id',
-            'section_id' => 'nullable|exists:sections,id',
+            'section_id' => 'nullable', // Can be single ID, array, or null
+            'all_sections' => 'nullable|boolean',
             'status' => 'required|in:' . implode(',', Event::getStatuses()),
         ], [
             'title.required' => 'The event title is required.',
@@ -166,12 +169,28 @@ class EngagementController extends Controller
                 'end_time' => $request->end_time ? ($request->end_date ?: $request->start_date) . ' ' . $request->end_time : null,
                 'location' => $request->location,
                 'semester_id' => $request->semester_id,
-                'section_id' => $request->section_id,
                 'status' => $request->status,
                 'created_by' => Auth::id(),
             ];
 
             $newEvent = Event::create($eventData);
+            
+            // Handle sections - sync to pivot table
+            if ($request->all_sections) {
+                // If all_sections is true, attach all active sections in the semester
+                if ($request->semester_id) {
+                    $sectionIds = Section::where('active', true)->pluck('id')->toArray();
+                    $newEvent->sections()->sync($sectionIds);
+                }
+                $newEvent->all_sections = true;
+            } elseif ($request->section_id) {
+                // Attach specific section (convert single ID to array)
+                $sectionIds = is_array($request->section_id) ? $request->section_id : [$request->section_id];
+                $newEvent->sections()->sync($sectionIds);
+                $newEvent->all_sections = false;
+            } else {
+                $newEvent->all_sections = false;
+            }
 
             // Send notifications to students
             $this->notifyStudents($newEvent, 'created');
@@ -225,7 +244,8 @@ class EngagementController extends Controller
             'end_time' => 'nullable|date_format:H:i' . ($request->start_time ? '|after:start_time' : ''),
             'location' => 'nullable|string|max:255',
             'semester_id' => 'nullable|exists:semesters,id',
-            'section_id' => 'nullable|exists:sections,id',
+            'section_id' => 'nullable', // Can be single ID, array, or null
+            'all_sections' => 'nullable|boolean',
             'status' => 'required|in:' . implode(',', Event::getStatuses()),
         ], [
             'title.required' => 'The event title is required.',
@@ -256,11 +276,29 @@ class EngagementController extends Controller
                 'end_time' => $request->end_time ? ($request->end_date ?: $request->start_date) . ' ' . $request->end_time : null,
                 'location' => $request->location,
                 'semester_id' => $request->semester_id,
-                'section_id' => $request->section_id,
                 'status' => $request->status,
             ];
 
             $event->update($eventData);
+            
+            // Handle sections - sync to pivot table
+            if ($request->all_sections) {
+                // If all_sections is true, attach all active sections in the semester
+                if ($request->semester_id) {
+                    $sectionIds = Section::where('active', true)->pluck('id')->toArray();
+                    $event->sections()->sync($sectionIds);
+                }
+                $event->all_sections = true;
+            } elseif ($request->section_id) {
+                // Attach specific section (convert single ID to array)
+                $sectionIds = is_array($request->section_id) ? $request->section_id : [$request->section_id];
+                $event->sections()->sync($sectionIds);
+                $event->all_sections = false;
+            } else {
+                // If no sections specified, detach all
+                $event->sections()->detach();
+                $event->all_sections = false;
+            }
 
             // Send notifications to students
             $this->notifyStudents($event, 'updated');
@@ -409,10 +447,15 @@ class EngagementController extends Controller
                 $query->where('semester_id', $event->semester_id);
             }
 
-            // Filter by section if specified
-            if ($event->section_id) {
-                $query->where('section_id', $event->section_id);
+            // Handle section filtering based on sections relationship
+            $event->load('sections'); // Ensure sections are loaded
+            $sectionIds = $event->sections->pluck('id')->toArray();
+            
+            if (!empty($sectionIds)) {
+                // Notify students in specific sections
+                $query->whereIn('section_id', $sectionIds);
             }
+            // If no sections specified, notify all students in the semester (when all_sections flag is used)
 
             // Get students
             $students = $query->get();
@@ -431,19 +474,37 @@ class EngagementController extends Controller
                 }
             }
 
-            // Determine notification type and title based on action
+            // Determine notification type and create student-friendly messages
             $notificationType = $action === 'created' ? 'event_created' : 'event_updated';
-            $actionText = $action === 'created' ? 'New Event' : 'Event Updated';
             
-            // Create notification title
-            $title = "{$actionText}: {$event->title}";
-            
-            // Create notification body
-            $body = "A " . ucfirst($event->event_type) . " event has been {$action} for {$startDate}{$eventTime}";
-            if ($event->location) {
-                $body .= " at {$event->location}";
+            // Create engaging, student-focused messages
+            if ($action === 'created') {
+                $title = "🎉 Don't Miss: {$event->title}";
+                
+                // Build compelling body message
+                $body = "You're invited! Join us for {$event->title} on {$startDate}";
+                if ($eventTime) {
+                    $body .= "{$eventTime}";
+                }
+                if ($event->location) {
+                    $body .= " at {$event->location}";
+                }
+                $body .= ". Mark your calendar and be part of this exciting ";
+                $body .= strtolower($event->event_type) . "! See you there! 🌟";
+            } else {
+                // Updated event message
+                $title = "📢 Important Update: {$event->title}";
+                
+                $body = "Heads up! We've made changes to {$event->title}. ";
+                $body .= "It's now scheduled for {$startDate}";
+                if ($eventTime) {
+                    $body .= "{$eventTime}";
+                }
+                if ($event->location) {
+                    $body .= " at {$event->location}";
+                }
+                $body .= ". Please check the details and adjust your schedule accordingly. Don't miss out! 📅";
             }
-            $body .= ".";
 
             // Create additional data
             $notificationData = [

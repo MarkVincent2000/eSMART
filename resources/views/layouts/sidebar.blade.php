@@ -90,7 +90,7 @@
 
 
                 <x-sidebar.title title="Activities" />
-                <x-sidebar.nav-link href="engagement.index" icon="ri-team-line" title="Engagement" />
+                <x-sidebar.nav-link href="engagement.index" icon="ri-calendar-event-line" title="Events" />
 
                 @can('view-student-management')
                     <x-sidebar.title title="Student Management" />

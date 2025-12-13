@@ -1,6 +1,6 @@
 @extends('layouts.master')
 @section('title')
-    Engagement
+    Events
 @endsection
 @section('css')
     <link href="{{ URL::asset('build/libs/nouislider/nouislider.min.css') }}" rel="stylesheet">
@@ -10,7 +10,7 @@
 @endsection
 @section('content')
 
-    <x-breadcrumb title="Engagement" li_1="Engagement Management" />
+    <x-breadcrumb title="Events" li_1="Activities" />
 
     @include('engagement.engagement')
 
@@ -75,6 +75,23 @@
                 }
             }
 
+            // Helper to wait for vanilla select to be ready
+            function waitForVanillaSelect(selectId, callback, maxRetries = 10) {
+                let retries = 0;
+                const checkInterval = setInterval(() => {
+                    if (window[`vanillaSelect_${selectId}`]) {
+                        clearInterval(checkInterval);
+                        callback(window[`vanillaSelect_${selectId}`]);
+                    } else {
+                        retries++;
+                        if (retries >= maxRetries) {
+                            clearInterval(checkInterval);
+                            console.error(`Vanilla select ${selectId} not found after ${maxRetries} retries`);
+                        }
+                    }
+                }, 100);
+            }
+
             // Get initial view based on screen size
             function getInitialView() {
                 if (window.innerWidth >= 768 && window.innerWidth < 1200) {
@@ -92,8 +109,11 @@
                     .then(response => response.json())
                     .then(data => {
                         formData = data;
-                        populateFormDropdowns();
-                        populateExternalEvents();
+                        // Small delay to ensure vanilla select components are initialized
+                        setTimeout(() => {
+                            populateFormDropdowns();
+                            populateExternalEvents();
+                        }, 100);
                     })
                     .catch(error => {
                         showToast('Failed to load form data', 'error', 'Error');
@@ -107,7 +127,7 @@
                 // Populate event type
                 const eventTypeSelect = document.getElementById('event-type');
                 if (eventTypeSelect) {
-                    eventTypeSelect.innerHTML = '<option value="">Select event type</option>';
+                    eventTypeSelect.innerHTML = '<option value="" disabled selected>Select event type</option>';
                     formData.eventTypeOptions.forEach(option => {
                         const optionEl = document.createElement('option');
                         optionEl.value = option.value;
@@ -119,7 +139,7 @@
                 // Populate status
                 const statusSelect = document.getElementById('event-status');
                 if (statusSelect) {
-                    statusSelect.innerHTML = '<option value="">Select status</option>';
+                    statusSelect.innerHTML = '<option value="" disabled selected>Select status</option>';
                     formData.eventStatusOptions.forEach(option => {
                         const optionEl = document.createElement('option');
                         optionEl.value = option.value;
@@ -131,7 +151,7 @@
                 // Populate semester
                 const semesterSelect = document.getElementById('event-semester');
                 if (semesterSelect) {
-                    semesterSelect.innerHTML = '<option value="">Select semester</option>';
+                    semesterSelect.innerHTML = '<option value="" disabled selected>Select semester</option>';
                     formData.semesterOptions.forEach(option => {
                         const optionEl = document.createElement('option');
                         optionEl.value = option.value;
@@ -143,17 +163,13 @@
                     }
                 }
 
-                // Populate section
-                const sectionSelect = document.getElementById('event-section');
-                if (sectionSelect) {
-                    sectionSelect.innerHTML = '<option value="">Select section</option>';
-                    formData.sectionOptions.forEach(option => {
-                        const optionEl = document.createElement('option');
-                        optionEl.value = option.value;
-                        optionEl.textContent = option.label;
-                        sectionSelect.appendChild(optionEl);
-                    });
-                }
+                // Populate section using vanilla select API
+                waitForVanillaSelect('eventSection', (selectAPI) => {
+                    if (formData && formData.sectionOptions) {
+                        selectAPI.setOptions(formData.sectionOptions);
+                        console.log('Section options loaded:', formData.sectionOptions.length, 'options');
+                    }
+                });
             }
 
             // Populate external events
@@ -299,12 +315,7 @@
                         upcomingEventsList.innerHTML = '';
 
                         if (allUpcomingEvents.length === 0) {
-                            upcomingEventsList.innerHTML = `
-                                                                                         <div class="text-center text-muted py-4">
-                                                                                            <i class="ri-calendar-line fs-1 mb-2"></i>
-                                                                                              <p>No upcoming events</p>
-                                                                                               </div>
-                                                                                            `;
+                            upcomingEventsList.innerHTML = ` <div class="text-center text-muted py-4"><i class="ri-calendar-line fs-1 mb-2"></i> <p>No upcoming events</p> </div>`;
                             return;
                         }
 
@@ -407,27 +418,7 @@
                     const eventItem = document.createElement('div');
                     eventItem.className = 'card mb-3';
                     eventItem.style.cursor = 'pointer';
-                    eventItem.innerHTML = `
-                                                                                                                  <div class="card-body">
-                                                                                                                      <div class="d-flex mb-3">
-                                                                                                                          <div class="flex-grow-1">
-                                                                                                                        <i class="mdi mdi-checkbox-blank-circle me-2 text-${color}"></i>
-                                                                                                                      <span class="fw-medium">${formattedDate}${endDateDisplay}</span>
-                                                                                                                    </div>
-                                                                                                                      <div class="flex-shrink-0">
-                                                                                                                     </div>
-                                                                                                                       </div>
-                                                                                                                       <h6 class="card-title fs-16">${event.title}</h6>
-                                                                                                                      ${event.extendedProps?.location ? `
-                                                                                                                          <p class="text-muted mb-2">
-                                                                                                                         <i class="ri-map-pin-line"></i> ${event.extendedProps.location}
-                                                                                                                          </p>
-                                                                                                                            ` : ''}
-                                                                                                                          ${description ? `
-                                                                                                                             <p class="text-muted text-truncate-two-lines mb-0">${description}</p>
-                                                                                                                              ` : ''}
-                                                                                                                            </div>
-                                                                                                                            `;
+                    eventItem.innerHTML = ` <div class="card-body"><div class="d-flex mb-3"> <div class="flex-grow-1"> <i class="mdi mdi-checkbox-blank-circle me-2 text-${color}"></i> <span class="fw-medium">${formattedDate}${endDateDisplay}</span> </div> <div class="flex-shrink-0"> </div></div><h6 class="card-title fs-16">${event.title}</h6>${event.extendedProps?.location ? `<p class="text-muted mb-2"><i class="ri-map-pin-line"></i> ${event.extendedProps.location} </p>` : ''}${description ? ` <p class="text-muted text-truncate-two-lines mb-0">${description}</p> ` : ''}</div> `;
 
                     // Add click event to view details
                     eventItem.addEventListener('click', () => {
@@ -447,12 +438,7 @@
                     const loader = document.createElement('div');
                     loader.id = 'events-loading';
                     loader.className = 'text-center py-3';
-                    loader.innerHTML = `
-                                                                                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                                                                           <span class="visually-hidden">Loading...</span>
-                                                                                                             </div>
-                                                                                                  <p class="text-muted mt-2 mb-0"><small>Scroll for more events (${allUpcomingEvents.length - currentEventIndex} remaining)</small></p>
-                                                                                                              `;
+                    loader.innerHTML = `<div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div> <p class="text-muted mt-2 mb-0"><small>Scroll for more events (${allUpcomingEvents.length - currentEventIndex} remaining)</small></p>`;
                     upcomingEventsList.appendChild(loader);
                 }
 
@@ -680,7 +666,13 @@
 
                         // Pre-fill the date from where it was dropped
                         if (info.event.start) {
-                            const droppedDate = info.event.start.toISOString().split('T')[0];
+                            // Format date in local timezone to avoid UTC offset issues
+                            const date = info.event.start;
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const droppedDate = `${year}-${month}-${day}`;
+
                             if (flatpickrDateInstance) {
                                 flatpickrDateInstance.setDate(droppedDate, false);
                             }
@@ -1021,6 +1013,7 @@
                 document.getElementById('modal-title').textContent = 'Create New Event';
                 clearFormErrors();
                 flatpickrValueClear();
+                resetAllSectionsSwitch();
 
                 // Set active semester if available
                 if (formData && formData.activeSemesterId) {
@@ -1161,6 +1154,7 @@
                     document.getElementById('form-event').reset();
                     clearFormErrors();
                     flatpickrValueClear();
+                    resetAllSectionsSwitch();
 
                     // Reset button state
                     const saveBtn = document.getElementById('btn-save-event');
@@ -1407,20 +1401,23 @@
                     }
                 }
 
-                // Update section
+                // Update section (now supports multiple sections)
                 const sectionTag = document.getElementById('event-section-tag');
                 const sectionContainer = document.getElementById('event-section-container');
                 if (sectionTag) {
-                    if (event.section_name) {
-                        sectionTag.textContent = event.section_name;
+                    if (event.section_names && event.section_names.length > 0) {
+                        sectionTag.textContent = event.section_names.join(', ');
                         if (sectionContainer) sectionContainer.style.display = 'block';
-                    } else if (event.section_id && formData) {
-                        const section = formData.sectionOptions.find(s => s.value == event.section_id);
-                        sectionTag.textContent = section ? section.label : 'Not specified';
-                        if (sectionContainer) sectionContainer.style.display = section ? 'block' : 'none';
+                    } else if (event.section_ids && event.section_ids.length > 0 && formData) {
+                        const sectionNames = event.section_ids.map(id => {
+                            const section = formData.sectionOptions.find(s => s.value == id);
+                            return section ? section.label : id;
+                        });
+                        sectionTag.textContent = sectionNames.join(', ');
+                        if (sectionContainer) sectionContainer.style.display = 'block';
                     } else {
-                        sectionTag.textContent = 'Not specified';
-                        if (sectionContainer) sectionContainer.style.display = 'none';
+                        sectionTag.textContent = 'All Sections';
+                        if (sectionContainer) sectionContainer.style.display = 'block';
                     }
                 }
             }
@@ -1464,7 +1461,11 @@
                         document.getElementById('event-location').value = event.location || '';
                         document.getElementById('event-status').value = event.status || '';
                         document.getElementById('event-semester').value = event.semester_id || '';
-                        document.getElementById('event-section').value = event.section_id || '';
+
+                        // Set section values using vanilla select API (multiple)
+                        if (window.vanillaSelect_eventSection) {
+                            window.vanillaSelect_eventSection.setValue(event.section_ids || []);
+                        }
 
                         // Initialize Flatpickr if not already done
                         if (!flatpickrDateInstance || !flatpickrTime1Instance || !flatpickrTime2Instance) {
@@ -1594,7 +1595,12 @@
                         document.getElementById('event-category').value = event.category || '';
                         document.getElementById('event-location').value = event.location || '';
                         document.getElementById('event-semester').value = event.semester_id || '';
-                        document.getElementById('event-section').value = event.section_id || '';
+
+                        // Set section values using vanilla select API (multiple)
+                        if (window.vanillaSelect_eventSection) {
+                            window.vanillaSelect_eventSection.setValue(event.section_ids || []);
+                        }
+
                         document.getElementById('event-status').value = event.status || 'draft';
 
                         // Initialize Flatpickr if not already initialized
@@ -1940,9 +1946,9 @@
                     // Set loading state
                     saveBtn.disabled = true;
                     saveBtn.innerHTML = `
-                                                                                                                                                     <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                                                                                                                    ${isUpdate ? 'Updating...' : 'Saving...'}
-                                                                                                                                                        `;
+                                                                                                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                                                                             ${isUpdate ? 'Updating...' : 'Saving...'}
+                                                                                                          `;
 
                     // Get Flatpickr date range value
                     var dateRangeValue = start_date.value;
@@ -1955,6 +1961,8 @@
                     var endTime = timepicker2.value ? convertTo24Hour(timepicker2.value) : '';
 
                     // Build form data
+                    const allSectionsChecked = document.getElementById('all-sections-switch')?.checked || false;
+
                     const data = {
                         eventid: document.getElementById('eventid').value || '',
                         title: document.getElementById('event-title').value,
@@ -1967,7 +1975,8 @@
                         end_time: endTime,
                         location: document.getElementById('event-location').value,
                         semester_id: document.getElementById('event-semester').value || null,
-                        section_id: document.getElementById('event-section').value || null,
+                        section_id: allSectionsChecked ? null : (window.vanillaSelect_eventSection ? (window.vanillaSelect_eventSection.getValue() || []) : []),
+                        all_sections: allSectionsChecked,
                         status: document.getElementById('event-status').value
                     };
 
@@ -2048,6 +2057,25 @@
                 document.querySelectorAll('[id$="-error"]').forEach(el => {
                     el.textContent = '';
                 });
+            }
+
+            // Reset all sections switch
+            function resetAllSectionsSwitch() {
+                const allSectionsSwitch = document.getElementById('all-sections-switch');
+                const allSectionsHint = document.getElementById('all-sections-hint');
+
+                if (allSectionsSwitch) {
+                    allSectionsSwitch.checked = false;
+                }
+
+                // Enable section select using vanilla select API
+                if (window.vanillaSelect_eventSection) {
+                    window.vanillaSelect_eventSection.enable();
+                }
+
+                if (allSectionsHint) {
+                    allSectionsHint.style.display = 'none';
+                }
             }
 
             // Format date helper
@@ -2186,6 +2214,7 @@
                         document.getElementById('form-event').reset();
                         clearFormErrors();
                         flatpickrValueClear();
+                        resetAllSectionsSwitch();
 
                         // Reset button state
                         const saveBtn = document.getElementById('btn-save-event');
@@ -2204,6 +2233,7 @@
                         document.getElementById('form-event').reset();
                         clearFormErrors();
                         flatpickrValueClear();
+                        resetAllSectionsSwitch();
 
                         // Reset button state
                         const saveBtn = document.getElementById('btn-save-event');
@@ -2217,6 +2247,33 @@
                         isViewMode = false;
                         currentEventId = null;
                         window.currentEventIsPast = false;
+                    }
+                });
+            }
+
+            // Handle "All Sections" switch
+            const allSectionsSwitch = document.getElementById('all-sections-switch');
+            const allSectionsHint = document.getElementById('all-sections-hint');
+
+            if (allSectionsSwitch) {
+                allSectionsSwitch.addEventListener('change', function () {
+                    if (this.checked) {
+                        // Disable section select and set to empty array using vanilla select API
+                        if (window.vanillaSelect_eventSection) {
+                            window.vanillaSelect_eventSection.disable();
+                            window.vanillaSelect_eventSection.setValue([]);
+                        }
+                        if (allSectionsHint) {
+                            allSectionsHint.style.display = 'block';
+                        }
+                    } else {
+                        // Enable section select using vanilla select API
+                        if (window.vanillaSelect_eventSection) {
+                            window.vanillaSelect_eventSection.enable();
+                        }
+                        if (allSectionsHint) {
+                            allSectionsHint.style.display = 'none';
+                        }
                     }
                 });
             }

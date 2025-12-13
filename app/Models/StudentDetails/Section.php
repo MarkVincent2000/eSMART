@@ -5,8 +5,11 @@ namespace App\Models\StudentDetails;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Enums\YearLevel;
 use App\Traits\LoggerTrait;
+use App\Models\Event\Event;
+use App\Models\Event\EventSection;
 
 class Section extends Model
 {
@@ -39,6 +42,16 @@ class Section extends Model
     public function studentInfos(): HasMany
     {
         return $this->hasMany(StudentInfo::class);
+    }
+
+    /**
+     * Get all events associated with this section.
+     */
+    public function events(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_section')
+            ->using(EventSection::class)
+            ->withTimestamps();
     }
 }
 

@@ -184,13 +184,27 @@
                                     </div>
                                 </div>
                                 <!--end col-->
-                                <div class="col-12">
+
+                                <div class="col-md-4">
                                     <div class="mb-3">
-                                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                                        <select class="form-select" name="status" id="event-status" required>
-                                            <option value="">Select status</option>
-                                        </select>
-                                        <div class="invalid-feedback" id="status-error"></div>
+                                        <label class="form-label">Notify All Sections</label>
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                id="all-sections-switch">
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <x-select-vanilla :options="[]" name="section_id" id="eventSection"
+                                            label="Section" placeholder="Select sections" :searchable="true"
+                                            :multiple="true" />
+                                        <div class="invalid-feedback" id="section_id-error"></div>
+                                        <small class="text-muted text-xs" id="all-sections-hint" style="display: none;">
+                                            <i class="ri-information-line"></i> All sections will be notified
+                                        </small>
                                     </div>
                                 </div>
                                 <!--end col-->
@@ -198,7 +212,7 @@
                                     <div class="mb-3">
                                         <label class="form-label">Event Type <span class="text-danger">*</span></label>
                                         <select class="form-select" name="event_type" id="event-type" required>
-                                            <option value="">Select event type</option>
+                                            <option value="" disabled selected>Select event type</option>
                                         </select>
                                         <div class="invalid-feedback" id="event_type-error"></div>
                                     </div>
@@ -269,21 +283,23 @@
                                     <div class="mb-3">
                                         <label class="form-label">Semester</label>
                                         <select class="form-select" name="semester_id" id="event-semester">
-                                            <option value="">Select semester</option>
+                                            <option value="" disabled selected>Select semester</option>
                                         </select>
                                         <div class="invalid-feedback" id="semester_id-error"></div>
                                     </div>
                                 </div>
-                                <!--end col-->
+
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Section</label>
-                                        <select class="form-select" name="section_id" id="event-section">
-                                            <option value="">Select section</option>
+                                        <label class="form-label">Status <span class="text-danger">*</span></label>
+                                        <select class="form-select" name="status" id="event-status" required>
+                                            <option value="" disabled selected>Select status</option>
                                         </select>
-                                        <div class="invalid-feedback" id="section_id-error"></div>
+                                        <div class="invalid-feedback" id="status-error"></div>
                                     </div>
                                 </div>
+                                <!--end col-->
+
                                 <!--end col-->
                             </div>
                             <!--end row-->

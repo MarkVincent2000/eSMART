@@ -5,6 +5,7 @@ namespace App\Models\Event;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\LoggerTrait;
@@ -41,7 +42,6 @@ class Event extends Model
         'end_time',
         'location',
         'semester_id',
-        'section_id',
         'status',
         'image',
         'metadata',
@@ -61,7 +61,6 @@ class Event extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'semester_id' => 'integer',
-        'section_id' => 'integer',
         'created_by' => 'integer',
         'approved_by' => 'integer',
         'approved_at' => 'datetime',
@@ -103,11 +102,13 @@ class Event extends Model
     }
 
     /**
-     * Get the section associated with this event.
+     * Get the sections associated with this event.
      */
-    public function section(): BelongsTo
+    public function sections(): BelongsToMany
     {
-        return $this->belongsTo(Section::class);
+        return $this->belongsToMany(Section::class, 'event_section')
+            ->using(EventSection::class)
+            ->withTimestamps();
     }
 
     /**
