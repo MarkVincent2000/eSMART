@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use App\Traits\LoggerTrait;
 use App\Models\StudentDetails\Semester;
 use App\Models\StudentDetails\Section;
@@ -59,8 +60,8 @@ class Attendance extends Model
         'semester_id' => 'integer',
         'category_id' => 'integer',
         'date' => 'date',
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
+        'start_time' => 'string', // TIME data type - stores only time (HH:mm:ss)
+        'end_time' => 'string',   // TIME data type - stores only time (HH:mm:ss)
         'scheduled_duration_minutes' => 'integer',
         'is_active' => 'boolean',
         'is_locked' => 'boolean',
@@ -70,6 +71,122 @@ class Attendance extends Model
         'created_by' => 'integer',
         'locked_at' => 'datetime',
     ];
+
+    /**
+     * Get start_time combined with date as Carbon instance (for comparisons/calculations)
+     *
+     * @return \Carbon\Carbon|null
+     */
+    public function getStartTimeAttribute($value)
+    {
+        // If no time value stored, return null
+        if (!isset($this->attributes['start_time']) || !$this->attributes['start_time'] || !$this->date) {
+            return null;
+        }
+        
+        // Get the raw time string from attributes
+        $timeStr = $this->attributes['start_time'];
+        
+        // Combine date with time to create full datetime in Manila timezone
+        $dateStr = $this->date instanceof \DateTimeInterface 
+            ? $this->date->format('Y-m-d') 
+            : $this->date;
+            
+        return Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' ' . $timeStr, 'Asia/Manila');
+    }
+
+    /**
+     * Set start_time from datetime or time string
+     *
+     * @param mixed $value
+     * @return void
+     */
+    public function setStartTimeAttribute($value)
+    {
+        if (!$value) {
+            $this->attributes['start_time'] = null;
+            return;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            // Extract time portion in Manila timezone
+            $manilaTime = Carbon::instance($value)->setTimezone('Asia/Manila');
+            $this->attributes['start_time'] = $manilaTime->format('H:i:s');
+        } elseif (is_string($value)) {
+            // If it's already in H:i:s format, use it directly
+            if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $value)) {
+                $this->attributes['start_time'] = $value;
+            } else {
+                // Try to parse as datetime and extract time
+                try {
+                    $parsed = Carbon::parse($value);
+                    $this->attributes['start_time'] = $parsed->format('H:i:s');
+                } catch (\Exception $e) {
+                    $this->attributes['start_time'] = $value;
+                }
+            }
+        } else {
+            $this->attributes['start_time'] = $value;
+        }
+    }
+
+    /**
+     * Get end_time combined with date as Carbon instance (for comparisons/calculations)
+     *
+     * @return \Carbon\Carbon|null
+     */
+    public function getEndTimeAttribute($value)
+    {
+        // If no time value stored, return null
+        if (!isset($this->attributes['end_time']) || !$this->attributes['end_time'] || !$this->date) {
+            return null;
+        }
+        
+        // Get the raw time string from attributes
+        $timeStr = $this->attributes['end_time'];
+        
+        // Combine date with time to create full datetime in Manila timezone
+        $dateStr = $this->date instanceof \DateTimeInterface 
+            ? $this->date->format('Y-m-d') 
+            : $this->date;
+            
+        return Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' ' . $timeStr, 'Asia/Manila');
+    }
+
+    /**
+     * Set end_time from datetime or time string
+     *
+     * @param mixed $value
+     * @return void
+     */
+    public function setEndTimeAttribute($value)
+    {
+        if (!$value) {
+            $this->attributes['end_time'] = null;
+            return;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            // Extract time portion in Manila timezone
+            $manilaTime = Carbon::instance($value)->setTimezone('Asia/Manila');
+            $this->attributes['end_time'] = $manilaTime->format('H:i:s');
+        } elseif (is_string($value)) {
+            // If it's already in H:i:s format, use it directly
+            if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $value)) {
+                $this->attributes['end_time'] = $value;
+            } else {
+                // Try to parse as datetime and extract time
+                try {
+                    $parsed = Carbon::parse($value);
+                    $this->attributes['end_time'] = $parsed->format('H:i:s');
+                } catch (\Exception $e) {
+                    $this->attributes['end_time'] = $value;
+                }
+            }
+        } else {
+            $this->attributes['end_time'] = $value;
+        }
+    }
 
     /**
      * Attendance type constants.

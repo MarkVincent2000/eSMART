@@ -401,26 +401,41 @@
             year: 'numeric' 
         }) : 'N/A';
 
-        // Format time range
+        // Format time range - parse ISO 8601 UTC strings and convert to Manila timezone
+        // Helper function to format time from ISO 8601 UTC string to Manila local time
+        const formatTimeFromString = (timeStr) => {
+            if (!timeStr) return null;
+            try {
+                // Parse ISO 8601 UTC string
+                const date = new Date(timeStr);
+                if (isNaN(date.getTime())) {
+                    return null;
+                }
+                // Convert to Manila timezone and format as 12-hour
+                return date.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true,
+                    timeZone: 'Asia/Manila'
+                });
+            } catch (error) {
+                console.error('Error formatting time:', error);
+                return null;
+            }
+        };
+        
         let timeRange = '';
         if (attendance.start_time && attendance.end_time) {
-            const startTime = new Date(attendance.start_time).toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            const endTime = new Date(attendance.end_time).toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true 
-            });
-            timeRange = `${startTime} - ${endTime}`;
+            const startTime = formatTimeFromString(attendance.start_time);
+            const endTime = formatTimeFromString(attendance.end_time);
+            if (startTime && endTime) {
+                timeRange = `${startTime} - ${endTime}`;
+            }
         } else if (attendance.start_time) {
-            timeRange = new Date(attendance.start_time).toLocaleTimeString('en-US', { 
-                hour: 'numeric', 
-                minute: '2-digit',
-                hour12: true 
-            });
+            const startTime = formatTimeFromString(attendance.start_time);
+            if (startTime) {
+                timeRange = startTime;
+            }
         }
 
         // Get sections info
@@ -669,43 +684,51 @@
                     }
                 }
                 
-                // Set start time - convert from 24-hour to 12-hour format
+                // Set start time - parse ISO 8601 UTC and convert to Manila timezone for display
                 if (attendance.start_time) {
-                    // Parse the datetime string (format: "Y-m-d H:i:s")
-                    const startTimeStr = attendance.start_time;
-                    const timeMatch = startTimeStr.match(/(\d{2}):(\d{2}):(\d{2})/);
-                    if (timeMatch) {
-                        const hours = parseInt(timeMatch[1], 10);
-                        const minutes = parseInt(timeMatch[2], 10);
-                        const ampm = hours >= 12 ? 'PM' : 'AM';
-                        const hours12 = hours % 12 || 12;
-                        const formattedTime = `${hours12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-                        
-                        if (flatpickrStartTimeInstance) {
-                            flatpickrStartTimeInstance.setDate(formattedTime, false);
-                        } else {
-                            document.getElementById('attendanceStartTime').value = formattedTime;
+                    try {
+                        const startDate = new Date(attendance.start_time);
+                        if (!isNaN(startDate.getTime())) {
+                            // Format as 12-hour time in Manila timezone
+                            const formattedTime = startDate.toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true,
+                                timeZone: 'Asia/Manila'
+                            });
+                            
+                            if (flatpickrStartTimeInstance) {
+                                flatpickrStartTimeInstance.setDate(formattedTime, false);
+                            } else {
+                                document.getElementById('attendanceStartTime').value = formattedTime;
+                            }
                         }
+                    } catch (error) {
+                        console.error('Error parsing start_time:', error);
                     }
                 }
                 
-                // Set end time - convert from 24-hour to 12-hour format
+                // Set end time - parse ISO 8601 UTC and convert to Manila timezone for display
                 if (attendance.end_time) {
-                    // Parse the datetime string (format: "Y-m-d H:i:s")
-                    const endTimeStr = attendance.end_time;
-                    const timeMatch = endTimeStr.match(/(\d{2}):(\d{2}):(\d{2})/);
-                    if (timeMatch) {
-                        const hours = parseInt(timeMatch[1], 10);
-                        const minutes = parseInt(timeMatch[2], 10);
-                        const ampm = hours >= 12 ? 'PM' : 'AM';
-                        const hours12 = hours % 12 || 12;
-                        const formattedTime = `${hours12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-                        
-                        if (flatpickrEndTimeInstance) {
-                            flatpickrEndTimeInstance.setDate(formattedTime, false);
-                        } else {
-                            document.getElementById('attendanceEndTime').value = formattedTime;
+                    try {
+                        const endDate = new Date(attendance.end_time);
+                        if (!isNaN(endDate.getTime())) {
+                            // Format as 12-hour time in Manila timezone
+                            const formattedTime = endDate.toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true,
+                                timeZone: 'Asia/Manila'
+                            });
+                            
+                            if (flatpickrEndTimeInstance) {
+                                flatpickrEndTimeInstance.setDate(formattedTime, false);
+                            } else {
+                                document.getElementById('attendanceEndTime').value = formattedTime;
+                            }
                         }
+                    } catch (error) {
+                        console.error('Error parsing end_time:', error);
                     }
                 }
                 
@@ -1445,9 +1468,13 @@
     window.reloadAttendanceCategories = loadCategories;
     // Attendance action functions
     window.viewAttendance = function(attendanceId) {
-        // TODO: Implement view attendance modal or page
-        showToast('Info', 'View attendance functionality coming soon', 'info');
-        console.log('View attendance:', attendanceId);
+        // Navigate to the student attendance page (using query parameter for folder-only route)
+        if (attendanceId) {
+            const baseUrl = window.studentAttendanceRoute || 'attendance';
+            window.location.href = `${baseUrl}?id=${attendanceId}`;
+        } else {
+            showToast('Error', 'Invalid attendance ID', 'error');
+        }
     };
 
     // Store all students data for search functionality
@@ -1691,6 +1718,64 @@
     }
 
     // Render students statistics
+    /**
+     * Refresh students data without reinitializing the modal
+     * Only updates the table and stats cards
+     */
+    async function refreshStudentsData(attendanceId) {
+        try {
+            const token = getCsrfToken();
+            const response = await fetch(`/attendance/${attendanceId}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load attendance data');
+            }
+
+            const result = await response.json();
+            
+            if (result.success && result.data && result.data.attendance) {
+                const attendance = result.data.attendance;
+                // Handle both snake_case and camelCase
+                const students = attendance.student_attendances || attendance.studentAttendances || [];
+                const stats = result.data.stats || {};
+                
+                // Store students data globally for search
+                allStudentsData = students;
+                allStudentsStats = stats;
+                
+                if (students.length === 0) {
+                    // Show empty state
+                    const studentsEmpty = document.getElementById('studentsEmpty');
+                    const studentsContent = document.getElementById('studentsContent');
+                    if (studentsEmpty) studentsEmpty.classList.remove('d-none');
+                    if (studentsContent) studentsContent.classList.remove('d-none');
+                } else {
+                    // Hide empty state
+                    const studentsEmpty = document.getElementById('studentsEmpty');
+                    if (studentsEmpty) studentsEmpty.classList.add('d-none');
+                    
+                    // Render stats
+                    renderStudentsStats(stats, students.length);
+                    
+                    // Set current students data and reset pagination
+                    currentStudentsData = students;
+                    currentStudentsPage = 1;
+                    
+                    // Render students table with pagination
+                    renderStudentsTableWithPagination();
+                }
+            }
+        } catch (error) {
+            console.error('Error refreshing students data:', error);
+        }
+    }
+
     function renderStudentsStats(stats, totalStudents) {
         const statsHtml = `
             <div class="col-md-3">
@@ -1919,10 +2004,10 @@
             }
             
             // Check if this row should be selectable (pending and has check-in)
+            // Allow selection if status is pending, regardless of approved_at value
             const hasCheckIn = studentAttendance.check_in_time ? true : false;
-            const isApproved = studentAttendance.approved_at ? true : false;
             const attendanceStatus = (studentAttendance.status || '').toLowerCase();
-            const isPending = attendanceStatus === 'pending' || (!isApproved && hasCheckIn);
+            const isPending = attendanceStatus === 'pending';
             const isSelectable = isPending && hasCheckIn;
             
             const row = `
@@ -2099,40 +2184,40 @@
     function renderStudentAttendanceActions(studentAttendance) {
         const studentAttendanceId = studentAttendance.id;
         const hasCheckIn = studentAttendance.check_in_time ? true : false;
-        const isApproved = studentAttendance.approved_at ? true : false;
         const actionStatus = (studentAttendance.status || '').toLowerCase();
+        const isPending = actionStatus === 'pending';
+        const isApproved = !isPending && studentAttendance.approved_at; // Only show approved badge if status is not pending
+        
+        let buttons = '';
+        
+        // Always show edit button
+        buttons += `<button class="btn btn-sm btn-primary" onclick="editStudentAttendanceStatus(${studentAttendanceId})" title="Edit Status">
+            <i class="ri-edit-line"></i>
+        </button>`;
         
         // Show approve/disapprove buttons if: status is "pending" AND has check-in time
-        // OR if not approved and has check-in time (pending approval)
-        const isPending = actionStatus === 'pending' || (!isApproved && hasCheckIn);
-        
-        // Show buttons only if pending and has check-in time
+        // Allow approval even if approved_at has a value, as long as status is pending
         if (isPending && hasCheckIn) {
-            return `
-                <div class="d-flex gap-1">
-                    <button class="btn btn-sm btn-success" onclick="approveStudentAttendance(${studentAttendanceId})" title="Approve">
-                        <i class="ri-check-line"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="disapproveStudentAttendance(${studentAttendanceId})" title="Disapprove">
-                        <i class="ri-close-line"></i>
-                    </button>
-                </div>
+            buttons += `
+                <button class="btn btn-sm btn-success" onclick="approveStudentAttendance(${studentAttendanceId})" title="Approve">
+                    <i class="ri-check-line"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="disapproveStudentAttendance(${studentAttendanceId})" title="Disapprove">
+                    <i class="ri-close-line"></i>
+                </button>
             `;
         }
         
-        // Show disapprove button if approved
+        // Show disapprove button if approved (status is not pending and has approved_at)
         if (isApproved) {
-            return `
-                <div class="d-flex gap-1 align-items-center">
-                    <span class="badge bg-success">Approved</span>
-                    <button class="btn btn-sm btn-danger" onclick="disapproveStudentAttendance(${studentAttendanceId})" title="Disapprove">
-                        <i class="ri-close-line"></i>
-                    </button>
-                </div>
+            buttons += `
+                <button class="btn btn-sm btn-danger" onclick="disapproveStudentAttendance(${studentAttendanceId})" title="Disapprove">
+                    <i class="ri-close-line"></i>
+                </button>
             `;
         }
         
-        return '<span class="text-muted">-</span>';
+        return buttons ? `<div class="d-flex gap-1 align-items-center">${buttons}</div>` : '<span class="text-muted">-</span>';
     }
 
     // Approve student attendance
@@ -2161,34 +2246,159 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
-                        Swal.fire({
-                            title: 'Approved!',
-                            text: result.message || 'Student attendance has been approved.',
-                            icon: 'success',
-                            confirmButtonColor: '#0ab39c'
-                        });
+                        // Show success toast
+                        showToast('Success', result.message || 'Student attendance approved successfully', 'success');
                         
-                        // Reload students data
-                        // Get current attendance ID from modal or store it
+                        // Refresh students data without reinitializing modal
                         const currentAttendanceId = window.currentViewingAttendanceId;
                         if (currentAttendanceId) {
-                            // Reload the students list
-                            await viewStudents(currentAttendanceId);
+                            await refreshStudentsData(currentAttendanceId);
+                        }
+                    } else {
+                        showToast('Error', result.message || 'Failed to approve student attendance', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error approving student attendance:', error);
+                }
+            }
+        });
+    };
+
+    // Edit student attendance status
+    window.editStudentAttendanceStatus = function(studentAttendanceId) {
+        // Find the student attendance data
+        const studentAttendance = allStudentsData.find(sa => sa.id === studentAttendanceId);
+        if (!studentAttendance) {
+            showToast('Error', 'Student attendance not found', 'error');
+            return;
+        }
+
+        const currentStatus = studentAttendance.status || 'pending';
+        
+        // Status options with labels
+        const statusOptions = [
+            { value: 'present', label: 'Present' },
+            { value: 'absent', label: 'Absent' },
+            { value: 'late', label: 'Late' },
+            { value: 'excused', label: 'Excused' },
+            { value: 'partial', label: 'Partial' },
+            { value: 'leave', label: 'Leave' },
+            { value: 'pending', label: 'Pending' }
+        ];
+
+        // Build select options HTML
+        let selectOptions = '';
+        statusOptions.forEach(option => {
+            const selected = option.value === currentStatus ? 'selected' : '';
+            selectOptions += `<option value="${option.value}" ${selected}>${option.label}</option>`;
+        });
+
+        Swal.fire({
+            title: 'Edit Attendance Status',
+            html: `
+                <div class="text-start">
+                    <label for="statusSelect" class="form-label mb-2">Select Status:</label>
+                    <select id="statusSelect" class="form-select">
+                        ${selectOptions}
+                    </select>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0ab39c',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Update Status',
+            cancelButtonText: 'Cancel',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                // Focus on select when modal opens
+                const select = document.getElementById('statusSelect');
+                if (select) {
+                    select.focus();
+                }
+            },
+            preConfirm: async () => {
+                const select = document.getElementById('statusSelect');
+                const selectedStatus = select ? select.value : null;
+                
+                if (!selectedStatus) {
+                    Swal.showValidationMessage('Please select a status');
+                    return false;
+                }
+                
+                if (selectedStatus === currentStatus) {
+                    Swal.showValidationMessage('Status is already set to this value');
+                    return false;
+                }
+                
+                return selectedStatus;
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed && result.value) {
+                const newStatus = result.value;
+                
+                try {
+                    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                    if (!token) {
+                        showToast('Error', 'CSRF token not found', 'error');
+                        return;
+                    }
+
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Updating...',
+                        text: 'Please wait while we update the status',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const response = await fetch(`/attendance/students/${studentAttendanceId}/update-status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            status: newStatus
+                        })
+                    });
+
+                    const responseData = await response.json();
+
+                    if (response.ok && responseData.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: responseData.message || 'Status updated successfully',
+                            confirmButtonColor: '#0ab39c',
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                        
+                        // Refresh students data without reinitializing modal
+                        const currentAttendanceId = window.currentViewingAttendanceId;
+                        if (currentAttendanceId) {
+                            await refreshStudentsData(currentAttendanceId);
                         }
                     } else {
                         Swal.fire({
-                            title: 'Error!',
-                            text: result.message || 'Failed to approve student attendance.',
                             icon: 'error',
+                            title: 'Error',
+                            text: responseData.message || 'Failed to update status',
                             confirmButtonColor: '#f06548'
                         });
                     }
                 } catch (error) {
-                    console.error('Error approving student attendance:', error);
+                    console.error('Error updating student attendance status:', error);
                     Swal.fire({
-                        title: 'Error!',
-                        text: 'An error occurred while approving the attendance.',
                         icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while updating the status',
                         confirmButtonColor: '#f06548'
                     });
                 }
@@ -2222,35 +2432,19 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
-                        Swal.fire({
-                            title: 'Disapproved!',
-                            text: result.message || 'Student attendance has been disapproved.',
-                            icon: 'success',
-                            confirmButtonColor: '#0ab39c'
-                        });
+                        // Show success toast
+                        showToast('Success', result.message || 'Student attendance disapproved successfully', 'success');
                         
-                        // Reload students data
+                        // Refresh students data without reinitializing modal
                         const currentAttendanceId = window.currentViewingAttendanceId;
                         if (currentAttendanceId) {
-                            // Reload the students list
-                            await viewStudents(currentAttendanceId);
+                            await refreshStudentsData(currentAttendanceId);
                         }
                     } else {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: result.message || 'Failed to disapprove student attendance.',
-                            icon: 'error',
-                            confirmButtonColor: '#f06548'
-                        });
+                        showToast('Error', result.message || 'Failed to disapprove student attendance', 'error');
                     }
                 } catch (error) {
                     console.error('Error disapproving student attendance:', error);
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'An error occurred while disapproving the attendance.',
-                        icon: 'error',
-                        confirmButtonColor: '#f06548'
-                    });
                 }
             }
         });
@@ -2353,10 +2547,10 @@
             const studentAttendance = allStudentsData.find(sa => sa.id === id);
             if (studentAttendance) {
                 const hasCheckIn = studentAttendance.check_in_time ? true : false;
-                const isApproved = studentAttendance.approved_at ? true : false;
                 const status = (studentAttendance.status || '').toLowerCase();
-                const isPending = status === 'pending' || (!isApproved && hasCheckIn);
+                const isPending = status === 'pending';
                 
+                // Allow approval if status is pending, regardless of approved_at value
                 if (isPending && hasCheckIn) {
                     eligible.push(id);
                 }
@@ -2399,7 +2593,9 @@
             confirmButtonColor: '#0ab39c',
             cancelButtonColor: '#f06548',
             confirmButtonText: `Yes, Approve ${eligibleIds.length}`,
-            cancelButtonText: 'Cancel'
+            cancelButtonText: 'Cancel',
+            allowOutsideClick: false,
+            allowEscapeKey: true
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
@@ -2419,38 +2615,23 @@
                     const responseData = await response.json();
 
                     if (response.ok && responseData.success) {
-                        Swal.fire({
-                            title: 'Approved!',
-                            text: responseData.message || `Successfully approved ${eligibleIds.length} attendance(s).`,
-                            icon: 'success',
-                            confirmButtonColor: '#0ab39c'
-                        });
+                        // Show success toast
+                        showToast('Success', responseData.message || `Successfully approved ${eligibleIds.length} attendance(s)`, 'success');
                         
                         // Clear selection
                         selectedStudentAttendances.clear();
                         document.getElementById('selectAllStudents').checked = false;
                         
-                        // Reload students data
+                        // Refresh students data without reinitializing modal
                         const currentAttendanceId = window.currentViewingAttendanceId;
                         if (currentAttendanceId) {
-                            await viewStudents(currentAttendanceId);
+                            await refreshStudentsData(currentAttendanceId);
                         }
                     } else {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: responseData.message || 'Failed to approve student attendances.',
-                            icon: 'error',
-                            confirmButtonColor: '#f06548'
-                        });
+                        showToast('Error', responseData.message || 'Failed to approve student attendances', 'error');
                     }
                 } catch (error) {
                     console.error('Error bulk approving student attendances:', error);
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'An error occurred while approving the attendances.',
-                        icon: 'error',
-                        confirmButtonColor: '#f06548'
-                    });
                 }
             }
         });
@@ -2498,38 +2679,23 @@
                     const responseData = await response.json();
 
                     if (response.ok && responseData.success) {
-                        Swal.fire({
-                            title: 'Disapproved!',
-                            text: responseData.message || `Successfully disapproved ${eligibleIds.length} attendance(s).`,
-                            icon: 'success',
-                            confirmButtonColor: '#0ab39c'
-                        });
+                        // Show success toast
+                        showToast('Success', responseData.message || `Successfully disapproved ${eligibleIds.length} attendance(s)`, 'success');
                         
                         // Clear selection
                         selectedStudentAttendances.clear();
                         document.getElementById('selectAllStudents').checked = false;
                         
-                        // Reload students data
+                        // Refresh students data without reinitializing modal
                         const currentAttendanceId = window.currentViewingAttendanceId;
                         if (currentAttendanceId) {
-                            await viewStudents(currentAttendanceId);
+                            await refreshStudentsData(currentAttendanceId);
                         }
                     } else {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: responseData.message || 'Failed to disapprove student attendances.',
-                            icon: 'error',
-                            confirmButtonColor: '#f06548'
-                        });
+                        showToast('Error', responseData.message || 'Failed to disapprove student attendances', 'error');
                     }
                 } catch (error) {
                     console.error('Error bulk disapproving student attendances:', error);
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'An error occurred while disapproving the attendances.',
-                        icon: 'error',
-                        confirmButtonColor: '#f06548'
-                    });
                 }
             }
         });
@@ -2739,13 +2905,14 @@
                 const notesMatch = attendance.notes ? 
                     attendance.notes.toLowerCase().includes(searchQuery) : false;
 
-                // Format time for search
+                // Format time for search - convert UTC to Manila timezone
                 let timeMatch = false;
                 if (attendance.start_time) {
                     const startTime = new Date(attendance.start_time).toLocaleTimeString('en-US', { 
                         hour: 'numeric', 
                         minute: '2-digit',
-                        hour12: true 
+                        hour12: true,
+                        timeZone: 'Asia/Manila'
                     }).toLowerCase();
                     timeMatch = startTime.includes(searchQuery);
                 }
@@ -2753,7 +2920,8 @@
                     const endTime = new Date(attendance.end_time).toLocaleTimeString('en-US', { 
                         hour: 'numeric', 
                         minute: '2-digit',
-                        hour12: true 
+                        hour12: true,
+                        timeZone: 'Asia/Manila'
                     }).toLowerCase();
                     timeMatch = endTime.includes(searchQuery);
                 }

@@ -326,8 +326,7 @@
                             </li>
                             <li>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="dashboardTask"
-                                        checked>
+                                    <input class="form-check-input" type="checkbox" value="" id="dashboardTask" checked>
                                     <label class="form-check-label" for="dashboardTask">
                                         Dashboards : Ecommerce, Analytics, Project,etc.
                                     </label>
@@ -343,8 +342,7 @@
                             </li>
                             <li>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value=""
-                                        id="authenticationTask">
+                                    <input class="form-check-input" type="checkbox" value="" id="authenticationTask">
                                     <label class="form-check-label" for="authenticationTask">
                                         Add authentication pages
                                     </label>
@@ -481,13 +479,13 @@
                                     <div class="col-lg-12">
                                         <label for="exampleFormControlTextarea1" class="form-label">Leave a
                                             Comments</label>
-                                        <textarea class="form-control bg-light border-light" id="exampleFormControlTextarea1" rows="3"
+                                        <textarea class="form-control bg-light border-light"
+                                            id="exampleFormControlTextarea1" rows="3"
                                             placeholder="Enter comments"></textarea>
                                     </div>
                                     <!--end col-->
                                     <div class="col-12 text-end">
-                                        <button type="button"
-                                            class="btn btn-ghost-secondary btn-icon waves-effect me-1"><i
+                                        <button type="button" class="btn btn-ghost-secondary btn-icon waves-effect me-1"><i
                                                 class="ri-attachment-line fs-16"></i></button>
                                         <a href="javascript:void(0);" class="btn btn-success">Post Comments</a>
                                     </div>
@@ -604,8 +602,8 @@
                                                         </div>
                                                     </div>
                                                     <div class="ms-3 flex-grow-1">
-                                                        <h6 class="fs-15 mb-0"><a
-                                                                href="javascript:void(0);">Images.zip</a></h6>
+                                                        <h6 class="fs-15 mb-0"><a href="javascript:void(0);">Images.zip</a>
+                                                        </h6>
                                                     </div>
                                                 </div>
                                             </td>
@@ -851,8 +849,8 @@
                                         class="img-fluid rounded-circle">
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h5 class="fs-13 mb-0"><a href="javascript:void(0);"
-                                            class="text-body d-block">Jennifer Carter</a></h5>
+                                    <h5 class="fs-13 mb-0"><a href="javascript:void(0);" class="text-body d-block">Jennifer
+                                            Carter</a></h5>
                                 </div>
                                 <div class="flex-shrink-0">
                                     <button type="button" class="btn btn-light btn-sm">Add</button>

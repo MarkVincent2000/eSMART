@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * AttendanceController
@@ -33,11 +34,51 @@ class AttendanceController extends Controller
     /**
      * Display the attendance management page
      * 
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('attendance.index');
+        $attendance = null;
+        $stats = null;
+        $currentUserStudentAttendance = null;
+        
+        // Check if viewing a specific attendance session
+        if ($request->has('id') && $request->id) {
+            try {
+                $attendance = Attendance::with([
+                    'semester',
+                    'sections',
+                    'category',
+                    'creator',
+                    'studentAttendances.user',
+                    'studentAttendances.user.studentInfo',
+                    'studentAttendances.markedBy',
+                    'studentAttendances.approvedBy'
+                ])->findOrFail($request->id);
+
+                // Get statistics
+                $stats = [
+                    'total_students' => $attendance->studentAttendances->count(),
+                    'present_count' => $attendance->studentAttendances->where('status', StudentAttendance::STATUS_PRESENT)->count(),
+                    'absent_count' => $attendance->studentAttendances->where('status', StudentAttendance::STATUS_ABSENT)->count(),
+                    'late_count' => $attendance->studentAttendances->where('status', StudentAttendance::STATUS_LATE)->count(),
+                    'excused_count' => $attendance->studentAttendances->where('status', StudentAttendance::STATUS_EXCUSED)->count(),
+                    'pending_count' => $attendance->studentAttendances->where('status', StudentAttendance::STATUS_PENDING)->count(),
+                ];
+
+                // Get current user's student attendance record
+                // Use database query instead of collection filter for better performance
+                $currentUserStudentAttendance = StudentAttendance::where('attendance_id', $attendance->id)
+                    ->where('user_id', Auth::id())
+                    ->with(['user', 'user.studentInfo'])
+                    ->first();
+            } catch (\Exception $e) {
+                // If attendance not found, just continue without student attendance data
+            }
+        }
+        
+        return view('attendance.index', compact('attendance', 'stats', 'currentUserStudentAttendance'));
     }
 
     /**
@@ -49,7 +90,8 @@ class AttendanceController extends Controller
     public function getAttendances(Request $request)
     {
         try {
-            $query = Attendance::with(['semester', 'sections', 'category', 'creator']);
+            $query = Attendance::with(['semester', 'sections', 'category', 'creator'])
+                ->orderBy('created_at', 'desc'); // Sort by newest first
 
             // Apply filters
             if ($request->has('semester_id') && $request->semester_id) {
@@ -78,8 +120,7 @@ class AttendanceController extends Controller
                 }
             }
 
-            $attendances = $query->orderBy('date', 'desc')
-                ->orderBy('start_time', 'desc')
+            $attendances = $query->orderBy('created_at', 'desc') // Sort by newest first
                 ->get();
 
             return response()->json([
@@ -251,22 +292,39 @@ class AttendanceController extends Controller
                 'category_id',
                 'attendance_type',
                 'date',
-                'start_time',
-                'end_time',
                 'location',
                 'latitude',
                 'longitude',
                 'is_active'
             ]);
 
+            // Handle start_time and end_time - extract time portion only (H:i:s) for TIME data type
+            if ($request->start_time) {
+                // Parse as Manila timezone (since frontend sends local Manila time)
+                $startTimeManila = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $request->start_time, 'Asia/Manila');
+                // Extract only time portion (H:i:s) for TIME data type
+                $data['start_time'] = $startTimeManila->format('H:i:s');
+            } else {
+                $data['start_time'] = null;
+            }
+
+            if ($request->end_time) {
+                // Parse as Manila timezone (since frontend sends local Manila time)
+                $endTimeManila = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $request->end_time, 'Asia/Manila');
+                // Extract only time portion (H:i:s) for TIME data type
+                $data['end_time'] = $endTimeManila->format('H:i:s');
+            } else {
+                $data['end_time'] = null;
+            }
+
             $data['created_by'] = Auth::id();
             $data['is_active'] = $request->has('is_active') ? (bool) $request->is_active : true;
 
             // Calculate scheduled duration if times are provided
-            if ($request->start_time && $request->end_time) {
-                $start = \Carbon\Carbon::parse($request->start_time);
-                $end = \Carbon\Carbon::parse($request->end_time);
-                $data['scheduled_duration_minutes'] = $start->diffInMinutes($end);
+            if ($data['start_time'] && $data['end_time'] && $data['date']) {
+                $startDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $data['date'] . ' ' . $data['start_time'], 'Asia/Manila');
+                $endDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $data['date'] . ' ' . $data['end_time'], 'Asia/Manila');
+                $data['scheduled_duration_minutes'] = $startDateTime->diffInMinutes($endDateTime);
             }
 
             $attendance = Attendance::create($data);
@@ -553,19 +611,36 @@ class AttendanceController extends Controller
                 'category_id',
                 'attendance_type',
                 'date',
-                'start_time',
-                'end_time',
                 'location',
                 'latitude',
                 'longitude',
                 'is_active'
             ]);
 
+            // Handle start_time and end_time - extract time portion only (H:i:s) for TIME data type
+            if ($request->start_time) {
+                // Parse as Manila timezone (since frontend sends local Manila time)
+                $startTimeManila = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $request->start_time, 'Asia/Manila');
+                // Extract only time portion (H:i:s) for TIME data type
+                $data['start_time'] = $startTimeManila->format('H:i:s');
+            } else {
+                $data['start_time'] = null;
+            }
+
+            if ($request->end_time) {
+                // Parse as Manila timezone (since frontend sends local Manila time)
+                $endTimeManila = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $request->end_time, 'Asia/Manila');
+                // Extract only time portion (H:i:s) for TIME data type
+                $data['end_time'] = $endTimeManila->format('H:i:s');
+            } else {
+                $data['end_time'] = null;
+            }
+
             // Recalculate scheduled duration if times are provided
-            if ($request->start_time && $request->end_time) {
-                $start = \Carbon\Carbon::parse($request->start_time);
-                $end = \Carbon\Carbon::parse($request->end_time);
-                $data['scheduled_duration_minutes'] = $start->diffInMinutes($end);
+            if ($data['start_time'] && $data['end_time'] && $data['date']) {
+                $startDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $data['date'] . ' ' . $data['start_time'], 'Asia/Manila');
+                $endDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $data['date'] . ' ' . $data['end_time'], 'Asia/Manila');
+                $data['scheduled_duration_minutes'] = $startDateTime->diffInMinutes($endDateTime);
             }
 
             $attendance->update($data);
@@ -693,15 +768,18 @@ class AttendanceController extends Controller
     public function approveStudentAttendance($id)
     {
         try {
-            $studentAttendance = StudentAttendance::findOrFail($id);
+            $studentAttendance = StudentAttendance::with('attendance')->findOrFail($id);
 
-            // Check if already approved
-            if ($studentAttendance->isApproved()) {
+            // Check if status is pending - allow approval if status is pending even if approved_at has value
+            if (!$studentAttendance->isPending()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This attendance has already been approved.'
+                    'message' => 'Can only approve attendance with pending status.'
                 ], 400);
             }
+
+            // Note: We allow approval even if approved_at already has a value, as long as status is pending
+            // This allows re-approval or correction of previously approved records that were set back to pending
 
             // Check if has check-in time
             if (!$studentAttendance->check_in_time) {
@@ -711,19 +789,141 @@ class AttendanceController extends Controller
                 ], 400);
             }
 
-            // Approve the attendance
-            $studentAttendance->approve(Auth::id());
+            // Load attendance relationship if not loaded
+            if (!$studentAttendance->relationLoaded('attendance')) {
+                $studentAttendance->load('attendance');
+            }
+
+            // Determine status based on check-in time comparison with attendance start_time
+            $status = StudentAttendance::STATUS_PRESENT;
+            $isLate = false;
+
+            if ($studentAttendance->attendance && $studentAttendance->attendance->start_time) {
+                // Use start_time directly - it's already a full datetime
+                $startTime = $studentAttendance->attendance->start_time->copy()->utc();
+                $checkInTime = $studentAttendance->check_in_time->copy()->utc();
+                
+                // Debug logging
+                Log::info('=== ATTENDANCE APPROVAL TIME COMPARISON ===', [
+                    'student_attendance_id' => $studentAttendance->id,
+                    'attendance_id' => $studentAttendance->attendance_id,
+                    'raw_data' => [
+                        'start_time_original' => $studentAttendance->attendance->start_time->toDateTimeString(),
+                        'check_in_time_original' => $studentAttendance->check_in_time->toDateTimeString(),
+                    ],
+                    'utc_comparison' => [
+                        'start_time_utc' => $startTime->toDateTimeString(),
+                        'check_in_time_utc' => $checkInTime->toDateTimeString(),
+                        'start_time_timestamp' => $startTime->timestamp,
+                        'check_in_time_timestamp' => $checkInTime->timestamp,
+                        'difference_seconds' => $checkInTime->diffInSeconds($startTime, false),
+                        'difference_minutes' => $checkInTime->diffInMinutes($startTime, false),
+                        'is_late_check' => $checkInTime->gt($startTime),
+                        'is_late_operator' => $checkInTime->timestamp > $startTime->timestamp,
+                    ],
+                ]);
+                
+                // Compare using direct timestamp comparison for absolute certainty
+                if ($checkInTime->timestamp > $startTime->timestamp) {
+                    $status = StudentAttendance::STATUS_LATE;
+                    $isLate = true;
+                    Log::info('✓ Status set to LATE', [
+                        'check_in_time' => $checkInTime->toDateTimeString() . ' (timestamp: ' . $checkInTime->timestamp . ')',
+                        'start_time' => $startTime->toDateTimeString() . ' (timestamp: ' . $startTime->timestamp . ')',
+                        'difference_seconds' => $checkInTime->timestamp - $startTime->timestamp,
+                    ]);
+                } else {
+                    Log::info('✓ Status set to PRESENT (on time)', [
+                        'check_in_time' => $checkInTime->toDateTimeString() . ' (timestamp: ' . $checkInTime->timestamp . ')',
+                        'start_time' => $startTime->toDateTimeString() . ' (timestamp: ' . $startTime->timestamp . ')',
+                        'difference_seconds' => $checkInTime->timestamp - $startTime->timestamp,
+                    ]);
+                }
+            } else {
+                Log::warning('Cannot compare times - missing data', [
+                    'has_attendance' => !!$studentAttendance->attendance,
+                    'has_start_time' => !!($studentAttendance->attendance && $studentAttendance->attendance->start_time),
+                ]);
+            }
+
+            // Update the student attendance with the determined status
+            $studentAttendance->update([
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'status' => $status,
+                'is_late' => $isLate,
+            ]);
+
+            // Determine message based on status
+            $statusMessage = $status === 'late' 
+                ? 'Student attendance approved and marked as late.' 
+                : 'Student attendance approved and marked as present.';
 
             return response()->json([
                 'success' => true,
-                'message' => 'Student attendance approved successfully.',
-                'data' => $studentAttendance->fresh(['user', 'user.studentInfo'])
+                'message' => $statusMessage,
+                'data' => $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance'])
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to approve student attendance: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update student attendance status
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param int $id Student attendance ID
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateStudentAttendanceStatus(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'status' => 'required|string|in:' . implode(',', StudentAttendance::getStatuses()),
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $studentAttendance = StudentAttendance::findOrFail($id);
+            $newStatus = $request->input('status');
+            $oldStatus = $studentAttendance->status;
+
+            // Update the status
+            $studentAttendance->update([
+                'status' => $newStatus,
+                'marked_by' => Auth::id(),
+            ]);
+
+            // If changing from approved status to pending, clear approval
+            if ($oldStatus !== StudentAttendance::STATUS_PENDING && $newStatus === StudentAttendance::STATUS_PENDING) {
+                $studentAttendance->update([
+                    'approved_by' => null,
+                    'approved_at' => null,
+                    'is_late' => false,
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student attendance status updated successfully.',
+                'data' => $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance'])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update student attendance status: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -793,18 +993,21 @@ class AttendanceController extends Controller
 
             foreach ($ids as $id) {
                 try {
-                    $studentAttendance = StudentAttendance::find($id);
+                    $studentAttendance = StudentAttendance::with('attendance')->find($id);
                     
                     if (!$studentAttendance) {
                         $skippedCount++;
                         continue;
                     }
 
-                    // Check if already approved
-                    if ($studentAttendance->isApproved()) {
+                    // Check if status is pending - allow approval if status is pending even if approved_at has value
+                    if (!$studentAttendance->isPending()) {
                         $skippedCount++;
                         continue;
                     }
+
+                    // Note: We allow approval even if approved_at already has a value, as long as status is pending
+                    // This allows re-approval or correction of previously approved records that were set back to pending
 
                     // Check if has check-in time
                     if (!$studentAttendance->check_in_time) {
@@ -812,8 +1015,35 @@ class AttendanceController extends Controller
                         continue;
                     }
 
-                    // Approve the attendance
-                    $studentAttendance->approve(Auth::id());
+                    // Load attendance relationship if not loaded
+                    if (!$studentAttendance->relationLoaded('attendance')) {
+                        $studentAttendance->load('attendance');
+                    }
+
+                    // Determine status based on check-in time comparison
+                    $status = StudentAttendance::STATUS_PRESENT;
+                    $isLate = false;
+
+                    if ($studentAttendance->attendance && $studentAttendance->attendance->start_time) {
+                        // Use start_time directly - it's already a full datetime
+                        $startTime = $studentAttendance->attendance->start_time->copy()->utc();
+                        $checkInTime = $studentAttendance->check_in_time->copy()->utc();
+                        
+                        // Compare using direct timestamp comparison
+                        if ($checkInTime->timestamp > $startTime->timestamp) {
+                            $status = StudentAttendance::STATUS_LATE;
+                            $isLate = true;
+                        }
+                    }
+
+                    // Update the student attendance
+                    $studentAttendance->update([
+                        'approved_by' => Auth::id(),
+                        'approved_at' => now(),
+                        'status' => $status,
+                        'is_late' => $isLate,
+                    ]);
+
                     $approvedCount++;
                 } catch (\Exception $e) {
                     $errors[] = "Failed to approve attendance ID {$id}: " . $e->getMessage();

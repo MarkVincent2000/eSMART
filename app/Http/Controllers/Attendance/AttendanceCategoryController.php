@@ -37,7 +37,7 @@ class AttendanceCategoryController extends Controller
             $categories = AttendanceCategory::with(['attendances' => function($query) {
                 $query->with(['semester', 'sections', 'creator'])
                     ->orderBy('date', 'desc')
-                    ->orderBy('start_time', 'desc');
+                    ->orderBy('created_at', 'desc'); // Sort by newest first
             }])
                 ->orderBy('display_order', 'asc')
                 ->orderBy('name', 'asc')

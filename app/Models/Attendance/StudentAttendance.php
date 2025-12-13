@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 use App\Traits\LoggerTrait;
 use App\Models\User;
 
@@ -58,8 +60,8 @@ class StudentAttendance extends Model
         'attendance_id' => 'integer',
         'user_id' => 'integer',
         'student_info_id' => 'integer',
-        'check_in_time' => 'datetime',
-        'check_out_time' => 'datetime',
+        'check_in_time' => 'string',  // TIME data type - stores only time (HH:mm:ss)
+        'check_out_time' => 'string', // TIME data type - stores only time (HH:mm:ss)
         'duration_minutes' => 'integer',
         'is_late' => 'boolean',
         'is_excused' => 'boolean',
@@ -70,6 +72,142 @@ class StudentAttendance extends Model
         'approved_by' => 'integer',
         'approved_at' => 'datetime',
     ];
+
+    /**
+     * Get check_in_time combined with attendance date as Carbon instance (for comparisons/calculations)
+     *
+     * @return \Carbon\Carbon|null
+     */
+    public function getCheckInTimeAttribute($value)
+    {
+        // If no time value stored, return null
+        if (!$value || !isset($this->attributes['check_in_time'])) {
+            return null;
+        }
+
+        // Get the raw time string from attributes
+        $timeStr = $this->attributes['check_in_time'];
+
+        // Load attendance relationship if not loaded (it will lazy load)
+        if (!$this->relationLoaded('attendance')) {
+            $this->load('attendance');
+        }
+
+        $attendance = $this->attendance;
+        if (!$attendance || !$attendance->date) {
+            return null;
+        }
+
+        // Combine attendance date with time to create full datetime in Manila timezone
+        $dateStr = $attendance->date instanceof \DateTimeInterface 
+            ? $attendance->date->format('Y-m-d') 
+            : $attendance->date;
+        
+        return Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' ' . $timeStr, 'Asia/Manila');
+    }
+
+    /**
+     * Set check_in_time from datetime or time string
+     *
+     * @param mixed $value
+     * @return void
+     */
+    public function setCheckInTimeAttribute($value)
+    {
+        if (!$value) {
+            $this->attributes['check_in_time'] = null;
+            return;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            // Extract time portion in Manila timezone
+            $manilaTime = Carbon::instance($value)->setTimezone('Asia/Manila');
+            $this->attributes['check_in_time'] = $manilaTime->format('H:i:s');
+        } elseif (is_string($value)) {
+            // If it's already in H:i:s format, use it directly
+            if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $value)) {
+                $this->attributes['check_in_time'] = $value;
+            } else {
+                // Try to parse as datetime and extract time in Manila timezone
+                try {
+                    $parsed = Carbon::parse($value)->setTimezone('Asia/Manila');
+                    $this->attributes['check_in_time'] = $parsed->format('H:i:s');
+                } catch (\Exception $e) {
+                    $this->attributes['check_in_time'] = $value;
+                }
+            }
+        } else {
+            $this->attributes['check_in_time'] = $value;
+        }
+    }
+
+    /**
+     * Get check_out_time combined with attendance date as Carbon instance (for comparisons/calculations)
+     *
+     * @return \Carbon\Carbon|null
+     */
+    public function getCheckOutTimeAttribute($value)
+    {
+        // If no time value stored, return null
+        if (!$value || !isset($this->attributes['check_out_time'])) {
+            return null;
+        }
+
+        // Get the raw time string from attributes
+        $timeStr = $this->attributes['check_out_time'];
+
+        // Load attendance relationship if not loaded (it will lazy load)
+        if (!$this->relationLoaded('attendance')) {
+            $this->load('attendance');
+        }
+
+        $attendance = $this->attendance;
+        if (!$attendance || !$attendance->date) {
+            return null;
+        }
+
+        // Combine attendance date with time to create full datetime in Manila timezone
+        $dateStr = $attendance->date instanceof \DateTimeInterface 
+            ? $attendance->date->format('Y-m-d') 
+            : $attendance->date;
+        
+        return Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' ' . $timeStr, 'Asia/Manila');
+    }
+
+    /**
+     * Set check_out_time from datetime or time string
+     *
+     * @param mixed $value
+     * @return void
+     */
+    public function setCheckOutTimeAttribute($value)
+    {
+        if (!$value) {
+            $this->attributes['check_out_time'] = null;
+            return;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            // Extract time portion in Manila timezone
+            $manilaTime = Carbon::instance($value)->setTimezone('Asia/Manila');
+            $this->attributes['check_out_time'] = $manilaTime->format('H:i:s');
+        } elseif (is_string($value)) {
+            // If it's already in H:i:s format, use it directly
+            if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $value)) {
+                $this->attributes['check_out_time'] = $value;
+            } else {
+                // Try to parse as datetime and extract time in Manila timezone
+                try {
+                    $parsed = Carbon::parse($value)->setTimezone('Asia/Manila');
+                    $this->attributes['check_out_time'] = $parsed->format('H:i:s');
+                } catch (\Exception $e) {
+                    $this->attributes['check_out_time'] = $value;
+                }
+            }
+        } else {
+            $this->attributes['check_out_time'] = $value;
+        }
+    }
 
     /**
      * Attendance status constants.
@@ -273,20 +411,26 @@ class StudentAttendance extends Model
 
     /**
      * Mark attendance as approved.
+     * Note: Status determination (present/late) is now handled in the controller.
      *
      * @param int $approvedBy
+     * @param string $status The status to set ('present' or 'late')
+     * @param bool $isLate Whether the attendance is late
      * @return bool
      */
-    public function approve(int $approvedBy): bool
+    public function approve(int $approvedBy, string $status = self::STATUS_PRESENT, bool $isLate = false): bool
     {
         return $this->update([
             'approved_by' => $approvedBy,
             'approved_at' => now(),
+            'status' => $status,
+            'is_late' => $isLate,
         ]);
     }
 
     /**
      * Mark attendance as unapproved.
+     * Sets status back to 'pending'.
      *
      * @return bool
      */
@@ -295,6 +439,8 @@ class StudentAttendance extends Model
         return $this->update([
             'approved_by' => null,
             'approved_at' => null,
+            'status' => self::STATUS_PENDING,
+            'is_late' => false,
         ]);
     }
 
