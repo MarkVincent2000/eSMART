@@ -186,11 +186,15 @@ class RoleManagement extends Component
         $isEditing = !is_null($this->roleId);
         
         // Validation rules - ensure name is unique per guard_name
+        // Format: unique:table,column,except,idColumn,whereColumn,whereValue
         $uniqueRule = 'required|string|max:255|unique:roles,name';
         if ($isEditing) {
-            $uniqueRule .= ',' . $this->roleId . ',id';
+            // When editing: exclude current role ID, add guard_name where clause
+            $uniqueRule .= ',' . $this->roleId . ',id,guard_name,' . $this->guard_name;
+        } else {
+            // When creating: use NULL for except, add guard_name where clause
+            $uniqueRule .= ',NULL,id,guard_name,' . $this->guard_name;
         }
-        $uniqueRule .= ',guard_name,' . $this->guard_name;
         
         $rules = [
             'name' => $uniqueRule,

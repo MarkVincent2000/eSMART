@@ -5,6 +5,7 @@ namespace App\Models\Attendance;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -33,7 +34,7 @@ class Attendance extends Model
         'title',
         'description',
         'semester_id',
-        'section_id',
+        'category_id',
         'attendance_type',
         'date',
         'start_time',
@@ -56,7 +57,7 @@ class Attendance extends Model
      */
     protected $casts = [
         'semester_id' => 'integer',
-        'section_id' => 'integer',
+        'category_id' => 'integer',
         'date' => 'date',
         'start_time' => 'datetime',
         'end_time' => 'datetime',
@@ -91,11 +92,32 @@ class Attendance extends Model
     }
 
     /**
-     * Get the section associated with this attendance session.
+     * Get the sections associated with this attendance session (many-to-many).
      */
-    public function section(): BelongsTo
+    public function sections(): BelongsToMany
     {
-        return $this->belongsTo(Section::class);
+        return $this->belongsToMany(Section::class, 'attendance_section')
+            ->withTimestamps()
+            ->using(AttendanceSection::class)
+            ->withPivot('id');
+    }
+
+    /**
+     * Get the first section (for backward compatibility).
+     * 
+     * @deprecated Use sections() relationship instead
+     */
+    public function section(): ?Section
+    {
+        return $this->sections()->first();
+    }
+
+    /**
+     * Get the category associated with this attendance session.
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(AttendanceCategory::class, 'category_id');
     }
 
     /**
@@ -151,7 +173,9 @@ class Attendance extends Model
      */
     public function scopeForSection($query, int $sectionId)
     {
-        return $query->where('section_id', $sectionId);
+        return $query->whereHas('sections', function ($q) use ($sectionId) {
+            $q->where('sections.id', $sectionId);
+        });
     }
 
     /**
@@ -160,6 +184,24 @@ class Attendance extends Model
     public function scopeOfType($query, string $type)
     {
         return $query->where('attendance_type', $type);
+    }
+
+    /**
+     * Scope a query to only include attendances of a specific category.
+     */
+    public function scopeOfCategory($query, int $categoryId)
+    {
+        return $query->where('category_id', $categoryId);
+    }
+
+    /**
+     * Scope a query to only include attendances with active categories.
+     */
+    public function scopeWithActiveCategory($query)
+    {
+        return $query->whereHas('category', function ($q) {
+            $q->where('is_active', true);
+        });
     }
 
     /**

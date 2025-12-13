@@ -80,6 +80,7 @@ class StudentAttendance extends Model
     public const STATUS_EXCUSED = 'excused';
     public const STATUS_PARTIAL = 'partial';
     public const STATUS_LEAVE = 'leave';
+    public const STATUS_PENDING = 'pending';
 
     /**
      * Get the attendance session that this student attendance belongs to.
@@ -237,6 +238,16 @@ class StudentAttendance extends Model
     }
 
     /**
+     * Determine if the attendance is pending.
+     *
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
      * Determine if the attendance is approved.
      *
      * @return bool
@@ -301,6 +312,7 @@ class StudentAttendance extends Model
             self::STATUS_EXCUSED,
             self::STATUS_PARTIAL,
             self::STATUS_LEAVE,
+            self::STATUS_PENDING,
         ];
     }
 }

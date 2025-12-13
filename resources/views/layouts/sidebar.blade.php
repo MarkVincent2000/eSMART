@@ -91,6 +91,7 @@
 
                 <x-sidebar.title title="Activities" />
                 <x-sidebar.nav-link href="engagement.index" icon="ri-calendar-event-line" title="Events" />
+                <x-sidebar.nav-link href="attendance.index" icon="mdi mdi-account-plus" title="Manage Attendance" />
 
                 @can('view-student-management')
                     <x-sidebar.title title="Student Management" />

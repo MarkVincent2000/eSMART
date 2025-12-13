@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             PermissionSeeder::class,
             SemesterSeeder::class,
+            AttendanceCategorySeeder::class,
         ]);
     }
 }

@@ -31,4 +31,7 @@ Route::post('/update-password/{id}', [App\Http\Controllers\HomeController::class
 // Engagement Routes
 require __DIR__.'/engagement/web.php';
 
+// Attendance Routes
+require __DIR__.'/attendance/web.php';
+
 Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->name('index');
