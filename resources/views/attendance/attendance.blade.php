@@ -410,7 +410,9 @@
                     <h5 class="modal-title" id="viewStudentsModalLabel">
                         <i class="ri-group-line align-bottom me-2"></i> Students Attendance
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                   
                 </div>
                 <div class="modal-body">
                     <!-- Loading State -->
@@ -441,6 +443,7 @@
                             </div>
                             <small class="text-muted" id="studentsSearchResults"></small>
                         </div>
+                        
 
                         <!-- Bulk Actions Container -->
                         <div id="bulkActionsContainer" class="mb-3 p-3 bg-light rounded border" style="display: none;">
@@ -461,6 +464,13 @@
                                     </button>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="d-flex gap-2 align-items-center mb-2">
+                            <button type="button" class="btn btn-sm btn-soft-primary" id="refreshStudentsTableBtn" 
+                                onclick="refreshStudentsTable()" title="Refresh Table">
+                                <i class="ri-refresh-line align-bottom"></i> Refresh
+                            </button>
                         </div>
 
                         <!-- Students Table -->

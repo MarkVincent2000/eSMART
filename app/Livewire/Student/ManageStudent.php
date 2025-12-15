@@ -6,10 +6,12 @@ use App\Models\StudentDetails\Semester;
 use App\Models\StudentDetails\Section;
 use App\Models\StudentDetails\Program;
 use App\Models\StudentDetails\StudentInfo;
+use App\Models\Notification;
 use App\Enums\YearLevel;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
+use Illuminate\Support\Facades\Log;
 
 class ManageStudent extends Component
 {
@@ -789,6 +791,18 @@ class ManageStudent extends Component
         
         $studentInfo->update($updateData);
         
+        // Reload the student info with relationships
+        $studentInfo->refresh();
+        $studentInfo->load(['user', 'program', 'section', 'semester']);
+        
+        // Send notification to the student
+        try {
+            $this->notifyStudentEnrollmentUpdated($studentInfo);
+        } catch (\Exception $notifyError) {
+            // Log error but don't fail the update
+            Log::error('Failed to send notification for student enrollment update: ' . $notifyError->getMessage());
+        }
+        
         $this->closeEditStudentModal();
         $this->resetPage(); // Reset pagination
         
@@ -865,6 +879,88 @@ class ManageStudent extends Component
         $this->showDeleteStudentModal = false;
         $this->deleteStudentInfoId = null;
         $this->deleteStudentNumber = null;
+    }
+
+    /**
+     * Notify student about enrollment update
+     * 
+     * @param StudentInfo $studentInfo
+     * @return void
+     */
+    private function notifyStudentEnrollmentUpdated(StudentInfo $studentInfo)
+    {
+        try {
+            // Skip if student doesn't have a user account
+            if (!$studentInfo->user || !$studentInfo->user_id) {
+                Log::info('Skipping notification - student has no user account', ['student_info_id' => $studentInfo->id]);
+                return;
+            }
+
+            // Build notification title and body
+            $title = "📝 Enrollment Updated";
+            
+            $body = "Your enrollment information has been updated. ";
+            
+            // Add details about what was updated
+            $details = [];
+            
+            if ($studentInfo->program) {
+                $details[] = "Program: {$studentInfo->program->name}";
+            }
+            
+            if ($studentInfo->section) {
+                $details[] = "Section: {$studentInfo->section->name}";
+            }
+            
+            if ($studentInfo->year_level) {
+                $yearLevelLabel = YearLevel::from($studentInfo->year_level)->label();
+                $details[] = "Year Level: {$yearLevelLabel}";
+            }
+            
+            if ($studentInfo->status) {
+                $statusLabel = ucfirst($studentInfo->status);
+                $details[] = "Status: {$statusLabel}";
+            }
+            
+            if (!empty($details)) {
+                $body .= implode(', ', $details) . ". ";
+            }
+            
+            $body .= "Please review your updated enrollment details.";
+
+            // Build notification data
+            $notificationData = [
+                'student_info_id' => $studentInfo->id,
+                'student_number' => $studentInfo->student_number,
+                'program_id' => $studentInfo->program_id,
+                'section_id' => $studentInfo->section_id,
+                'year_level' => $studentInfo->year_level,
+                'status' => $studentInfo->status,
+                'semester_id' => $studentInfo->semester_id,
+            ];
+
+            // URL for the notification
+            $notificationUrl = "/enrollment.my-info-index";
+
+            // Create notification
+            Notification::create([
+                'user_id' => $studentInfo->user_id,
+                'type' => 'enrollment_updated',
+                'title' => $title,
+                'body' => $body,
+                'url' => $notificationUrl,
+                'data' => $notificationData,
+                'notifiable_id' => $studentInfo->id,
+                'notifiable_type' => StudentInfo::class,
+                'read_at' => null,
+            ]);
+
+            Log::info("Sent enrollment update notification to student {$studentInfo->user_id} for enrollment: {$studentInfo->student_number} (ID: {$studentInfo->id})");
+
+        } catch (\Exception $e) {
+            // Log error but don't fail the enrollment update
+            Log::error("Failed to send notification for student enrollment {$studentInfo->id}: " . $e->getMessage());
+        }
     }
 
     public function render()

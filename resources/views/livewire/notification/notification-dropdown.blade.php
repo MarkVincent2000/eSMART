@@ -52,7 +52,7 @@
                             </div>
 
                             <!-- Notification Content -->
-                            <a href="#" type="button" class="notification-item-link"
+                            <a href="{{ $notification->url ?? '#' }}" type="button" class="notification-item-link"
                                 wire:click.prevent="clickmarkAsRead({{ $notification->id }})">
                                 <div class="notification-item-content flex-grow-1">
 
@@ -357,4 +357,33 @@
             color: #adb5bd;
         }
     </style>
+
+    <script>
+        // Listen for navigation event from Livewire
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('navigate-to-notification-url', (event) => {
+                // Handle both Livewire 2 and Livewire 3 event formats
+                const url = event.url || event[0]?.url || (Array.isArray(event) && event[0]?.url);
+                
+                if (url && url !== '#' && url !== '') {
+                    // Use setTimeout to ensure Livewire finishes processing first
+                    setTimeout(() => {
+                        window.location.href = url;
+                    }, 100);
+                }
+            });
+        });
+
+        // Fallback for when Livewire is already loaded
+        if (typeof Livewire !== 'undefined' && Livewire.find) {
+            Livewire.on('navigate-to-notification-url', (event) => {
+                const url = event.url || event[0]?.url || (Array.isArray(event) && event[0]?.url);
+                if (url && url !== '#' && url !== '') {
+                    setTimeout(() => {
+                        window.location.href = url;
+                    }, 100);
+                }
+            });
+        }
+    </script>
 </div>

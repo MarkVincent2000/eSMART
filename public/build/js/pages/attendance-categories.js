@@ -1719,11 +1719,50 @@
 
     // Render students statistics
     /**
+     * Refresh students table (called by refresh button)
+     */
+    window.refreshStudentsTable = async function() {
+        const attendanceId = window.currentViewingAttendanceId;
+        if (!attendanceId) {
+            showToast('Error', 'No attendance session selected', 'error');
+            return;
+        }
+
+        // Get refresh button and show loading state
+        const refreshBtn = document.getElementById('refreshStudentsTableBtn');
+        const originalContent = refreshBtn ? refreshBtn.innerHTML : '';
+        
+        if (refreshBtn) {
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Refreshing...';
+        }
+
+        try {
+            await refreshStudentsData(attendanceId);
+            showToast('Success', 'Students table refreshed successfully', 'success');
+        } catch (error) {
+            console.error('Error refreshing students table:', error);
+            showToast('Error', 'Failed to refresh students table', 'error');
+        } finally {
+            // Restore button state
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = originalContent;
+            }
+        }
+    };
+
+    /**
      * Refresh students data without reinitializing the modal
      * Only updates the table and stats cards
+     * Preserves search query and re-applies filter after refresh
      */
     async function refreshStudentsData(attendanceId) {
         try {
+            // Preserve current search query
+            const searchInput = document.getElementById('studentsSearchInput');
+            const currentSearchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            
             const token = getCsrfToken();
             const response = await fetch(`/attendance/${attendanceId}`, {
                 method: 'GET',
@@ -1763,16 +1802,25 @@
                     // Render stats
                     renderStudentsStats(stats, students.length);
                     
-                    // Set current students data and reset pagination
-                    currentStudentsData = students;
-                    currentStudentsPage = 1;
+                    // Re-apply search filter if there's an active search query
+                    if (currentSearchQuery) {
+                        filterStudents(currentSearchQuery);
+                    } else {
+                        // No search query, show all students
+                        currentStudentsData = students;
+                        currentStudentsPage = 1;
+                    }
                     
                     // Render students table with pagination
                     renderStudentsTableWithPagination();
+                    
+                    // Update select all checkbox state
+                    updateSelectAllCheckbox();
                 }
             }
         } catch (error) {
             console.error('Error refreshing students data:', error);
+            throw error; // Re-throw so calling function can handle it
         }
     }
 

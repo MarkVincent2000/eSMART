@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('type')->nullable();
             $table->string('title');
+            $table->string('url')->nullable();
             $table->text('body')->nullable();
             $table->json('data')->nullable();
             $table->timestamp('read_at')->nullable();

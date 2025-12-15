@@ -50,13 +50,17 @@ class NotificationDropdown extends Component
         $notification = Notification::where('user_id', Auth::id())
             ->findOrFail($notificationId);
         
+        // Mark as read if unread
         if ($notification->isUnread()) {
             $notification->markAsRead();
-            
-            $this->dispatch('show-toast', [
-                'message' => 'Notification marked as read',
-                'type' => 'success'
-            ]);
+        }
+        
+        // Get the URL and dispatch event for navigation
+        $url = $notification->url;
+        
+        // Dispatch browser event to navigate to the URL (if URL exists)
+        if (!empty($url) && $url !== '#') {
+            $this->dispatch('navigate-to-notification-url', url: $url);
         }
     }
 

@@ -162,6 +162,7 @@ class RegisterController extends Controller
                     'user_name' => $newUser->name,
                     'action' => 'user_registered',
                 ],
+                'url' => '/user-management.index',
                 'notifiable_id' => $newUser->id,
                 'notifiable_type' => User::class,
             ]);

@@ -1883,25 +1883,42 @@
 
             // Helper function to convert 12-hour format to 24-hour format
             function convertTo24Hour(time12h) {
-                if (!time12h) return '';
+                if (!time12h) return null;
 
                 // Check if already in 24-hour format (no AM/PM)
                 if (!time12h.match(/AM|PM/i)) {
+                    // Ensure it's in H:i format (pad hours if needed)
+                    const parts = time12h.split(':');
+                    if (parts.length === 2) {
+                        let hours = parts[0].trim();
+                        let minutes = parts[1].trim();
+                        // Pad hours to 2 digits
+                        hours = hours.padStart(2, '0');
+                        // Ensure minutes are 2 digits
+                        minutes = minutes.padEnd(2, '0').substring(0, 2);
+                        return `${hours}:${minutes}`;
+                    }
                     return time12h;
                 }
 
                 const [time, modifier] = time12h.split(' ');
                 let [hours, minutes] = time.split(':');
 
+                // Convert hours to integer for calculation
+                let hoursInt = parseInt(hours, 10);
+
                 if (hours === '12') {
-                    hours = '00';
+                    hoursInt = modifier.toUpperCase() === 'AM' ? 0 : 12;
+                } else if (modifier.toUpperCase() === 'PM') {
+                    hoursInt = hoursInt + 12;
                 }
 
-                if (modifier.toUpperCase() === 'PM') {
-                    hours = parseInt(hours, 10) + 12;
-                }
+                // Pad hours to 2 digits (00-23)
+                const hoursStr = String(hoursInt).padStart(2, '0');
+                // Ensure minutes are 2 digits
+                const minutesStr = (minutes || '00').padEnd(2, '0').substring(0, 2);
 
-                return `${hours}:${minutes}`;
+                return `${hoursStr}:${minutesStr}`;
             }
 
             // Helper function to convert 24-hour format to 12-hour format
@@ -1957,8 +1974,8 @@
                     var endDate = dates.length > 1 ? dates[1].trim() : null;
 
                     // Get time values from Flatpickr and convert to 24-hour format
-                    var startTime = timepicker1.value ? convertTo24Hour(timepicker1.value) : '';
-                    var endTime = timepicker2.value ? convertTo24Hour(timepicker2.value) : '';
+                    var startTime = timepicker1.value ? convertTo24Hour(timepicker1.value) : null;
+                    var endTime = timepicker2.value ? convertTo24Hour(timepicker2.value) : null;
 
                     // Build form data
                     const allSectionsChecked = document.getElementById('all-sections-switch')?.checked || false;

@@ -9,11 +9,13 @@ use App\Models\Attendance\StudentAttendance;
 use App\Models\StudentDetails\Semester;
 use App\Models\StudentDetails\Section;
 use App\Models\StudentDetails\StudentInfo;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 /**
  * AttendanceController
@@ -338,10 +340,21 @@ class AttendanceController extends Controller
                 }
             }
 
+            // Reload attendance with relationships for notification
+            $attendance->load(['semester', 'sections', 'category', 'creator']);
+
+            // Send notifications to students
+            try {
+                $this->notifyStudents($attendance);
+            } catch (\Exception $notifyError) {
+                // Log error but don't fail the request
+                Log::error('Failed to send notifications for attendance: ' . $notifyError->getMessage());
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Attendance session created successfully.',
-                'data' => $attendance->load(['semester', 'sections', 'category', 'creator'])
+                'data' => $attendance
             ], 201);
 
         } catch (\Exception $e) {
@@ -652,10 +665,21 @@ class AttendanceController extends Controller
                 $attendance->sections()->detach();
             }
 
+            // Reload attendance with relationships for notification
+            $attendance = $attendance->fresh(['semester', 'sections', 'category', 'creator']);
+
+            // Send notifications to students about the update
+            try {
+                $this->notifyStudents($attendance, 'updated');
+            } catch (\Exception $notifyError) {
+                // Log error but don't fail the request
+                Log::error('Failed to send notifications for attendance update: ' . $notifyError->getMessage());
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Attendance session updated successfully.',
-                'data' => $attendance->fresh(['semester', 'sections', 'category', 'creator'])
+                'data' => $attendance
             ]);
 
         } catch (\Exception $e) {
@@ -854,6 +878,17 @@ class AttendanceController extends Controller
                 'is_late' => $isLate,
             ]);
 
+            // Reload with relationships for notification
+            $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance']);
+
+            // Send notification to student
+            try {
+                $this->notifyStudentAttendanceStatusChange($studentAttendance, 'approved', $status);
+            } catch (\Exception $notifyError) {
+                // Log error but don't fail the approval
+                Log::error('Failed to send notification for attendance approval: ' . $notifyError->getMessage());
+            }
+
             // Determine message based on status
             $statusMessage = $status === 'late' 
                 ? 'Student attendance approved and marked as late.' 
@@ -862,7 +897,7 @@ class AttendanceController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $statusMessage,
-                'data' => $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance'])
+                'data' => $studentAttendance
             ]);
 
         } catch (\Exception $e) {
@@ -914,10 +949,23 @@ class AttendanceController extends Controller
                 ]);
             }
 
+            // Reload with relationships for notification
+            $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance']);
+
+            // Send notification to student if status changed
+            if ($oldStatus !== $newStatus) {
+                try {
+                    $this->notifyStudentAttendanceStatusChange($studentAttendance, 'updated', $newStatus, $oldStatus);
+                } catch (\Exception $notifyError) {
+                    // Log error but don't fail the update
+                    Log::error('Failed to send notification for attendance status update: ' . $notifyError->getMessage());
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Student attendance status updated successfully.',
-                'data' => $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance'])
+                'data' => $studentAttendance
             ]);
 
         } catch (\Exception $e) {
@@ -950,10 +998,21 @@ class AttendanceController extends Controller
             // Disapprove the attendance
             $studentAttendance->unapprove();
 
+            // Reload with relationships for notification
+            $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance']);
+
+            // Send notification to student
+            try {
+                $this->notifyStudentAttendanceStatusChange($studentAttendance, 'disapproved', $studentAttendance->status);
+            } catch (\Exception $notifyError) {
+                // Log error but don't fail the disapproval
+                Log::error('Failed to send notification for attendance disapproval: ' . $notifyError->getMessage());
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Student attendance disapproved successfully.',
-                'data' => $studentAttendance->fresh(['user', 'user.studentInfo'])
+                'data' => $studentAttendance
             ]);
 
         } catch (\Exception $e) {
@@ -1044,6 +1103,17 @@ class AttendanceController extends Controller
                         'is_late' => $isLate,
                     ]);
 
+                    // Reload with relationships for notification
+                    $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance']);
+
+                    // Send notification to student
+                    try {
+                        $this->notifyStudentAttendanceStatusChange($studentAttendance, 'approved', $status);
+                    } catch (\Exception $notifyError) {
+                        // Log error but continue with other approvals
+                        Log::error("Failed to send notification for attendance approval ID {$id}: " . $notifyError->getMessage());
+                    }
+
                     $approvedCount++;
                 } catch (\Exception $e) {
                     $errors[] = "Failed to approve attendance ID {$id}: " . $e->getMessage();
@@ -1112,6 +1182,18 @@ class AttendanceController extends Controller
 
                     // Disapprove the attendance
                     $studentAttendance->unapprove();
+
+                    // Reload with relationships for notification
+                    $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance']);
+
+                    // Send notification to student
+                    try {
+                        $this->notifyStudentAttendanceStatusChange($studentAttendance, 'disapproved', $studentAttendance->status);
+                    } catch (\Exception $notifyError) {
+                        // Log error but continue with other disapprovals
+                        Log::error("Failed to send notification for attendance disapproval ID {$id}: " . $notifyError->getMessage());
+                    }
+
                     $disapprovedCount++;
                 } catch (\Exception $e) {
                     $errors[] = "Failed to disapprove attendance ID {$id}: " . $e->getMessage();
@@ -1133,6 +1215,296 @@ class AttendanceController extends Controller
                 'success' => false,
                 'message' => 'Failed to bulk disapprove student attendances: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Notify students about attendance session creation or update
+     * 
+     * @param Attendance $attendance
+     * @param string $action 'created' or 'updated'
+     * @return void
+     */
+    private function notifyStudents(Attendance $attendance, string $action = 'created')
+    {
+        try {
+            // Get section IDs from the attendance
+            $sectionIds = $attendance->sections->pluck('id')->toArray();
+
+            if (empty($sectionIds)) {
+                Log::warning('No sections found for attendance notification', ['attendance_id' => $attendance->id]);
+                return;
+            }
+
+            // Get active semester IDs
+            $activeSemesterIds = Semester::where('is_active', true)->pluck('id')->toArray();
+
+            // Get all enrolled students from the specified sections
+            // where their semester is active and matches attendance semester
+            $students = StudentInfo::whereIn('section_id', $sectionIds)
+                ->whereIn('status', ['enrolled', 'enroll'])
+                ->where('semester_id', $attendance->semester_id)
+                ->whereIn('semester_id', $activeSemesterIds)
+                ->with('user')
+                ->get();
+
+            if ($students->isEmpty()) {
+                Log::info('No students found for attendance notification', ['attendance_id' => $attendance->id]);
+                return;
+            }
+
+            // Format attendance date and time for notification
+            $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
+            $attendanceTime = '';
+            
+            if ($attendance->start_time) {
+                // Parse time (H:i:s format) and format it
+                $timeParts = explode(':', $attendance->start_time);
+                if (count($timeParts) >= 2) {
+                    $hour = (int)$timeParts[0];
+                    $minute = $timeParts[1];
+                    $period = $hour >= 12 ? 'PM' : 'AM';
+                    $hour12 = $hour % 12;
+                    if ($hour12 == 0) $hour12 = 12;
+                    
+                    $startTime = sprintf('%d:%s %s', $hour12, $minute, $period);
+                    
+                    if ($attendance->end_time) {
+                        $endTimeParts = explode(':', $attendance->end_time);
+                        if (count($endTimeParts) >= 2) {
+                            $endHour = (int)$endTimeParts[0];
+                            $endMinute = $endTimeParts[1];
+                            $endPeriod = $endHour >= 12 ? 'PM' : 'AM';
+                            $endHour12 = $endHour % 12;
+                            if ($endHour12 == 0) $endHour12 = 12;
+                            
+                            $endTime = sprintf('%d:%s %s', $endHour12, $endMinute, $endPeriod);
+                            $attendanceTime = " from {$startTime} to {$endTime}";
+                        } else {
+                            $attendanceTime = " at {$startTime}";
+                        }
+                    } else {
+                        $attendanceTime = " at {$startTime}";
+                    }
+                }
+            }
+
+            // Build notification title and body based on action
+            $notificationType = $action === 'created' ? 'attendance_created' : 'attendance_updated';
+            
+            if ($action === 'created') {
+                $title = "📋 New Attendance Session: {$attendance->title}";
+                
+                $body = "A new attendance session has been created for you. ";
+                $body .= "Session: {$attendance->title} on {$attendanceDate}";
+                if ($attendanceTime) {
+                    $body .= $attendanceTime;
+                }
+                if ($attendance->location) {
+                    $body .= " at {$attendance->location}";
+                }
+                $body .= ". Please check in when the session starts! ✅";
+            } else {
+                // Updated attendance message
+                $title = "📢 Attendance Session Updated: {$attendance->title}";
+                
+                $body = "The attendance session has been updated. ";
+                $body .= "Session: {$attendance->title} on {$attendanceDate}";
+                if ($attendanceTime) {
+                    $body .= $attendanceTime;
+                }
+                if ($attendance->location) {
+                    $body .= " at {$attendance->location}";
+                }
+                $body .= ". Please review the updated details and check in when the session starts! 📅";
+            }
+
+            // Build notification data
+            $notificationData = [
+                'attendance_id' => $attendance->id,
+                'attendance_title' => $attendance->title,
+                'date' => $attendance->date,
+                'start_time' => $attendance->start_time,
+                'end_time' => $attendance->end_time,
+                'location' => $attendance->location,
+                'attendance_type' => $attendance->attendance_type,
+                'action' => $action,
+            ];
+
+            // URL for the notification (with attendance ID as query parameter)
+            $notificationUrl = "/attendance?id={$attendance->id}";
+
+            // Create notifications for each student
+            $notificationCount = 0;
+            foreach ($students as $student) {
+                // Skip if student doesn't have a user account
+                if (!$student->user || !$student->user_id) {
+                    continue;
+                }
+
+                try {
+                    Notification::create([
+                        'user_id' => $student->user_id,
+                        'type' => $notificationType,
+                        'title' => $title,
+                        'body' => $body,
+                        'url' => $notificationUrl,
+                        'data' => $notificationData,
+                        'notifiable_id' => $attendance->id,
+                        'notifiable_type' => Attendance::class,
+                        'read_at' => null,
+                    ]);
+                    $notificationCount++;
+                } catch (\Exception $e) {
+                    // Log error but continue with other students
+                    Log::error("Failed to create notification for student {$student->user_id}: " . $e->getMessage());
+                }
+            }
+
+            // Log notification count for debugging
+            $actionText = $action === 'created' ? 'creation' : 'update';
+            Log::info("Sent attendance {$actionText} notifications to {$notificationCount} students for attendance: {$attendance->title} (ID: {$attendance->id})");
+
+        } catch (\Exception $e) {
+            // Log error but don't fail the attendance creation
+            Log::error("Failed to send notifications for attendance {$attendance->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify student about attendance status change
+     * 
+     * @param StudentAttendance $studentAttendance
+     * @param string $action 'approved', 'disapproved', or 'updated'
+     * @param string $newStatus The new status
+     * @param string|null $oldStatus The old status (for updates)
+     * @return void
+     */
+    private function notifyStudentAttendanceStatusChange(StudentAttendance $studentAttendance, string $action, string $newStatus, ?string $oldStatus = null)
+    {
+        try {
+            // Skip if student doesn't have a user account
+            if (!$studentAttendance->user || !$studentAttendance->user_id) {
+                Log::info('Skipping notification - student has no user account', ['student_attendance_id' => $studentAttendance->id]);
+                return;
+            }
+
+            // Load attendance relationship if not loaded
+            if (!$studentAttendance->relationLoaded('attendance')) {
+                $studentAttendance->load('attendance');
+            }
+
+            if (!$studentAttendance->attendance) {
+                Log::warning('Skipping notification - attendance session not found', ['student_attendance_id' => $studentAttendance->id]);
+                return;
+            }
+
+            $attendance = $studentAttendance->attendance;
+
+            // Build notification title and body based on action and status
+            $statusLabels = [
+                'present' => 'Present',
+                'absent' => 'Absent',
+                'late' => 'Late',
+                'excused' => 'Excused',
+                'pending' => 'Pending',
+                'partial' => 'Partial',
+                'leave' => 'Leave',
+            ];
+
+            $statusLabel = $statusLabels[$newStatus] ?? ucfirst($newStatus);
+            $statusEmoji = [
+                'present' => '✅',
+                'absent' => '❌',
+                'late' => '⏰',
+                'excused' => '📝',
+                'pending' => '⏳',
+                'partial' => '📊',
+                'leave' => '🏖️',
+            ];
+            $emoji = $statusEmoji[$newStatus] ?? '📋';
+
+            if ($action === 'approved') {
+                $title = "{$emoji} Attendance Approved: {$statusLabel}";
+                
+                $body = "Your attendance has been approved and marked as {$statusLabel}. ";
+                $body .= "Session: {$attendance->title}";
+                
+                if ($attendance->date) {
+                    $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
+                    $body .= " on {$attendanceDate}";
+                }
+                
+                if ($newStatus === 'late' && $studentAttendance->is_late) {
+                    $body .= ". Note: You were marked as late.";
+                } else {
+                    $body .= ".";
+                }
+            } elseif ($action === 'disapproved') {
+                $title = "⚠️ Attendance Disapproved";
+                
+                $body = "Your attendance has been disapproved. ";
+                $body .= "Session: {$attendance->title}";
+                
+                if ($attendance->date) {
+                    $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
+                    $body .= " on {$attendanceDate}";
+                }
+                
+                $body .= ". Please contact your instructor for more information.";
+            } else {
+                // Updated status
+                $title = "📝 Attendance Status Updated: {$statusLabel}";
+                
+                $body = "Your attendance status has been updated to {$statusLabel}. ";
+                $body .= "Session: {$attendance->title}";
+                
+                if ($attendance->date) {
+                    $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
+                    $body .= " on {$attendanceDate}";
+                }
+                
+                if ($oldStatus) {
+                    $oldStatusLabel = $statusLabels[$oldStatus] ?? ucfirst($oldStatus);
+                    $body .= " (changed from {$oldStatusLabel})";
+                }
+                
+                $body .= ".";
+            }
+
+            // Build notification data
+            $notificationData = [
+                'student_attendance_id' => $studentAttendance->id,
+                'attendance_id' => $attendance->id,
+                'attendance_title' => $attendance->title,
+                'status' => $newStatus,
+                'old_status' => $oldStatus,
+                'action' => $action,
+                'is_late' => $studentAttendance->is_late,
+                'approved_at' => $studentAttendance->approved_at ? $studentAttendance->approved_at->toDateTimeString() : null,
+            ];
+
+            // URL for the notification (with attendance ID as query parameter)
+            $notificationUrl = "/attendance?id={$attendance->id}";
+
+            // Create notification
+            Notification::create([
+                'user_id' => $studentAttendance->user_id,
+                'type' => 'attendance_status_changed',
+                'title' => $title,
+                'body' => $body,
+                'url' => $notificationUrl,
+                'data' => $notificationData,
+                'notifiable_id' => $studentAttendance->id,
+                'notifiable_type' => StudentAttendance::class,
+                'read_at' => null,
+            ]);
+
+            Log::info("Sent attendance status change notification to student {$studentAttendance->user_id} for attendance: {$attendance->title} (Status: {$newStatus}, Action: {$action})");
+
+        } catch (\Exception $e) {
+            // Log error but don't fail the status change
+            Log::error("Failed to send notification for student attendance status change {$studentAttendance->id}: " . $e->getMessage());
         }
     }
 }

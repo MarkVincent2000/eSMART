@@ -86,14 +86,32 @@
                                     aria-labelledby="{{ $headingId }}">
                                     <div class="accordion-body ms-2 ps-5 pt-0">
                                         @if($notification->body)
-                                            <p class="text-muted mb-2">{{ $notification->body }}</p>
+                                            <p class="text-muted mb-2">
+                                                @if($notification->url)
+                                                    <a href="{{ $notification->url }}" 
+                                                        class="text-decoration-none text-muted"
+                                                        wire:click.prevent="markAsRead({{ $notification->id }})"
+                                                        style="cursor: pointer;">
+                                                        {{ $notification->body }}
+                                                    </a>
+                                                @else
+                                                    {{ $notification->body }}
+                                                @endif
+                                            </p>
                                         @endif
                                         <p class="text-muted mb-3">
                                             <i class="ri-time-line me-1"></i>
                                             {{ $notification->created_at->diffForHumans() }}
                                         </p>
                                         <div class="d-flex flex-wrap gap-3">
-                                            @if($notification->isUnread())
+                                            @if($notification->url)
+                                                <a href="{{ $notification->url }}" 
+                                                    class="btn btn-link link-primary p-0 text-decoration-none"
+                                                    wire:click.prevent="markAsRead({{ $notification->id }})"
+                                                    wire:loading.attr="disabled">
+                                                    <i class="ri-external-link-line me-1"></i>View Details
+                                                </a>
+                                            @elseif($notification->isUnread())
                                                 <button type="button" class="btn btn-link link-primary p-0 text-decoration-none"
                                                     wire:click="markAsRead({{ $notification->id }})" wire:loading.attr="disabled">
                                                     <i class="ri-check-line me-1"></i>Mark as Read
@@ -140,6 +158,33 @@
                     instance.show();
                 } else {
                     instance.hide();
+                }
+            });
+        }
+
+        // Listen for navigation event from Livewire
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('navigate-to-notification-url', (event) => {
+                // Handle both Livewire 2 and Livewire 3 event formats
+                const url = event.url || event[0]?.url || (Array.isArray(event) && event[0]?.url);
+                
+                if (url && url !== '#' && url !== '') {
+                    // Use setTimeout to ensure Livewire finishes processing first
+                    setTimeout(() => {
+                        window.location.href = url;
+                    }, 100);
+                }
+            });
+        });
+
+        // Fallback for when Livewire is already loaded
+        if (typeof Livewire !== 'undefined' && Livewire.find) {
+            Livewire.on('navigate-to-notification-url', (event) => {
+                const url = event.url || event[0]?.url || (Array.isArray(event) && event[0]?.url);
+                if (url && url !== '#' && url !== '') {
+                    setTimeout(() => {
+                        window.location.href = url;
+                    }, 100);
                 }
             });
         }

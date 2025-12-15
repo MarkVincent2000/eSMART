@@ -14,7 +14,7 @@
     <x-breadcrumb title="Profile Settings" li_1="User Management" />
 
     <div id="user-profile-settings-wrapper">
-        @livewire('user.user-profile-settings')
+        <livewire:user.user-profile-settings />
     </div>
 
 

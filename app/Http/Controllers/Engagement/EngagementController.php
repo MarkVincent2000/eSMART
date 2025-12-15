@@ -126,7 +126,16 @@ class EngagementController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        // Normalize empty time strings to null
+        $requestData = $request->all();
+        if (isset($requestData['start_time']) && $requestData['start_time'] === '') {
+            $requestData['start_time'] = null;
+        }
+        if (isset($requestData['end_time']) && $requestData['end_time'] === '') {
+            $requestData['end_time'] = null;
+        }
+
+        $validator = Validator::make($requestData, [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'event_type' => 'required|in:' . implode(',', Event::getTypes()),
@@ -134,7 +143,7 @@ class EngagementController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i' . ($request->start_time ? '|after:start_time' : ''),
+            'end_time' => 'nullable|date_format:H:i' . ($requestData['start_time'] ?? null ? '|after:start_time' : ''),
             'location' => 'nullable|string|max:255',
             'semester_id' => 'nullable|exists:semesters,id',
             'section_id' => 'nullable', // Can be single ID, array, or null
@@ -145,6 +154,8 @@ class EngagementController extends Controller
             'event_type.required' => 'Please select an event type.',
             'start_date.required' => 'The start date is required.',
             'end_date.after_or_equal' => 'The end date must be after or equal to the start date.',
+            'start_time.date_format' => 'The start time must be in the format H:i (e.g., 14:30).',
+            'end_time.date_format' => 'The end time must be in the format H:i (e.g., 14:30).',
             'end_time.after' => 'The end time must be after the start time.',
             'status.required' => 'Please select a status.',
         ]);
@@ -165,8 +176,8 @@ class EngagementController extends Controller
                 'category' => $request->category,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date ?: null,
-                'start_time' => $request->start_time ? $request->start_date . ' ' . $request->start_time : null,
-                'end_time' => $request->end_time ? ($request->end_date ?: $request->start_date) . ' ' . $request->end_time : null,
+                'start_time' => $requestData['start_time'] ? $request->start_date . ' ' . $requestData['start_time'] . ':00' : null,
+                'end_time' => $requestData['end_time'] ? ($request->end_date ?: $request->start_date) . ' ' . $requestData['end_time'] . ':00' : null,
                 'location' => $request->location,
                 'semester_id' => $request->semester_id,
                 'status' => $request->status,
@@ -233,7 +244,16 @@ class EngagementController extends Controller
             ], 404);
         }
 
-        $validator = Validator::make($request->all(), [
+        // Normalize empty time strings to null
+        $requestData = $request->all();
+        if (isset($requestData['start_time']) && $requestData['start_time'] === '') {
+            $requestData['start_time'] = null;
+        }
+        if (isset($requestData['end_time']) && $requestData['end_time'] === '') {
+            $requestData['end_time'] = null;
+        }
+
+        $validator = Validator::make($requestData, [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'event_type' => 'required|in:' . implode(',', Event::getTypes()),
@@ -241,7 +261,7 @@ class EngagementController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i' . ($request->start_time ? '|after:start_time' : ''),
+            'end_time' => 'nullable|date_format:H:i' . ($requestData['start_time'] ?? null ? '|after:start_time' : ''),
             'location' => 'nullable|string|max:255',
             'semester_id' => 'nullable|exists:semesters,id',
             'section_id' => 'nullable', // Can be single ID, array, or null
@@ -252,6 +272,8 @@ class EngagementController extends Controller
             'event_type.required' => 'Please select an event type.',
             'start_date.required' => 'The start date is required.',
             'end_date.after_or_equal' => 'The end date must be after or equal to the start date.',
+            'start_time.date_format' => 'The start time must be in the format H:i (e.g., 14:30).',
+            'end_time.date_format' => 'The end time must be in the format H:i (e.g., 14:30).',
             'end_time.after' => 'The end time must be after the start time.',
             'status.required' => 'Please select a status.',
         ]);
@@ -272,8 +294,8 @@ class EngagementController extends Controller
                 'category' => $request->category,
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date ?: null,
-                'start_time' => $request->start_time ? $request->start_date . ' ' . $request->start_time : null,
-                'end_time' => $request->end_time ? ($request->end_date ?: $request->start_date) . ' ' . $request->end_time : null,
+                'start_time' => $requestData['start_time'] ? $request->start_date . ' ' . $requestData['start_time'] . ':00' : null,
+                'end_time' => $requestData['end_time'] ? ($request->end_date ?: $request->start_date) . ' ' . $requestData['end_time'] . ':00' : null,
                 'location' => $request->location,
                 'semester_id' => $request->semester_id,
                 'status' => $request->status,
@@ -530,6 +552,7 @@ class EngagementController extends Controller
                     'title' => $title,
                     'body' => $body,
                     'data' => $notificationData,
+                    'url' => '/engagement.index',
                     'notifiable_id' => $event->id,
                     'notifiable_type' => Event::class,
                     'read_at' => null,

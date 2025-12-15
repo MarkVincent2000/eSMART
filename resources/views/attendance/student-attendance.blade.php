@@ -63,10 +63,10 @@
                 </div>
 
                 <div id="timeTrackingAlertContainer"></div>
-                <h3 class="mb-1" id="timeDuration">N/A</h3>
+                <h3 class="mb-1" id="timeDuration">--</h3>
                 <h5 class="fs-14 mb-2">
                     <i class="ri-time-line align-bottom me-1"></i>
-                    <span id="startTime">N/A</span> - <span id="endTime">N/A</span>
+                    <span id="startTime">--</span> - <span id="endTime">--</span>
                 </h5>
                 <p class="text-muted mb-4 fs-12" id="attendanceTitle">Attendance Session</p>
                 <div class="hstack gap-2 justify-content-center" id="timeTrackingButtons">
@@ -78,7 +78,7 @@
                     </button>
                 </div>
                 <div id="noAttendanceMessage" style="display: none;">
-                    <h3 class="mb-1">N/A</h3>
+                    <h3 class="mb-1">--</h3>
                     <h5 class="fs-14 mb-4">No Attendance Record</h5>
                     <p class="text-muted mb-4 fs-12">You are not enrolled in this attendance session.</p>
                 </div>
