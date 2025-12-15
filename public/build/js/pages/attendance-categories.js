@@ -489,7 +489,12 @@
                                         <a class="dropdown-item" href="javascript:void(0);" onclick="editAttendance(${attendance.id})">
                                             <i class="ri-edit-2-line align-bottom me-2 text-muted"></i> Edit
                                         </a>
+
+                                        
                                          <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="javascript:void(0);" onclick="printAttendance(${attendance.id})">
+                                            <i class="ri-printer-line align-bottom me-2 text-muted"></i> Print
+                                        </a>
                                         <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteAttendance(${attendance.id})">
                                             <i class="ri-delete-bin-5-line align-bottom me-2 text-muted"></i> Delete
                                         </a>
@@ -2780,6 +2785,16 @@
     window.deleteAttendance = function(attendanceId) {
         attendanceToDelete = attendanceId;
         const modal = new bootstrap.Modal(document.getElementById('deleteAttendanceModal'));
+        modal.show();
+    };
+
+    // Print attendance
+    window.printAttendance = function(attendanceId) {
+        // Store current attendance ID for print modal
+        window.currentPrintAttendanceId = attendanceId;
+        
+        // Show print modal
+        const modal = new bootstrap.Modal(document.getElementById('printAttendanceModal'));
         modal.show();
     };
 

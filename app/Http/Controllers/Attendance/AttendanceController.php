@@ -878,17 +878,6 @@ class AttendanceController extends Controller
                 'is_late' => $isLate,
             ]);
 
-            // Reload with relationships for notification
-            $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance']);
-
-            // Send notification to student
-            try {
-                $this->notifyStudentAttendanceStatusChange($studentAttendance, 'approved', $status);
-            } catch (\Exception $notifyError) {
-                // Log error but don't fail the approval
-                Log::error('Failed to send notification for attendance approval: ' . $notifyError->getMessage());
-            }
-
             // Determine message based on status
             $statusMessage = $status === 'late' 
                 ? 'Student attendance approved and marked as late.' 
@@ -897,7 +886,7 @@ class AttendanceController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $statusMessage,
-                'data' => $studentAttendance
+                'data' => $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance'])
             ]);
 
         } catch (\Exception $e) {
@@ -949,23 +938,10 @@ class AttendanceController extends Controller
                 ]);
             }
 
-            // Reload with relationships for notification
-            $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance']);
-
-            // Send notification to student if status changed
-            if ($oldStatus !== $newStatus) {
-                try {
-                    $this->notifyStudentAttendanceStatusChange($studentAttendance, 'updated', $newStatus, $oldStatus);
-                } catch (\Exception $notifyError) {
-                    // Log error but don't fail the update
-                    Log::error('Failed to send notification for attendance status update: ' . $notifyError->getMessage());
-                }
-            }
-
             return response()->json([
                 'success' => true,
                 'message' => 'Student attendance status updated successfully.',
-                'data' => $studentAttendance
+                'data' => $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance'])
             ]);
 
         } catch (\Exception $e) {
@@ -998,21 +974,10 @@ class AttendanceController extends Controller
             // Disapprove the attendance
             $studentAttendance->unapprove();
 
-            // Reload with relationships for notification
-            $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance']);
-
-            // Send notification to student
-            try {
-                $this->notifyStudentAttendanceStatusChange($studentAttendance, 'disapproved', $studentAttendance->status);
-            } catch (\Exception $notifyError) {
-                // Log error but don't fail the disapproval
-                Log::error('Failed to send notification for attendance disapproval: ' . $notifyError->getMessage());
-            }
-
             return response()->json([
                 'success' => true,
                 'message' => 'Student attendance disapproved successfully.',
-                'data' => $studentAttendance
+                'data' => $studentAttendance->fresh(['user', 'user.studentInfo'])
             ]);
 
         } catch (\Exception $e) {
@@ -1103,17 +1068,6 @@ class AttendanceController extends Controller
                         'is_late' => $isLate,
                     ]);
 
-                    // Reload with relationships for notification
-                    $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance']);
-
-                    // Send notification to student
-                    try {
-                        $this->notifyStudentAttendanceStatusChange($studentAttendance, 'approved', $status);
-                    } catch (\Exception $notifyError) {
-                        // Log error but continue with other approvals
-                        Log::error("Failed to send notification for attendance approval ID {$id}: " . $notifyError->getMessage());
-                    }
-
                     $approvedCount++;
                 } catch (\Exception $e) {
                     $errors[] = "Failed to approve attendance ID {$id}: " . $e->getMessage();
@@ -1182,18 +1136,6 @@ class AttendanceController extends Controller
 
                     // Disapprove the attendance
                     $studentAttendance->unapprove();
-
-                    // Reload with relationships for notification
-                    $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance']);
-
-                    // Send notification to student
-                    try {
-                        $this->notifyStudentAttendanceStatusChange($studentAttendance, 'disapproved', $studentAttendance->status);
-                    } catch (\Exception $notifyError) {
-                        // Log error but continue with other disapprovals
-                        Log::error("Failed to send notification for attendance disapproval ID {$id}: " . $notifyError->getMessage());
-                    }
-
                     $disapprovedCount++;
                 } catch (\Exception $e) {
                     $errors[] = "Failed to disapprove attendance ID {$id}: " . $e->getMessage();
@@ -1368,143 +1310,6 @@ class AttendanceController extends Controller
         } catch (\Exception $e) {
             // Log error but don't fail the attendance creation
             Log::error("Failed to send notifications for attendance {$attendance->id}: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Notify student about attendance status change
-     * 
-     * @param StudentAttendance $studentAttendance
-     * @param string $action 'approved', 'disapproved', or 'updated'
-     * @param string $newStatus The new status
-     * @param string|null $oldStatus The old status (for updates)
-     * @return void
-     */
-    private function notifyStudentAttendanceStatusChange(StudentAttendance $studentAttendance, string $action, string $newStatus, ?string $oldStatus = null)
-    {
-        try {
-            // Skip if student doesn't have a user account
-            if (!$studentAttendance->user || !$studentAttendance->user_id) {
-                Log::info('Skipping notification - student has no user account', ['student_attendance_id' => $studentAttendance->id]);
-                return;
-            }
-
-            // Load attendance relationship if not loaded
-            if (!$studentAttendance->relationLoaded('attendance')) {
-                $studentAttendance->load('attendance');
-            }
-
-            if (!$studentAttendance->attendance) {
-                Log::warning('Skipping notification - attendance session not found', ['student_attendance_id' => $studentAttendance->id]);
-                return;
-            }
-
-            $attendance = $studentAttendance->attendance;
-
-            // Build notification title and body based on action and status
-            $statusLabels = [
-                'present' => 'Present',
-                'absent' => 'Absent',
-                'late' => 'Late',
-                'excused' => 'Excused',
-                'pending' => 'Pending',
-                'partial' => 'Partial',
-                'leave' => 'Leave',
-            ];
-
-            $statusLabel = $statusLabels[$newStatus] ?? ucfirst($newStatus);
-            $statusEmoji = [
-                'present' => '✅',
-                'absent' => '❌',
-                'late' => '⏰',
-                'excused' => '📝',
-                'pending' => '⏳',
-                'partial' => '📊',
-                'leave' => '🏖️',
-            ];
-            $emoji = $statusEmoji[$newStatus] ?? '📋';
-
-            if ($action === 'approved') {
-                $title = "{$emoji} Attendance Approved: {$statusLabel}";
-                
-                $body = "Your attendance has been approved and marked as {$statusLabel}. ";
-                $body .= "Session: {$attendance->title}";
-                
-                if ($attendance->date) {
-                    $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
-                    $body .= " on {$attendanceDate}";
-                }
-                
-                if ($newStatus === 'late' && $studentAttendance->is_late) {
-                    $body .= ". Note: You were marked as late.";
-                } else {
-                    $body .= ".";
-                }
-            } elseif ($action === 'disapproved') {
-                $title = "⚠️ Attendance Disapproved";
-                
-                $body = "Your attendance has been disapproved. ";
-                $body .= "Session: {$attendance->title}";
-                
-                if ($attendance->date) {
-                    $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
-                    $body .= " on {$attendanceDate}";
-                }
-                
-                $body .= ". Please contact your instructor for more information.";
-            } else {
-                // Updated status
-                $title = "📝 Attendance Status Updated: {$statusLabel}";
-                
-                $body = "Your attendance status has been updated to {$statusLabel}. ";
-                $body .= "Session: {$attendance->title}";
-                
-                if ($attendance->date) {
-                    $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
-                    $body .= " on {$attendanceDate}";
-                }
-                
-                if ($oldStatus) {
-                    $oldStatusLabel = $statusLabels[$oldStatus] ?? ucfirst($oldStatus);
-                    $body .= " (changed from {$oldStatusLabel})";
-                }
-                
-                $body .= ".";
-            }
-
-            // Build notification data
-            $notificationData = [
-                'student_attendance_id' => $studentAttendance->id,
-                'attendance_id' => $attendance->id,
-                'attendance_title' => $attendance->title,
-                'status' => $newStatus,
-                'old_status' => $oldStatus,
-                'action' => $action,
-                'is_late' => $studentAttendance->is_late,
-                'approved_at' => $studentAttendance->approved_at ? $studentAttendance->approved_at->toDateTimeString() : null,
-            ];
-
-            // URL for the notification (with attendance ID as query parameter)
-            $notificationUrl = "/attendance?id={$attendance->id}";
-
-            // Create notification
-            Notification::create([
-                'user_id' => $studentAttendance->user_id,
-                'type' => 'attendance_status_changed',
-                'title' => $title,
-                'body' => $body,
-                'url' => $notificationUrl,
-                'data' => $notificationData,
-                'notifiable_id' => $studentAttendance->id,
-                'notifiable_type' => StudentAttendance::class,
-                'read_at' => null,
-            ]);
-
-            Log::info("Sent attendance status change notification to student {$studentAttendance->user_id} for attendance: {$attendance->title} (Status: {$newStatus}, Action: {$action})");
-
-        } catch (\Exception $e) {
-            // Log error but don't fail the status change
-            Log::error("Failed to send notification for student attendance status change {$studentAttendance->id}: " . $e->getMessage());
         }
     }
 }

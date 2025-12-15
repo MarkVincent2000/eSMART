@@ -544,4 +544,45 @@
         </div>
     </div>
     <!--end view students modal -->
+
+    <!-- Print Attendance Modal -->
+    <div class="modal fade" id="printAttendanceModal" tabindex="-1" aria-labelledby="printAttendanceModalLabel"
+        data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0">
+                <div class="modal-header p-3 bg-info-subtle">
+                    <h5 class="modal-title" id="printAttendanceModalLabel">
+                        <i class="ri-printer-line align-bottom me-2"></i> Print Attendance
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Modal content will be added here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--end print attendance modal -->
+
+    <style>
+        /* Ensure simplebar container has enough height for dropdown menus */
+        .tasks-wrapper[data-simplebar] {
+            min-height: 300px !important;
+            height: 300px !important;
+        }
+        
+        /* Allow dropdown menus to overflow the container */
+        .tasks-wrapper .dropdown-menu {
+            z-index: 1050;
+        }
+        
+        /* Ensure attendance cards have enough space for dropdown */
+        .tasks-box {
+            margin-bottom: 1rem;
+        }
+    </style>
+    
 </div>
