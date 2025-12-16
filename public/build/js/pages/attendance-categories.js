@@ -491,10 +491,11 @@
                                         </a>
 
                                         
-                                         <div class="dropdown-divider"></div>
+                                        
                                         <a class="dropdown-item" href="javascript:void(0);" onclick="printAttendance(${attendance.id})">
                                             <i class="ri-printer-line align-bottom me-2 text-muted"></i> Print
                                         </a>
+                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteAttendance(${attendance.id})">
                                             <i class="ri-delete-bin-5-line align-bottom me-2 text-muted"></i> Delete
                                         </a>
@@ -1439,6 +1440,126 @@
                 }
             });
         }
+
+        // Handle update remarks button
+        const updateRemarksBtn = document.getElementById('updateRemarksBtn');
+        if (updateRemarksBtn) {
+            updateRemarksBtn.addEventListener('click', async function() {
+                const studentAttendanceId = document.getElementById('remarksStudentAttendanceId').value;
+                const remarksTextarea = document.getElementById('remarksTextarea');
+                
+                if (!studentAttendanceId) {
+                    showToast('Error', 'Student attendance ID not found', 'error');
+                    return;
+                }
+
+                // Find the student attendance data to get current remarks
+                const studentAttendance = allStudentsData.find(sa => sa.id === parseInt(studentAttendanceId, 10));
+                const currentRemarks = studentAttendance ? (studentAttendance.remarks || studentAttendance.notes || '') : '';
+                const newRemarks = remarksTextarea ? remarksTextarea.value.trim() : '';
+
+                // Don't update if remarks haven't changed
+                if (newRemarks === currentRemarks) {
+                    showToast('Info', 'No changes detected', 'info');
+                    return;
+                }
+
+                // Get button elements for loading state
+                const buttonText = updateRemarksBtn.querySelector('.button-text');
+                const buttonSpinner = updateRemarksBtn.querySelector('.button-spinner');
+
+                // Show loading state
+                setButtonLoading(updateRemarksBtn, buttonText, buttonSpinner, true);
+
+                try {
+                    const token = getCsrfToken();
+                    if (!token) {
+                        showToast('Error', 'CSRF token not found. Please refresh the page.', 'error');
+                        setButtonLoading(updateRemarksBtn, buttonText, buttonSpinner, false);
+                        return;
+                    }
+
+                    const response = await fetch(`/attendance/students/${studentAttendanceId}/update-remarks`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            remarks: newRemarks
+                        })
+                    });
+
+                    const responseData = await response.json();
+
+                    if (response.ok && responseData.success) {
+                        showToast('Success', responseData.message || 'Remarks updated successfully', 'success');
+                        
+                        // Close modal
+                        const modalElement = document.getElementById('editRemarksModal');
+                        const modal = bootstrap.Modal.getInstance(modalElement);
+                        if (modal) {
+                            modal.hide();
+                        }
+
+                        // Reset form
+                        if (remarksTextarea) {
+                            remarksTextarea.value = '';
+                            remarksTextarea.classList.remove('is-invalid');
+                        }
+                        document.getElementById('remarksStudentAttendanceId').value = '';
+
+                        // Refresh students data without reinitializing modal
+                        const currentAttendanceId = window.currentViewingAttendanceId;
+                        if (currentAttendanceId) {
+                            await refreshStudentsData(currentAttendanceId);
+                        }
+                    } else {
+                        // Show validation errors
+                        if (responseData.errors && responseData.errors.remarks) {
+                            if (remarksTextarea) {
+                                remarksTextarea.classList.add('is-invalid');
+                            }
+                            const errorElement = document.getElementById('error-remarks');
+                            if (errorElement) {
+                                errorElement.textContent = responseData.errors.remarks[0];
+                                errorElement.style.display = 'block';
+                            }
+                        }
+                        showToast('Error', responseData.message || 'Failed to update remarks', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error updating student attendance remarks:', error);
+                    showToast('Error', 'An error occurred while updating the remarks', 'error');
+                } finally {
+                    // Hide loading state
+                    setButtonLoading(updateRemarksBtn, buttonText, buttonSpinner, false);
+                }
+            });
+        }
+
+        // Clear form when edit remarks modal is closed
+        const editRemarksModal = document.getElementById('editRemarksModal');
+        if (editRemarksModal) {
+            editRemarksModal.addEventListener('hidden.bs.modal', function() {
+                const remarksTextarea = document.getElementById('remarksTextarea');
+                const remarksForm = document.getElementById('editRemarksForm');
+                
+                if (remarksForm) {
+                    remarksForm.reset();
+                }
+                if (remarksTextarea) {
+                    remarksTextarea.classList.remove('is-invalid');
+                }
+                const errorElement = document.getElementById('error-remarks');
+                if (errorElement) {
+                    errorElement.textContent = '';
+                    errorElement.style.display = 'none';
+                }
+                document.getElementById('remarksStudentAttendanceId').value = '';
+            });
+        }
     });
 
     // Add event listeners to clear errors when user starts typing/selecting
@@ -2248,6 +2369,11 @@
             <i class="ri-edit-line"></i>
         </button>`;
         
+        // Always show remarks button
+        buttons += `<button class="btn btn-sm btn-info" onclick="editStudentAttendanceRemarks(${studentAttendanceId})" title="Edit Remarks">
+            <i class="ri-message-3-line"></i>
+        </button>`;
+        
         // Show approve/disapprove buttons if: status is "pending" AND has check-in time
         // Allow approval even if approved_at has a value, as long as status is pending
         if (isPending && hasCheckIn) {
@@ -2457,6 +2583,56 @@
                 }
             }
         });
+    };
+
+    // Edit student attendance remarks
+    window.editStudentAttendanceRemarks = function(studentAttendanceId) {
+        // Find the student attendance data
+        const studentAttendance = allStudentsData.find(sa => sa.id === studentAttendanceId);
+        if (!studentAttendance) {
+            showToast('Error', 'Student attendance not found', 'error');
+            return;
+        }
+
+        const currentRemarks = studentAttendance.remarks || studentAttendance.notes || '';
+        
+        // Set the student attendance ID
+        const remarksIdInput = document.getElementById('remarksStudentAttendanceId');
+        if (remarksIdInput) {
+            remarksIdInput.value = studentAttendanceId;
+        }
+        
+        // Set the current remarks in the textarea
+        const remarksTextarea = document.getElementById('remarksTextarea');
+        if (remarksTextarea) {
+            remarksTextarea.value = currentRemarks || '';
+            remarksTextarea.classList.remove('is-invalid');
+            
+            // Clear any error messages
+            const errorElement = document.getElementById('error-remarks');
+            if (errorElement) {
+                errorElement.textContent = '';
+                errorElement.style.display = 'none';
+            }
+        }
+        
+        // Show the modal
+        const modalElement = document.getElementById('editRemarksModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+            
+            // Focus on textarea after modal is shown
+            modalElement.addEventListener('shown.bs.modal', function onModalShown() {
+                if (remarksTextarea) {
+                    remarksTextarea.focus();
+                    const len = remarksTextarea.value.length;
+                    remarksTextarea.setSelectionRange(len, len);
+                }
+                // Remove event listener after first use
+                modalElement.removeEventListener('shown.bs.modal', onModalShown);
+            }, { once: true });
+        }
     };
 
     // Disapprove student attendance
@@ -2793,9 +2969,65 @@
         // Store current attendance ID for print modal
         window.currentPrintAttendanceId = attendanceId;
         
+        // Get modal elements
+        const modalElement = document.getElementById('printAttendanceModal');
+        const iframe = document.getElementById('printAttendanceIframe');
+        const loading = document.getElementById('printAttendanceLoading');
+        
+        // Show loading state
+        if (loading) loading.style.display = 'block';
+        if (iframe) {
+            iframe.style.display = 'none';
+            iframe.src = ''; // Clear previous src
+        }
+        
         // Show print modal
-        const modal = new bootstrap.Modal(document.getElementById('printAttendanceModal'));
+        const modal = new bootstrap.Modal(modalElement);
         modal.show();
+        
+        // Set iframe source after modal is shown
+        modalElement.addEventListener('shown.bs.modal', function onModalShown() {
+            if (iframe && attendanceId) {
+                // Build PDF URL
+                const pdfUrl = `/attendance/${attendanceId}/print`;
+                iframe.src = pdfUrl;
+                
+                // Hide loading and show iframe when loaded
+                iframe.onload = function() {
+                    if (loading) loading.style.display = 'none';
+                    iframe.style.display = 'block';
+                };
+                
+                // Handle iframe load errors
+                iframe.onerror = function() {
+                    if (loading) {
+                        loading.innerHTML = `
+                            <div class="text-danger">
+                                <lord-icon src="https://cdn.lordicon.com/tdrtiskw.json" trigger="loop" colors="primary:#f06548" style="width:80px;height:80px"></lord-icon>
+                                <p class="mt-3">Failed to load attendance report</p>
+                                <button class="btn btn-primary btn-sm" onclick="window.printAttendance(${attendanceId})">
+                                    <i class="ri-refresh-line align-bottom me-1"></i> Retry
+                                </button>
+                            </div>
+                        `;
+                    }
+                };
+            }
+            
+            // Remove event listener after first use
+            modalElement.removeEventListener('shown.bs.modal', onModalShown);
+        }, { once: true });
+    };
+    
+    // Open attendance report in new tab
+    window.openAttendanceInNewTab = function() {
+        const attendanceId = window.currentPrintAttendanceId;
+        if (attendanceId) {
+            const pdfUrl = `/attendance/${attendanceId}/print`;
+            window.open(pdfUrl, '_blank');
+        } else {
+            showToast('Error', 'Attendance ID not found', 'error');
+        }
     };
 
     // Handle delete attendance confirmation
@@ -2862,34 +3094,57 @@
             'editCategoryModal',
             'deleteCategoryModal',
             'deleteAttendanceModal',
-            'viewStudentsModal'
+            'viewStudentsModal',
+            'printAttendanceModal',
+            'editRemarksModal'
         ];
 
         modalIds.forEach(modalId => {
             const modalElement = document.getElementById(modalId);
             if (modalElement) {
+                // Handle show event - remove focus from layout wrapper before modal opens
+                modalElement.addEventListener('show.bs.modal', function() {
+                    // Remove focus from any focused elements in the layout wrapper
+                    const layoutWrapper = document.getElementById('layout-wrapper');
+                    if (layoutWrapper) {
+                        const focusedElement = layoutWrapper.querySelector(':focus');
+                        if (focusedElement) {
+                            focusedElement.blur();
+                        }
+                    }
+                    
+                    // Remove aria-hidden from modal
+                    this.removeAttribute('aria-hidden');
+                    this.setAttribute('aria-modal', 'true');
+                });
+
                 // Ensure aria-hidden is properly set when modal is shown
                 modalElement.addEventListener('shown.bs.modal', function() {
                     this.setAttribute('aria-hidden', 'false');
-                    // Remove any focus from elements that might be hidden
-                    const focusedElement = document.activeElement;
-                    if (focusedElement && !this.contains(focusedElement)) {
-                        // Focus should be on the modal, Bootstrap handles this
-                        const firstFocusable = this.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-                        if (firstFocusable) {
+                    this.setAttribute('aria-modal', 'true');
+                    
+                    // Focus on first focusable element in modal
+                    const firstFocusable = this.querySelector('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+                    if (firstFocusable) {
+                        setTimeout(() => {
                             firstFocusable.focus();
-                        }
+                        }, 100);
                     }
                 });
 
                 // Ensure aria-hidden is properly set when modal is hidden
-                modalElement.addEventListener('hidden.bs.modal', function() {
-                    this.setAttribute('aria-hidden', 'true');
+                modalElement.addEventListener('hide.bs.modal', function() {
+                    // Remove focus from any focused elements in the modal before hiding
+                    const focusedElement = this.querySelector(':focus');
+                    if (focusedElement) {
+                        focusedElement.blur();
+                    }
                 });
 
-                // Handle show event to ensure proper state
-                modalElement.addEventListener('show.bs.modal', function() {
-                    this.removeAttribute('aria-hidden');
+                // Clean up after modal is hidden
+                modalElement.addEventListener('hidden.bs.modal', function() {
+                    this.setAttribute('aria-hidden', 'true');
+                    this.removeAttribute('aria-modal');
                 });
             }
         });

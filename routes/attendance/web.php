@@ -40,6 +40,8 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
     Route::get('/view/students', [StudentAttendanceController::class, 'getStudentAttendances'])->name('view.students');
     Route::post('/students/time-in', [StudentAttendanceController::class, 'timeIn'])->name('students.time-in');
     Route::post('/students/time-out', [StudentAttendanceController::class, 'timeOut'])->name('students.time-out');
+    // Print route must be before /{id} route to avoid route conflicts
+    Route::get('/{id}/print', [AttendanceController::class, 'printPdf'])->name('print')->where('id', '[0-9]+');
     Route::get('/{id}', [AttendanceController::class, 'show'])->name('show')->where('id', '[0-9]+');
     Route::put('/{id}', [AttendanceController::class, 'update'])->name('update')->where('id', '[0-9]+');
     Route::delete('/{id}', [AttendanceController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
@@ -50,6 +52,7 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
     Route::post('/students/{id}/approve', [AttendanceController::class, 'approveStudentAttendance'])->name('students.approve')->where('id', '[0-9]+');
     Route::post('/students/{id}/disapprove', [AttendanceController::class, 'disapproveStudentAttendance'])->name('students.disapprove')->where('id', '[0-9]+');
     Route::post('/students/{id}/update-status', [AttendanceController::class, 'updateStudentAttendanceStatus'])->name('students.update-status')->where('id', '[0-9]+');
+    Route::post('/students/{id}/update-remarks', [AttendanceController::class, 'updateStudentAttendanceRemarks'])->name('students.update-remarks')->where('id', '[0-9]+');
     Route::post('/students/bulk-approve', [AttendanceController::class, 'bulkApproveStudentAttendances'])->name('students.bulk-approve');
     Route::post('/students/bulk-disapprove', [AttendanceController::class, 'bulkDisapproveStudentAttendances'])->name('students.bulk-disapprove');
 });

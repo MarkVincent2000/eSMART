@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
  * AttendanceController
@@ -953,6 +954,51 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Update student attendance remarks
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param int $id Student attendance ID
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateStudentAttendanceRemarks(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'remarks' => 'nullable|string|max:65535',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $studentAttendance = StudentAttendance::findOrFail($id);
+            $remarks = $request->input('remarks', '');
+
+            // Update the remarks
+            $studentAttendance->update([
+                'remarks' => $remarks ?: null,
+                'marked_by' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Student attendance remarks updated successfully.',
+                'data' => $studentAttendance->fresh(['user', 'user.studentInfo', 'attendance'])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update student attendance remarks: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Disapprove a student attendance
      * 
      * @param int $id Student attendance ID
@@ -1310,6 +1356,81 @@ class AttendanceController extends Controller
         } catch (\Exception $e) {
             // Log error but don't fail the attendance creation
             Log::error("Failed to send notifications for attendance {$attendance->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate PDF for attendance
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function printPdf($id)
+    {
+        try {
+            $attendance = Attendance::with([
+                'semester',
+                'sections',
+                'category',
+                'creator',
+                'studentAttendances.user',
+                'studentAttendances.user.studentInfo'
+            ])->findOrFail($id);
+
+            // Get statistics
+            $stats = [
+                'total_students' => $attendance->studentAttendances->count(),
+                'present_count' => $attendance->studentAttendances->where('status', StudentAttendance::STATUS_PRESENT)->count(),
+                'absent_count' => $attendance->studentAttendances->where('status', StudentAttendance::STATUS_ABSENT)->count(),
+                'late_count' => $attendance->studentAttendances->where('status', StudentAttendance::STATUS_LATE)->count(),
+                'excused_count' => $attendance->studentAttendances->where('status', StudentAttendance::STATUS_EXCUSED)->count(),
+                'pending_count' => $attendance->studentAttendances->where('status', StudentAttendance::STATUS_PENDING)->count(),
+            ];
+
+            // Get student attendances sorted by student name
+            $studentAttendances = $attendance->studentAttendances->sortBy(function($sa) {
+                try {
+                    $student = $sa->user ?? null;
+                    if (!$student) {
+                        return 'ZZZ'; // Put null users at the end
+                    }
+                    
+                    $studentInfo = $student->studentInfo ?? $student->student_info ?? null;
+                    $studentName = $student->name ?? 
+                        trim(($student->first_name ?? $student->firstName ?? '') . ' ' . ($student->last_name ?? $student->lastName ?? '')) ?? 
+                        '';
+                    
+                    return $studentName ?: 'ZZZ';
+                } catch (\Exception $e) {
+                    Log::error('Error sorting student attendance: ' . $e->getMessage());
+                    return 'ZZZ';
+                }
+            });
+
+            // Generate PDF filename
+            $filename = 'attendance-report-' . $attendance->id . '-' . now()->format('Y-m-d') . '.pdf';
+            $title = $attendance->title ?? 'Untitled Attendance Session';
+            $sanitizedTitle = preg_replace('/[^A-Za-z0-9\-_]/', '-', $title);
+            $filename = 'attendance-' . $sanitizedTitle . '-' . now()->format('Y-m-d') . '.pdf';
+
+            // Load the view and generate PDF
+            $pdf = Pdf::loadView('attendance.print.attendance-pdf', compact('attendance', 'stats', 'studentAttendances'));
+            
+            // Set PDF options
+            $pdf->setPaper('a4', 'portrait');
+            $pdf->setOption('enable-local-file-access', true);
+            $pdf->setOption('isHtml5ParserEnabled', true);
+            $pdf->setOption('isRemoteEnabled', false);
+
+            // Return PDF as download or stream
+            return $pdf->stream($filename);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            abort(404, 'Attendance session not found.');
+        } catch (\Exception $e) {
+            Log::error('Error generating attendance PDF: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            abort(500, 'An error occurred while generating the attendance report. Please check the logs for details.');
         }
     }
 }

@@ -556,10 +556,23 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <!-- Modal content will be added here -->
+                <div class="modal-body p-0">
+                    <div id="printAttendanceLoading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Loading attendance report...</p>
+                    </div>
+                    <iframe id="printAttendanceIframe" 
+                            src="" 
+                            style="width: 100%; height: 70vh; border: none; display: none;"
+                            title="Attendance Report">
+                    </iframe>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-info" onclick="openAttendanceInNewTab()">
+                        <i class="ri-external-link-line align-bottom me-1"></i> Open in New Tab
+                    </button>
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -567,11 +580,50 @@
     </div>
     <!--end print attendance modal -->
 
+    <!-- Edit Remarks Modal -->
+    <div class="modal fade" id="editRemarksModal" tabindex="-1" aria-labelledby="editRemarksModalLabel"
+        data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border border-info">
+                <div class="modal-header p-3 bg-info-subtle">
+                    <h5 class="modal-title" id="editRemarksModalLabel">
+                        <i class="ri-message-3-line align-bottom me-2"></i> Edit Remarks
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editRemarksForm">
+                        <input type="hidden" id="remarksStudentAttendanceId" name="student_attendance_id" value="">
+                        <div class="mb-3">
+                            <label for="remarksTextarea" class="form-label">Remarks:</label>
+                            <textarea class="form-control" id="remarksTextarea" name="remarks" rows="4"
+                                placeholder="Enter remarks..."></textarea>
+                            <div class="invalid-feedback" id="error-remarks"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-info" id="updateRemarksBtn">
+                        <span class="button-text">
+                            <i class="ri-save-line align-bottom me-1"></i> Update Remarks
+                        </span>
+                        <span class="button-spinner d-none">
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            Updating...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--end edit remarks modal -->
+
     <style>
         /* Ensure simplebar container has enough height for dropdown menus */
         .tasks-wrapper[data-simplebar] {
-            min-height: 300px !important;
-            height: 300px !important;
+            min-height: 250px !important;
+            height: 250px !important;
         }
         
         /* Allow dropdown menus to overflow the container */
