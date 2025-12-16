@@ -235,7 +235,7 @@
                                     <div class="col-lg-6">
                                         <div class="mb-3">
                                             <label for="contactNoInput" class="form-label">Contact Number</label>
-                                            <input type="text"
+                                            <input type="number"
                                                 class="form-control @error('contact_no') is-invalid @enderror"
                                                 id="contactNoInput" placeholder="Enter your contact number"
                                                 wire:model="contact_no">
@@ -380,7 +380,7 @@
                                         <div class="mb-3">
                                             <label for="guardianContactNoInput" class="form-label">Guardian Contact
                                                 Number</label>
-                                            <input type="text"
+                                            <input type="number"
                                                 class="form-control @error('guardian_contact_no') is-invalid @enderror"
                                                 id="guardianContactNoInput" placeholder="Enter guardian contact number"
                                                 wire:model="guardian_contact_no">

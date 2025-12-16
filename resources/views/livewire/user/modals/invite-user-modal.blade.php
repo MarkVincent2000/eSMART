@@ -137,7 +137,7 @@
 
             <div class="col-md-6">
                 <label for="contact_no" class="form-label">Contact Number</label>
-                <input type="text" class="form-control @error('contact_no') is-invalid @enderror" id="contact_no"
+                <input type="number" class="form-control @error('contact_no') is-invalid @enderror" id="contact_no"
                     wire:model="contact_no" placeholder="Enter contact number">
                 @error('contact_no')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -214,7 +214,7 @@
 
             <div class="col-md-6">
                 <label for="guardian_contact_no" class="form-label">Guardian Contact Number</label>
-                <input type="text" class="form-control @error('guardian_contact_no') is-invalid @enderror"
+                <input type="number" class="form-control @error('guardian_contact_no') is-invalid @enderror"
                     id="guardian_contact_no" wire:model="guardian_contact_no"
                     placeholder="Enter guardian contact number">
                 @error('guardian_contact_no')

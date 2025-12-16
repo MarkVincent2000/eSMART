@@ -1242,39 +1242,39 @@ class AttendanceController extends Controller
             }
 
             // Format attendance date and time for notification
+            // Date is stored as date-only, interpreted in local (Manila) timezone
             $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
             $attendanceTime = '';
-            
-            if ($attendance->start_time) {
-                // Parse time (H:i:s format) and format it
-                $timeParts = explode(':', $attendance->start_time);
-                if (count($timeParts) >= 2) {
-                    $hour = (int)$timeParts[0];
-                    $minute = $timeParts[1];
-                    $period = $hour >= 12 ? 'PM' : 'AM';
-                    $hour12 = $hour % 12;
-                    if ($hour12 == 0) $hour12 = 12;
-                    
-                    $startTime = sprintf('%d:%s %s', $hour12, $minute, $period);
-                    
-                    if ($attendance->end_time) {
-                        $endTimeParts = explode(':', $attendance->end_time);
-                        if (count($endTimeParts) >= 2) {
-                            $endHour = (int)$endTimeParts[0];
-                            $endMinute = $endTimeParts[1];
-                            $endPeriod = $endHour >= 12 ? 'PM' : 'AM';
-                            $endHour12 = $endHour % 12;
-                            if ($endHour12 == 0) $endHour12 = 12;
-                            
-                            $endTime = sprintf('%d:%s %s', $endHour12, $endMinute, $endPeriod);
-                            $attendanceTime = " from {$startTime} to {$endTime}";
-                        } else {
-                            $attendanceTime = " at {$startTime}";
-                        }
+
+            // NOTE: start_time and end_time are stored as TIME (H:i:s) and the Attendance model
+            // accessors already combine them with the date in Asia/Manila timezone, returning
+            // Carbon instances. We should rely on those accessors instead of manually parsing
+            // the raw string values to avoid timezone and formatting issues.
+            try {
+                // Use accessors (may return null)
+                $startDateTime = $attendance->start_time; // Carbon|null (Asia/Manila)
+                $endDateTime = $attendance->end_time;     // Carbon|null (Asia/Manila)
+
+                if ($startDateTime instanceof Carbon) {
+                    // Example format: 8:00 AM
+                    $startTime = $startDateTime->format('g:i A');
+
+                    if ($endDateTime instanceof Carbon) {
+                        // Example format: 12:00 PM
+                        $endTime = $endDateTime->format('g:i A');
+                        $attendanceTime = " from {$startTime} to {$endTime}";
                     } else {
                         $attendanceTime = " at {$startTime}";
                     }
                 }
+            } catch (\Throwable $e) {
+                // Fallback: do not break notification if formatting fails; just log it
+                Log::warning('Failed to format attendance time for notification', [
+                    'attendance_id' => $attendance->id,
+                    'start_time_raw' => $attendance->getRawOriginal('start_time'),
+                    'end_time_raw' => $attendance->getRawOriginal('end_time'),
+                    'error' => $e->getMessage(),
+                ]);
             }
 
             // Build notification title and body based on action
