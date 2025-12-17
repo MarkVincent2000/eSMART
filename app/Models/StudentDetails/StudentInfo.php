@@ -31,8 +31,7 @@ class StudentInfo extends Model
         'program_id',
         'year_level',
         'section_id',
-        'semester_id',
-        'quarter_id',
+        'semester',
         'school_year',
         'status',
         'enrolled_at',
@@ -47,8 +46,8 @@ class StudentInfo extends Model
         'user_id' => 'integer',
         'program_id' => 'integer',
         'section_id' => 'integer',
-        'semester_id' => 'integer',
-        'quarter_id' => 'integer',
+        // semester is stored as JSON
+        'semester' => 'array',
         'year_level' => 'integer',
         'enrolled_at' => 'date',
     ];
@@ -77,34 +76,27 @@ class StudentInfo extends Model
         return $this->belongsTo(Section::class);
     }
 
-    /**
-     * Get the semester associated with the student.
-     */
-    public function semester(): BelongsTo
-    {
-        return $this->belongsTo(Semester::class);
-    }
+    // Note:
+    // - semester_id has been replaced with a JSON "semester" field.
+    // - quarter_id has been removed. Use semester (JSON) and school_year
+    //   to determine the active term instead of quarters.
 
     /**
-     * Get the quarter associated with the student.
+     * Get a human-readable list of semester names from the JSON field.
      */
-    public function quarter(): BelongsTo
+    public function getSemesterNamesAttribute(): string
     {
-        return $this->belongsTo(Quarter::class);
-    }
-
-    /**
-     * Determine the active academic term name based on student level.
-     */
-    public function getCurrentTermAttribute(): string
-    {
-        // Logic: If JHS (assuming year_level 7-10), prioritize Quarter
-        if ($this->year_level <= 10) {
-            return $this->quarter ? $this->quarter->name : 'N/A';
+        if (empty($this->semester) || !is_array($this->semester)) {
+            return 'N/A';
         }
-        
-        // For SHS (11-12), use Semester
-        return $this->semester ? $this->semester->name : 'N/A';
+
+        $names = array_column($this->semester, 'name');
+
+        if (empty($names)) {
+            return 'N/A';
+        }
+
+        return implode(' / ', $names);
     }
 }
 

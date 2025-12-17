@@ -346,7 +346,6 @@
                                         <th scope="col">Program</th>
                                         <th scope="col">Year Level</th>
                                         <th scope="col">Section</th>
-                                        <th scope="col">Semester</th>
                                         <th scope="col">School Year</th>
                                         <th scope="col">Status</th>
                                         <th scope="col">Enrolled At</th>
@@ -389,13 +388,6 @@
                                             <td>
                                                 @if($studentInfo->section)
                                                     <span>{{ $studentInfo->section->name }}</span>
-                                                @else
-                                                    <span class="text-muted">N/A</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($studentInfo->semester)
-                                                    <span>{{ $studentInfo->semester->name }}</span>
                                                 @else
                                                     <span class="text-muted">N/A</span>
                                                 @endif
@@ -444,7 +436,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="10" class="text-center text-muted py-4">
+                                            <td colspan="9" class="text-center text-muted py-4">
                                                 <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
                                                     colors="primary:#405189,secondary:#0ab39c"
                                                     style="width:72px;height:72px">

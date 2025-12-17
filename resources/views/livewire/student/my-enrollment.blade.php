@@ -22,6 +22,18 @@
                                 </p>
                             @endif
                         </div>
+                        @if($activeSemester->quarters && $activeSemester->quarters->count())
+                            <div class="text-center mb-3">
+                                <p class="text-muted mb-1">Quarters</p>
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                    @foreach($activeSemester->quarters as $quarter)
+                                        <span class="badge bg-primary-subtle text-primary">
+                                            {{ $quarter->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                         <div class="text-center">
                             <span class="badge bg-success-subtle text-success">Active</span>
                         </div>
@@ -52,7 +64,7 @@
                                 <p class="text-muted mb-2">You are enrolled for this semester.</p>
                                 @if($studentInfo->semester)
                                     <p class="text-muted small mb-0">
-                                        <strong>Semester:</strong> {{ $studentInfo->semester->name }}
+                                        <strong>Semester(s):</strong> {{ $studentInfo->semester_names }}
                                     </p>
                                 @endif
                                 @if($studentInfo->program)
@@ -190,7 +202,6 @@
                                         <th scope="col">Program</th>
                                         <th scope="col">Year Level</th>
                                         <th scope="col">Section</th>
-                                        <th scope="col">Semester</th>
                                         <th scope="col">School Year</th>
                                         <th scope="col">Status</th>
                                         <th scope="col">Enrolled At</th>
@@ -224,13 +235,6 @@
                                             <td>
                                                 @if($studentInfo->section)
                                                     <span>{{ $studentInfo->section->name }}</span>
-                                                @else
-                                                    <span class="text-muted">N/A</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($studentInfo->semester)
-                                                    <span>{{ $studentInfo->semester->name }}</span>
                                                 @else
                                                     <span class="text-muted">N/A</span>
                                                 @endif
@@ -308,6 +312,18 @@
                             {{ $activeSemester->end_date->format('M d, Y') }}
                         </small>
                     @endif
+                    @if($activeSemester->quarters && $activeSemester->quarters->count())
+                        <div class="mt-3">
+                            <p class="text-muted mb-1">Quarters</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach($activeSemester->quarters as $quarter)
+                                    <span class="badge bg-primary-subtle text-primary">
+                                        {{ $quarter->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
             @endif
 
@@ -342,25 +358,26 @@
                     <div class="@error('programId') is-invalid @enderror"
                         wire:key="program-select-{{ $yearLevel ?? 'none' }}">
                         <x-select wire:model="programId" :options="$this->programOptions" placeholder="Select Program"
-                            :searchable="true" :disabled="!$yearLevel" id="programId" />
+                            :searchable="true" :disabled="!$yearLevel || $yearLevel < \App\Enums\YearLevel::GRADE_11->value" id="programId" />
                     </div>
                     @error('programId')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                     @if(!$yearLevel)
                         <small class="text-muted">Please select a year level first</small>
+                    @elseif($yearLevel < \App\Enums\YearLevel::GRADE_11->value)
+                        <small class="text-muted">Program selection is only required for Grade 11 and 12.</small>
                     @endif
                 </div>
 
 
 
                 <div class="col-md-12">
-                    <label for="sectionId" class="form-label">Section</label>
+                    <label for="sectionId" class="form-label">Section <span class="text-danger">*</span></label>
                     <div class="@error('sectionId') is-invalid @enderror"
                         wire:key="section-select-{{ $yearLevel ?? 'none' }}">
-                        <x-select wire:model="sectionId" :options="$this->sectionOptions"
-                            placeholder="Select Section (Optional)" :searchable="true" :disabled="!$yearLevel"
-                            id="sectionId" />
+                        <x-select wire:model="sectionId" :options="$this->sectionOptions" placeholder="Select Section"
+                            :searchable="true" :disabled="!$yearLevel" id="sectionId" />
                     </div>
                     @error('sectionId')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -446,10 +463,10 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label text-muted">Semester</label>
+                    <label class="form-label text-muted">Semester(s)</label>
                     <div>
                         @if($this->selectedStudentInfo->semester)
-                            <span>{{ $this->selectedStudentInfo->semester->name }}</span>
+                            <span>{{ $this->selectedStudentInfo->semester_names }}</span>
                         @else
                             <span class="text-muted">Not assigned</span>
                         @endif

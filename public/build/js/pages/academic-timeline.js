@@ -400,6 +400,8 @@
 
         const handleReactivate = async () => {
             const firstId = firstIdInput.value;
+            const secondId = secondIdInput.value;
+
             if (!firstId) {
                 showNotification('No 1st Semester found for this school year.', 'error');
                 return;
@@ -409,15 +411,21 @@
                 confirmBtn.disabled = true;
                 confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
 
-                const response = await fetch(`/academic/semester/${firstId}/status`, {
-                    method: 'PUT',
+                const payload = {
+                    first_semester_id: parseInt(firstId, 10),
+                    // Only send second_semester_id if present
+                    ...(secondId ? { second_semester_id: parseInt(secondId, 10) } : {}),
+                };
+
+                const response = await fetch('/academic/semesters/reactivate', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': getCsrfToken(),
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ is_active: true })
+                    body: JSON.stringify(payload),
                 });
 
                 let result;
@@ -428,7 +436,7 @@
                     throw new Error('Invalid response from server');
                 }
 
-                if (!response.ok) {
+                if (!response.ok || !result.success) {
                     const errorMessage = result.message || result.error || 'Failed to reactivate semesters';
                     console.error('Reactivation failed:', errorMessage, result);
                     throw new Error(errorMessage);

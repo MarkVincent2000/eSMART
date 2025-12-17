@@ -430,27 +430,11 @@ class AcademicController extends Controller
                     }
                 }
 
+                // Only toggle the active flag here. Display logic (is_display)
+                // is controlled by create/reactivate flows so that the cards
+                // always show the intended semester pair. Using the status modal
+                // should never change which semesters are displayed on the cards.
                 $semester->is_active = $newIsActive;
-
-                // If this is a 1st Semester being activated, update display flags so cards show this pair.
-                $name = strtolower($semester->name ?? '');
-                if ($newIsActive && (str_contains($name, '1st') || str_contains($name, 'first'))) {
-                    // Clear display flags from all 1st/2nd semesters
-                    Semester::whereIn('name', ['1st Semester', '2nd Semester'])->update(['is_display' => false]);
-
-                    // Mark this 1st Semester as displayed
-                    $semester->is_display = true;
-
-                    // Also mark the matching 2nd Semester (same school year) as displayed if it exists
-                    $second = Semester::where('school_year', $semester->school_year)
-                        ->where('name', '2nd Semester')
-                        ->first();
-                    if ($second) {
-                        $second->is_display = true;
-                        $second->save();
-                    }
-                }
-
                 $semester->save();
 
                 if ($newIsActive) {
@@ -483,6 +467,116 @@ class AcademicController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update semester status: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Reactivate a previous semester pair and make it the currently active/displayed one.
+     *
+     * This is used by the "Set Semesters as Active Again" action from the
+     * Previous Semesters table. Whatever semesters are currently active/displayed
+     * will be replaced by the reactivated pair.
+     *
+     * Expected payload:
+     *  - first_semester_id (required) : ID of the 1st Semester to reactivate
+     *  - second_semester_id (optional): ID of the 2nd Semester to pair with it
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reactivateSemesters(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'first_semester_id' => 'required|integer|exists:semesters,id',
+                'second_semester_id' => 'nullable|integer|exists:semesters,id',
+            ], [
+                'first_semester_id.required' => '1st Semester ID is required.',
+                'first_semester_id.exists' => 'The selected 1st Semester does not exist.',
+                'second_semester_id.exists' => 'The selected 2nd Semester does not exist.',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $firstId = (int) $request->input('first_semester_id');
+            $secondId = $request->filled('second_semester_id')
+                ? (int) $request->input('second_semester_id')
+                : null;
+
+            DB::transaction(function () use ($firstId, $secondId) {
+                /** @var \App\Models\StudentDetails\Semester $first */
+                $first = Semester::findOrFail($firstId);
+
+                // If second ID not explicitly provided, try to infer it from the same school year
+                $second = null;
+                if ($secondId) {
+                    $second = Semester::find($secondId);
+                } else {
+                    $second = Semester::where('school_year', $first->school_year)
+                        ->where('name', '2nd Semester')
+                        ->first();
+                }
+
+                $idsToKeep = [$first->id];
+                if ($second) {
+                    $idsToKeep[] = $second->id;
+                }
+
+                // Deactivate all other 1st/2nd semesters (any school year) and hide them from cards
+                $otherIds = Semester::whereIn('name', ['1st Semester', '2nd Semester'])
+                    ->whereNotIn('id', $idsToKeep)
+                    ->pluck('id');
+
+                if ($otherIds->isNotEmpty()) {
+                    Semester::whereIn('id', $otherIds)->update([
+                        'is_active' => false,
+                        'is_display' => false,
+                    ]);
+                    Quarter::whereIn('semester_id', $otherIds)->update([
+                        'is_active' => false,
+                    ]);
+                }
+
+                // Reactivate and display the chosen 1st Semester
+                $first->is_active = true;
+                $first->is_display = true;
+                $first->save();
+                Quarter::where('semester_id', $first->id)->update(['is_active' => true]);
+
+                // Ensure its paired 2nd Semester (if any) is displayed on the cards
+                // but remains inactive (mirrors create-new behaviour).
+                if ($second) {
+                    $second->is_display = true;
+                    // Keep 2nd Semester inactive to follow the rule that only 1st is active by default
+                    $second->is_active = false;
+                    $second->save();
+                    Quarter::where('semester_id', $second->id)->update(['is_active' => false]);
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Semesters reactivated successfully',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error reactivating semesters', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'request_data' => $request->all(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reactivate semesters: ' . $e->getMessage(),
             ], 500);
         }
     }

@@ -1963,9 +1963,9 @@
                     // Set loading state
                     saveBtn.disabled = true;
                     saveBtn.innerHTML = `
-                                                                                                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                                                                             ${isUpdate ? 'Updating...' : 'Saving...'}
-                                                                                                          `;
+                                                                                                              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                                                                                 ${isUpdate ? 'Updating...' : 'Saving...'}
+                                                                                                              `;
 
                     // Get Flatpickr date range value
                     var dateRangeValue = start_date.value;

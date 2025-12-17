@@ -59,9 +59,9 @@ class Attendance extends Model
     protected $casts = [
         'semester_id' => 'integer',
         'category_id' => 'integer',
-        'date' => 'date',
-        'start_time' => 'string', // TIME data type - stores only time (HH:mm:ss)
-        'end_time' => 'string',   // TIME data type - stores only time (HH:mm:ss)
+        'date' => 'date:Y-m-d',
+        'start_time' => 'datetime:H:i:s', // Keep as time string
+    'end_time' => 'datetime:H:i:s',   // TIME data type - stores only time (HH:mm:ss)
         'scheduled_duration_minutes' => 'integer',
         'is_active' => 'boolean',
         'is_locked' => 'boolean',

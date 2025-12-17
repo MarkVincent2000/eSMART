@@ -461,13 +461,28 @@ class EngagementController extends Controller
     private function notifyStudents(Event $event, string $action = 'created')
     {
         try {
-            // Build query to find students
-            $query = StudentInfo::with('user');
+            // Determine the active semester (only students enrolled in this active semester
+            // should receive notifications).
+            $activeSemester = Semester::where('is_active', true)->first();
 
-            // Filter by semester if specified
-            if ($event->semester_id) {
-                $query->where('semester_id', $event->semester_id);
+            if (!$activeSemester) {
+                // No active semester configured; nothing to notify.
+                Log::warning('notifyStudents called but no active semester found.');
+                return;
             }
+
+            // Build query to find students
+            // NOTE:
+            // - StudentInfo no longer has a simple semester_id foreign key.
+            // - Semester details are stored as a JSON ARRAY in the "semester" column, e.g.:
+            //   [
+            //     {"id": 3, "name": "1st Semester", "school_year": "2026-2027"},
+            //     {"id": 4, "name": "2nd Semester", "school_year": "2026-2027"}
+            //   ]
+            // - We match students whose JSON semester array contains an element with the
+            //   active semester's id.
+            $query = StudentInfo::with('user')
+                ->whereJsonContains('semester', ['id' => $activeSemester->id]);
 
             // Handle section filtering based on sections relationship
             $event->load('sections'); // Ensure sections are loaded

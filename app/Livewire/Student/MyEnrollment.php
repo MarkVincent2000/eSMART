@@ -6,6 +6,8 @@ use App\Models\StudentDetails\Semester;
 use App\Models\StudentDetails\StudentInfo;
 use App\Models\StudentDetails\Program;
 use App\Models\StudentDetails\Section;
+use App\Models\Notification;
+use App\Models\User;
 use App\Enums\YearLevel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -54,7 +56,10 @@ class MyEnrollment extends Component
 
     public function loadActiveSemester()
     {
-        $this->activeSemester = Semester::where('is_active', true)->first();
+        // Load the active semester together with its quarters
+        $this->activeSemester = Semester::with(['quarters' => function ($query) {
+            $query->orderBy('name');
+        }])->where('is_active', true)->first();
     }
 
     public function checkEnrollment()
@@ -65,61 +70,20 @@ class MyEnrollment extends Component
         if ($user && $user->hasRole('user')) {
             // Check if there's an active semester
             if ($this->activeSemester) {
-                // Get all user's enrollments, ordered by most recent first
-                $enrollments = StudentInfo::with(['semester', 'program'])
+                // Rule: every grade level can enroll only once per school year.
+                // Find the most recent enrollment for the active semester's school year.
+                $enrollment = StudentInfo::with(['program'])
                     ->where('user_id', $user->id)
-                    ->whereNotNull('semester_id')
+                    ->where('school_year', $this->activeSemester->school_year)
                     ->orderBy('created_at', 'desc')
-                    ->get();
-                
-                if ($enrollments->isEmpty()) {
+                    ->first();
+
+                if ($enrollment) {
+                    $this->studentInfo = $enrollment;
+                    $this->hasEnrollment = true;
+                } else {
                     $this->studentInfo = null;
                     $this->hasEnrollment = false;
-                    return;
-                }
-                
-                // Get the most recent enrollment to determine current grade level
-                $mostRecentEnrollment = $enrollments->first();
-                $currentGradeLevel = $mostRecentEnrollment->year_level;
-                
-                // Check enrollment based on current grade level rules
-                // Grade 11-12: Can enroll per semester (check if enrolled in active semester)
-                // Grade 7-10: Can enroll per school year (check if enrolled in active semester's school year)
-                
-                if ($currentGradeLevel >= 11) {
-                    // User is currently Grade 11-12 (based on most recent enrollment)
-                    // Check if they have a Grade 11-12 enrollment for the active semester
-                    $activeSemesterEnrollment = $enrollments->first(function($enrollment) {
-                        return $enrollment->year_level >= 11 && 
-                               $enrollment->semester_id === $this->activeSemester->id;
-                    });
-                    
-                    if ($activeSemesterEnrollment) {
-                        $this->studentInfo = $activeSemesterEnrollment;
-                        $this->hasEnrollment = true;
-                    } else {
-                        // User is Grade 11-12 but not enrolled in active semester
-                        // Ignore old Grade 7-10 enrollments - they can enroll in the new semester
-                        $this->studentInfo = null;
-                        $this->hasEnrollment = false;
-                    }
-                } else {
-                    // User is currently Grade 7-10 (based on most recent enrollment)
-                    // Check if they have a Grade 7-10 enrollment for the active semester's school year
-                    $schoolYearEnrollment = $enrollments->first(function($enrollment) {
-                        return $enrollment->year_level >= 7 && 
-                               $enrollment->year_level <= 10 &&
-                               $enrollment->school_year === $this->activeSemester->school_year;
-                    });
-                    
-                    if ($schoolYearEnrollment) {
-                        $this->studentInfo = $schoolYearEnrollment;
-                        $this->hasEnrollment = true;
-                    } else {
-                        // User is Grade 7-10 but not enrolled in active semester's school year
-                        $this->studentInfo = null;
-                        $this->hasEnrollment = false;
-                    }
                 }
             } else {
                 // No active semester, so no enrollment possible
@@ -140,40 +104,13 @@ class MyEnrollment extends Component
             return false;
         }
 
-        // Get all existing enrollments for the user
-        $existingEnrollments = StudentInfo::where('user_id', $user->id)
-            ->whereNotNull('semester_id')
-            ->get();
+        // Rule: every grade level can enroll only once per school year.
+        // Check if there's already an enrollment for the active semester's school year.
+        $alreadyEnrolledInThisSchoolYear = StudentInfo::where('user_id', $user->id)
+            ->where('school_year', $this->activeSemester->school_year)
+            ->exists();
 
-        if ($existingEnrollments->isEmpty()) {
-            return true; // No existing enrollment, can enroll
-        }
-
-        // Grade 11-12: Can enroll again if there is another semester (different semester_id)
-        // They can enroll in different semesters, but not the same semester twice
-        if ($yearLevel >= 11) {
-            // Check if already enrolled in this exact semester
-            $alreadyEnrolledInThisSemester = $existingEnrollments->contains(function($enrollment) {
-                return $enrollment->semester_id === $this->activeSemester->id;
-            });
-
-            // Can enroll if not already enrolled in this semester
-            return !$alreadyEnrolledInThisSemester;
-        }
-
-        // Grade 7-10: Can only enroll if the school_year is different from existing enrollment
-        // They can only enroll once per school year
-        if ($yearLevel >= 7 && $yearLevel <= 10) {
-            // Check if already enrolled in this school year
-            $alreadyEnrolledInThisSchoolYear = $existingEnrollments->contains(function($enrollment) {
-                return $enrollment->school_year === $this->activeSemester->school_year;
-            });
-
-            // Can enroll if not already enrolled in this school year
-            return !$alreadyEnrolledInThisSchoolYear;
-        }
-
-        return false;
+        return !$alreadyEnrolledInThisSchoolYear;
     }
 
     public function enrollNow()
@@ -242,7 +179,7 @@ class MyEnrollment extends Component
             return null;
         }
         
-        return StudentInfo::with(['user', 'program', 'section', 'semester'])
+        return StudentInfo::with(['user', 'program', 'section'])
             ->where('id', $this->selectedStudentInfoId)
             ->where('user_id', $user->id)
             ->first();
@@ -335,7 +272,8 @@ class MyEnrollment extends Component
             'studentNumber' => 'required|string|max:255',
             'yearLevel' => 'required|integer|in:' . implode(',', YearLevel::values()),
             'programId' => $this->yearLevel >= 11 ? 'required|exists:programs,id' : 'nullable|exists:programs,id',
-            'sectionId' => 'nullable|exists:sections,id',
+            // Section is required and must belong to the selected year level
+            'sectionId' => 'required|exists:sections,id,year_level,' . $this->yearLevel,
         ];
         
         $this->validate($rules, [
@@ -347,48 +285,37 @@ class MyEnrollment extends Component
             'sectionId.exists' => 'Selected section is invalid.',
         ]);
         
-        // Check enrollment eligibility based on grade level
+        // Check enrollment eligibility based on school year rule
         if (!$this->canEnroll($this->yearLevel)) {
-            $yearLevelLabel = YearLevel::from($this->yearLevel)->label();
-            
-            if ($this->yearLevel >= 11) {
-                // Grade 11-12: Check if already enrolled in this semester
-                $existingEnrollment = StudentInfo::where('user_id', $user->id)
-                    ->where('semester_id', $this->activeSemester->id)
-                    ->first();
-                    
-                if ($existingEnrollment) {
-                    $this->dispatch('show-toast', [
-                        'message' => 'You are already enrolled for this semester.',
-                        'type' => 'warning',
-                        'title' => 'Already Enrolled'
-                    ]);
-                    return;
-                }
-            } else {
-                // Grade 7-10: Check if already enrolled in this school year
-                $existingEnrollment = StudentInfo::where('user_id', $user->id)
-                    ->where('school_year', $this->activeSemester->school_year)
-                    ->first();
-                    
-                if ($existingEnrollment) {
-                    $this->dispatch('show-toast', [
-                        'message' => 'You are already enrolled for school year ' . $this->activeSemester->school_year . '. Grade ' . ($this->yearLevel <= 8 ? '7-8' : '9-10') . ' students can only enroll once per school year.',
-                        'type' => 'warning',
-                        'title' => 'Already Enrolled'
-                    ]);
-                    return;
-                }
-            }
+            // User is already enrolled in this school year for some semester
+            $this->dispatch('show-toast', [
+                'message' => 'You are already enrolled for school year ' . $this->activeSemester->school_year . '. Students can only enroll once per school year.',
+                'type' => 'warning',
+                'title' => 'Already Enrolled'
+            ]);
+            return;
         }
         
+        // Build semester JSON: include all semesters for this school year (e.g. 1st and 2nd)
+        $semestersForYear = Semester::where('school_year', $this->activeSemester->school_year)
+            ->orderBy('id')
+            ->get()
+            ->map(function ($semester) {
+                return [
+                    'id' => $semester->id,
+                    'name' => $semester->name,
+                    'school_year' => $semester->school_year,
+                ];
+            })
+            ->toArray();
+
         // Create StudentInfo record
         $studentInfoData = [
             'user_id' => $user->id,
             'student_number' => $this->studentNumber,
             'year_level' => $this->yearLevel,
             'section_id' => $this->sectionId ?: null,
-            'semester_id' => $this->activeSemester->id,
+            'semester' => $semestersForYear,
             'school_year' => $this->activeSemester->school_year,
             'status' => 'pending',
             'enrolled_at' => now(),
@@ -402,6 +329,42 @@ class MyEnrollment extends Component
         }
         
         $studentInfo = StudentInfo::create($studentInfoData);
+
+        // Notify all admins and super-admins about the new enrollment
+        try {
+            $adminUsers = User::role(['super-admin', 'admin'])->get();
+
+            if ($adminUsers->isNotEmpty()) {
+                $title = 'New Enrollment Submitted';
+                $body = "A new enrollment has been submitted by {$user->name} "
+                      . "for school year {$this->activeSemester->school_year}.";
+
+                foreach ($adminUsers as $admin) {
+                    Notification::create([
+                        'user_id' => $admin->id,
+                        'type' => 'enrollment_submitted',
+                        'title' => $title,
+                        'body' => $body,
+                        'url' => '/enrollment.manage-enroll-index',
+                        'data' => [
+                            'student_info_id' => $studentInfo->id,
+                            'student_number' => $studentInfo->student_number,
+                            'student_user_id' => $studentInfo->user_id,
+                            'program_id' => $studentInfo->program_id,
+                            'section_id' => $studentInfo->section_id,
+                            'year_level' => $studentInfo->year_level,
+                            'status' => $studentInfo->status,
+                            'school_year' => $studentInfo->school_year,
+                        ],
+                        'notifiable_id' => $studentInfo->id,
+                        'notifiable_type' => StudentInfo::class,
+                        'read_at' => null,
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Swallow notification errors to not break enrollment flow
+        }
         
         $this->closeEnrollModal();
         $this->checkEnrollment();
@@ -423,7 +386,7 @@ class MyEnrollment extends Component
             return collect([])->paginate(10);
         }
         
-        $query = StudentInfo::with(['user', 'program', 'section', 'semester'])
+        $query = StudentInfo::with(['user', 'program', 'section'])
             ->where('user_id', $user->id);
         
         // Search filter
@@ -438,10 +401,8 @@ class MyEnrollment extends Component
                   ->orWhereHas('section', function($sectionQuery) {
                       $sectionQuery->where('name', 'like', '%' . $this->studentSearch . '%');
                   })
-                  ->orWhereHas('semester', function($semesterQuery) {
-                      $semesterQuery->where('name', 'like', '%' . $this->studentSearch . '%')
-                                    ->orWhere('school_year', 'like', '%' . $this->studentSearch . '%');
-                  });
+                  // Semester is stored as JSON; search by school_year only
+                  ;
             });
         }
         
@@ -485,10 +446,8 @@ class MyEnrollment extends Component
                   ->orWhereHas('section', function($sectionQuery) {
                       $sectionQuery->where('name', 'like', '%' . $this->studentSearch . '%');
                   })
-                  ->orWhereHas('semester', function($semesterQuery) {
-                      $semesterQuery->where('name', 'like', '%' . $this->studentSearch . '%')
-                                    ->orWhere('school_year', 'like', '%' . $this->studentSearch . '%');
-                  });
+                  // Semester is stored as JSON; search by school_year only
+                  ;
             });
         }
         

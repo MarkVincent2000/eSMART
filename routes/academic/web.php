@@ -34,6 +34,10 @@ Route::prefix('academic')->name('academic.')->group(function () {
         ->where('id', '[0-9]+')
         ->name('semester.updateStatus');
 
+    // Reactivate a previous semester pair and set it as the active/displayed one
+    Route::post('/semesters/reactivate', [App\Http\Controllers\Academic\AcademicController::class, 'reactivateSemesters'])
+        ->name('semesters.reactivate');
+
     // Quarter routes
     Route::put('/quarter/{id}', [App\Http\Controllers\Academic\AcademicController::class, 'updateQuarter'])
         ->where('id', '[0-9]+')

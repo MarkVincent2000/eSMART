@@ -440,14 +440,31 @@ class AttendanceController extends Controller
             // Get active semester IDs first
             $activeSemesterIds = Semester::where('is_active', true)->pluck('id')->toArray();
 
+            // Ensure this attendance's semester is active before creating any records
+            if (!$attendance->semester_id || !in_array($attendance->semester_id, $activeSemesterIds, true)) {
+                Log::info('Attendance semester is not active; skipping creation of student attendances', [
+                    'attendance_id' => $attendance->id,
+                    'attendance_semester_id' => $attendance->semester_id,
+                    'active_semester_ids' => $activeSemesterIds,
+                ]);
+                return 0;
+            }
+
             // Get all enrolled students from the specified sections
-            // where their semester is active and matches attendance semester
-            // Check for both 'enrolled' and 'enroll' status values
+            // whose JSON semester array contains the attendance semester.
+            // NOTE:
+            // - StudentInfo no longer uses a simple semester_id foreign key.
+            // - Semester details are stored as a JSON ARRAY in the "semester" column, e.g.:
+            //   [
+            //     {"id": 3, "name": "1st Semester", "school_year": "2026-2027"},
+            //     {"id": 4, "name": "2nd Semester", "school_year": "2026-2027"}
+            //   ]
+            // - We match students whose semester JSON contains an element with the
+            //   current (active) attendance semester id.
             $students = StudentInfo::whereIn('section_id', $sectionIds)
                 ->whereIn('status', ['enrolled', 'enroll']) // Support both status values
-                ->where('semester_id', $attendance->semester_id) // Match attendance semester
-                ->whereIn('semester_id', $activeSemesterIds) // Ensure semester is active
-                ->with(['user', 'semester'])
+                ->whereJsonContains('semester', ['id' => $attendance->semester_id])
+                ->with(['user'])
                 ->get();
 
             if ($students->isEmpty()) {
@@ -664,6 +681,22 @@ class AttendanceController extends Controller
                 $attendance->sections()->sync($sectionIds);
             } else {
                 $attendance->sections()->detach();
+            }
+
+            // After updating sections and semester, ensure corresponding StudentAttendance
+            // records exist for all eligible students (based on JSON semester + sections).
+            if (!empty($sectionIds)) {
+                try {
+                    $studentsAdded = $this->createStudentAttendances($attendance, $sectionIds);
+                    Log::info('Student attendances ensured after attendance update', [
+                        'attendance_id' => $attendance->id,
+                        'students_added' => $studentsAdded,
+                    ]);
+                } catch (\Exception $createSaError) {
+                    Log::error('Failed to create student attendances after attendance update: ' . $createSaError->getMessage(), [
+                        'attendance_id' => $attendance->id,
+                    ]);
+                }
             }
 
             // Reload attendance with relationships for notification
@@ -1227,12 +1260,30 @@ class AttendanceController extends Controller
             // Get active semester IDs
             $activeSemesterIds = Semester::where('is_active', true)->pluck('id')->toArray();
 
+            // Ensure the attendance semester is active
+            if (!$attendance->semester_id || !in_array($attendance->semester_id, $activeSemesterIds, true)) {
+                Log::info('Attendance semester is not active; skipping student notifications', [
+                    'attendance_id' => $attendance->id,
+                    'attendance_semester_id' => $attendance->semester_id,
+                    'active_semester_ids' => $activeSemesterIds,
+                ]);
+                return;
+            }
+
             // Get all enrolled students from the specified sections
-            // where their semester is active and matches attendance semester
+            // whose JSON semester array contains the attendance semester.
+            // NOTE:
+            // - StudentInfo no longer uses a simple semester_id foreign key.
+            // - Semester details are stored as a JSON ARRAY in the "semester" column, e.g.:
+            //   [
+            //     {"id": 3, "name": "1st Semester", "school_year": "2026-2027"},
+            //     {"id": 4, "name": "2nd Semester", "school_year": "2026-2027"}
+            //   ]
+            // - We match students whose semester JSON contains an element with the
+            //   current (active) attendance semester id.
             $students = StudentInfo::whereIn('section_id', $sectionIds)
                 ->whereIn('status', ['enrolled', 'enroll'])
-                ->where('semester_id', $attendance->semester_id)
-                ->whereIn('semester_id', $activeSemesterIds)
+                ->whereJsonContains('semester', ['id' => $attendance->semester_id])
                 ->with('user')
                 ->get();
 

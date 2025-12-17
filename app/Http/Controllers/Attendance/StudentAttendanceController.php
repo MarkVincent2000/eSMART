@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Attendance;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance\Attendance;
 use App\Models\Attendance\StudentAttendance;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -104,15 +105,7 @@ class StudentAttendanceController extends Controller
                     // Store only time portion for TIME data type
                     $checkInTimeStr = $clientDateTimeManila->format('H:i:s');
                     
-                    // Log for debugging purposes
-                    Log::info('Time In recorded from digital clock', [
-                        'attendance_date' => $attendanceDate,
-                        'client_time_utc_iso' => $clientTime,
-                        'client_time_utc' => $clientDateTimeUTC->format('Y-m-d H:i:s'),
-                        'client_time_manila' => $clientDateTimeManila->format('Y-m-d H:i:s'),
-                        'recorded_time_str' => $checkInTimeStr,
-                        'time_source' => 'digital_clock_manila_time_extracted'
-                    ]);
+                
                 } catch (\Exception $e) {
                     // If parsing fails, use server time in Manila timezone
                     $serverTimeManila = now()->setTimezone('Asia/Manila');
@@ -143,6 +136,35 @@ class StudentAttendanceController extends Controller
                 'status' => StudentAttendance::STATUS_PENDING,
                 'marked_by' => Auth::id(),
             ]);
+
+            // --- NEW: NOTIFY THE CREATOR ---
+            try {
+                $creatorId = $attendance->created_by;
+                $studentName = $studentAttendance->user->name ?? 'A student';
+                $formattedTime = \Carbon\Carbon::createFromFormat('H:i:s', $checkInTimeStr)->format('g:i A');
+
+                if ($creatorId) {
+                    Notification::create([
+                        'user_id' => $creatorId,
+                        'type' => 'student_timed_in',
+                        'title' => "⏰ Student Timed In: {$attendance->title}",
+                        'body' => "{$studentName} has timed in at {$formattedTime} for your session: {$attendance->title}.",
+                        'url' => "/attendance?id={$attendance->id}", // Link to the specific attendance management page
+                        'data' => [
+                            'attendance_id' => $attendance->id,
+                            'student_id' => Auth::id(),
+                            'student_name' => $studentName,
+                            'check_in_time' => $checkInTimeStr
+                        ],
+                        'notifiable_id' => $studentAttendance->id,
+                        'notifiable_type' => StudentAttendance::class,
+                        'read_at' => null,
+                    ]);
+                }
+            } catch (\Exception $notifyError) {
+                // We log the error but don't stop the Time In process from succeeding
+                Log::error('Failed to notify creator of time-in: ' . $notifyError->getMessage());
+            }
             
             // Return combined datetime for API response (combine date + time)
             $checkInDateTime = $studentAttendance->check_in_time; // Accessor combines date + time
@@ -292,6 +314,35 @@ class StudentAttendanceController extends Controller
                 'duration_minutes' => $durationMinutes,
                 'status' => StudentAttendance::STATUS_PENDING,
             ]);
+
+            // --- NEW: NOTIFY THE CREATOR ---
+            try {
+                $creatorId = $attendance->created_by;
+                $studentName = $studentAttendance->user->name ?? 'A student';
+                $formattedTime = \Carbon\Carbon::createFromFormat('H:i:s', $checkOutTimeStr)->format('g:i A');
+
+                if ($creatorId) {
+                    Notification::create([
+                        'user_id' => $creatorId,
+                        'type' => 'student_timed_out',
+                        'title' => "⏰ Student Timed Out: {$attendance->title}",
+                        'body' => "{$studentName} has timed out at {$formattedTime} for your session: {$attendance->title}.",
+                        'url' => "/attendance?id={$attendance->id}", // Link to the specific attendance management page
+                        'data' => [
+                            'attendance_id' => $attendance->id,
+                            'student_id' => Auth::id(),
+                            'student_name' => $studentName,
+                            'check_out_time' => $checkOutTimeStr
+                        ],
+                        'notifiable_id' => $studentAttendance->id,
+                        'notifiable_type' => StudentAttendance::class,
+                        'read_at' => null,
+                    ]);
+                }
+            } catch (\Exception $notifyError) {
+                // We log the error but don't stop the Time Out process from succeeding
+                Log::error('Failed to notify creator of time-out: ' . $notifyError->getMessage());
+            }
             
             // Return combined datetime for API response (combine date + time)
             $checkOutDateTime = $studentAttendance->check_out_time; // Accessor combines date + time

@@ -466,7 +466,7 @@ class ManageStudent extends Component
     #[Computed]
     public function studentInfos()
     {
-        $query = StudentInfo::with(['user', 'program', 'section', 'semester']);
+        $query = StudentInfo::with(['user', 'program', 'section']);
         
         // Search filter
         if ($this->studentSearch) {
@@ -492,11 +492,18 @@ class ManageStudent extends Component
             $query->where('status', $this->studentStatus);
         }
         
-        // Semester filter
+        // Semester filter (by school year, since semester is stored as JSON)
         if (!empty($this->selectedSemesters)) {
             $semesterIds = array_filter(array_map('intval', $this->selectedSemesters));
             if (!empty($semesterIds)) {
-                $query->whereIn('semester_id', $semesterIds);
+                $schoolYears = Semester::whereIn('id', $semesterIds)
+                    ->pluck('school_year')
+                    ->unique()
+                    ->toArray();
+
+                if (!empty($schoolYears)) {
+                    $query->whereIn('school_year', $schoolYears);
+                }
             }
         }
         
@@ -582,11 +589,18 @@ class ManageStudent extends Component
             $query->where('status', $status);
         }
         
-        // Apply semester filter
+        // Apply semester filter (by school year, since semester is stored as JSON)
         if (!empty($this->selectedSemesters)) {
             $semesterIds = array_filter(array_map('intval', $this->selectedSemesters));
             if (!empty($semesterIds)) {
-                $query->whereIn('semester_id', $semesterIds);
+                $schoolYears = Semester::whereIn('id', $semesterIds)
+                    ->pluck('school_year')
+                    ->unique()
+                    ->toArray();
+
+                if (!empty($schoolYears)) {
+                    $query->whereIn('school_year', $schoolYears);
+                }
             }
         }
         
@@ -611,7 +625,7 @@ class ManageStudent extends Component
 
     public function viewStudent($studentInfoId)
     {
-        $studentInfo = StudentInfo::with(['user', 'program', 'section', 'semester'])
+        $studentInfo = StudentInfo::with(['user', 'program', 'section'])
             ->find($studentInfoId);
             
         if (!$studentInfo) {
@@ -640,13 +654,13 @@ class ManageStudent extends Component
             return null;
         }
         
-        return StudentInfo::with(['user', 'program', 'section', 'semester'])
+        return StudentInfo::with(['user', 'program', 'section'])
             ->find($this->selectedStudentInfoId);
     }
 
     public function editStudent($studentInfoId)
     {
-        $studentInfo = StudentInfo::with(['program', 'section', 'semester'])
+        $studentInfo = StudentInfo::with(['program', 'section'])
             ->find($studentInfoId);
             
         if (!$studentInfo) {
@@ -793,7 +807,7 @@ class ManageStudent extends Component
         
         // Reload the student info with relationships
         $studentInfo->refresh();
-        $studentInfo->load(['user', 'program', 'section', 'semester']);
+        $studentInfo->load(['user', 'program', 'section']);
         
         // Send notification to the student
         try {
@@ -936,7 +950,6 @@ class ManageStudent extends Component
                 'section_id' => $studentInfo->section_id,
                 'year_level' => $studentInfo->year_level,
                 'status' => $studentInfo->status,
-                'semester_id' => $studentInfo->semester_id,
             ];
 
             // URL for the notification

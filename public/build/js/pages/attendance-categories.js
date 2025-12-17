@@ -395,11 +395,33 @@
     // Render a single attendance card
     function renderAttendanceCard(attendance) {
         // Format date
-        const date = attendance.date ? new Date(attendance.date).toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric', 
-            year: 'numeric' 
-        }) : 'N/A';
+        // NOTE:
+        // - attendance.date is a date string from the backend (usually "YYYY-MM-DD").
+        // - Using new Date("YYYY-MM-DD") interprets it as UTC and can shift the date
+        //   by one day depending on the browser's local timezone.
+        // - To avoid this off‑by‑one issue, parse the string manually instead of
+        //   constructing a Date object.
+        // Replace the existing date logic with this:
+           // Locate this section inside renderAttendanceCard
+           let date = 'N/A';
+           if (attendance.date) {
+               // Extract strictly the first 10 characters (YYYY-MM-DD)
+               const rawDateStr = String(attendance.date).substring(0, 10);
+               const dateParts = rawDateStr.split('-');
+               
+               if (dateParts.length === 3) {
+                   const year = dateParts[0];
+                   // Subtract 1 from month because array is 0-indexed
+                   const monthIndex = parseInt(dateParts[1], 10) - 1;
+                   const day = parseInt(dateParts[2], 10);
+                   
+                   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                   const monthLabel = monthNames[monthIndex] ?? dateParts[1];
+                   
+                   // Build the string manually to avoid JS Date object shifting
+                   date = `${monthLabel} ${day}, ${year}`;
+               }
+           }
 
         // Format time range - parse ISO 8601 UTC strings and convert to Manila timezone
         // Helper function to format time from ISO 8601 UTC string to Manila local time
@@ -411,12 +433,13 @@
                 if (isNaN(date.getTime())) {
                     return null;
                 }
-                // Convert to Manila timezone and format as 12-hour
+                // Format as 12-hour time using the browser's local timezone.
+                // The backend already uses the application timezone (Asia/Manila),
+                // so no explicit timezone override is needed here.
                 return date.toLocaleTimeString('en-US', {
                     hour: 'numeric',
                     minute: '2-digit',
                     hour12: true,
-                    timeZone: 'Asia/Manila'
                 });
             } catch (error) {
                 console.error('Error formatting time:', error);
@@ -668,39 +691,38 @@
                     vanillaSectionSelect.setValue(sectionIds);
                 }
                 
-                // Set date - convert from Y-m-d to Date object for Flatpickr
+                // Set date in Flatpickr from backend value without timezone shifts.
+                // attendance.date is typically "YYYY-MM-DD" (cast as date in Laravel).
+               // Inside loadAttendanceForEdit function
+                   // Inside loadAttendanceForEdit
                 if (attendance.date) {
-                    // Parse the date string (format: "Y-m-d" or "Y-m-d H:i:s")
-                    const dateStr = attendance.date.split(' ')[0]; // Get just the date part
-                    const dateParts = dateStr.split('-');
-                    if (dateParts.length === 3) {
-                        const year = parseInt(dateParts[0], 10);
-                        const month = parseInt(dateParts[1], 10) - 1; // JavaScript months are 0-indexed
-                        const day = parseInt(dateParts[2], 10);
-                        const dateObj = new Date(year, month, day);
-                        
-                        if (flatpickrDateInstance) {
-                            // Use Date object for Flatpickr
-                            flatpickrDateInstance.setDate(dateObj, false);
-                        } else {
-                            // Fallback: format as m/d/Y string
-                            const formattedDate = `${month + 1}/${day}/${year}`;
-                            document.getElementById('attendanceDate').value = formattedDate;
+                    // Get the YYYY-MM-DD string directly from the database
+                    const rawDateStr = String(attendance.date).substring(0, 10); 
+                    
+                    if (flatpickrDateInstance) {
+                        // Set date using the literal string and specific format
+                        // This prevents Flatpickr from converting it to a local Date object
+                        flatpickrDateInstance.setDate(rawDateStr, false, "Y-m-d");
+                    } else {
+                        // Fallback for standard input
+                        const [y, m, d] = rawDateStr.split('-');
+                        const dateInput = document.getElementById('attendanceDate');
+                        if (dateInput) {
+                            dateInput.value = `${parseInt(m)}/${parseInt(d)}/${y}`;
                         }
                     }
                 }
                 
-                // Set start time - parse ISO 8601 UTC and convert to Manila timezone for display
+                // Set start time - parse ISO 8601 string and display in local time
                 if (attendance.start_time) {
                     try {
                         const startDate = new Date(attendance.start_time);
                         if (!isNaN(startDate.getTime())) {
-                            // Format as 12-hour time in Manila timezone
+                            // Format as 12-hour time using browser's local timezone
                             const formattedTime = startDate.toLocaleTimeString('en-US', {
                                 hour: 'numeric',
                                 minute: '2-digit',
                                 hour12: true,
-                                timeZone: 'Asia/Manila'
                             });
                             
                             if (flatpickrStartTimeInstance) {
@@ -714,17 +736,16 @@
                     }
                 }
                 
-                // Set end time - parse ISO 8601 UTC and convert to Manila timezone for display
+                // Set end time - parse ISO 8601 string and display in local time
                 if (attendance.end_time) {
                     try {
                         const endDate = new Date(attendance.end_time);
                         if (!isNaN(endDate.getTime())) {
-                            // Format as 12-hour time in Manila timezone
+                            // Format as 12-hour time using browser's local timezone
                             const formattedTime = endDate.toLocaleTimeString('en-US', {
                                 hour: 'numeric',
                                 minute: '2-digit',
                                 hour12: true,
-                                timeZone: 'Asia/Manila'
                             });
                             
                             if (flatpickrEndTimeInstance) {
@@ -975,17 +996,19 @@
                 const endTimeValue = document.getElementById('attendanceEndTime').value;
                 
                 // Convert date from m/d/Y to Y-m-d format for API
-                let apiDateValue = dateValue;
+                let apiDateValue = '';
                 if (dateValue) {
-                    // Parse m/d/Y format and convert to Y-m-d
                     const dateParts = dateValue.split('/');
                     if (dateParts.length === 3) {
                         const month = dateParts[0].padStart(2, '0');
                         const day = dateParts[1].padStart(2, '0');
                         const year = dateParts[2];
-                        apiDateValue = `${year}-${month}-${day}`;
+                        // Create a literal Y-m-d string
+                        apiDateValue = `${year}-${month}-${day}`; 
                     }
                 }
+
+                
                 
                 // Convert 12-hour time format to 24-hour format for API
                 function convertTo24Hour(time12h) {
@@ -1009,8 +1032,9 @@
                     return `${hour24.toString().padStart(2, '0')}:${minutes}`;
                 }
                 
-                const startTime24h = convertTo24Hour(startTimeValue);
-                const endTime24h = convertTo24Hour(endTimeValue);
+                // Ensure the start/end times use the same literal date string
+                const startTime24h = convertTo24Hour(document.getElementById('attendanceStartTime').value);
+                const endTime24h = convertTo24Hour(document.getElementById('attendanceEndTime').value);
                 
                 // Get section_ids from vanilla select component (supports multiple)
                 let sectionIds = [];
@@ -1061,7 +1085,7 @@
                     semester_id: formData.get('semester_id') ? parseInt(formData.get('semester_id'), 10) : null,
                     section_ids: sectionIds,
                     add_all_sections: addAllSections,
-                    date: apiDateValue,
+                    date: apiDateValue, // Send "2025-12-17"
                     start_time: startTime24h ? `${apiDateValue} ${startTime24h}:00` : null,
                     end_time: endTime24h ? `${apiDateValue} ${endTime24h}:00` : null,
                     location: formData.get('location') || null,
@@ -3204,12 +3228,25 @@
             // Filter attendances within this category
             const filteredAttendances = (category.attendances || []).filter(attendance => {
                 // Search in attendance fields
-                const dateMatch = attendance.date ? 
-                    new Date(attendance.date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                    }).toLowerCase().includes(searchQuery) : false;
+                // IMPORTANT: avoid using new Date("YYYY-MM-DD") here to prevent
+                // timezone-based date shifting that can cause off‑by‑one issues.
+                let formattedDateForSearch = '';
+                if (attendance.date) {
+                    const rawDateStr = String(attendance.date).split(' ')[0]; // "YYYY-MM-DD"
+                    const dateParts = rawDateStr.split('-');
+                    if (dateParts.length === 3) {
+                        const year = dateParts[0];
+                        const monthIndex = parseInt(dateParts[1], 10) - 1; // 0–11
+                        const day = parseInt(dateParts[2], 10);
+                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        const monthLabel = monthNames[monthIndex] ?? dateParts[1];
+                        formattedDateForSearch = `${monthLabel} ${day}, ${year}`.toLowerCase();
+                    }
+                }
+
+                const dateMatch = formattedDateForSearch
+                    ? formattedDateForSearch.includes(searchQuery)
+                    : false;
 
                 const locationMatch = attendance.location ? 
                     attendance.location.toLowerCase().includes(searchQuery) : false;
@@ -3223,25 +3260,29 @@
                 const notesMatch = attendance.notes ? 
                     attendance.notes.toLowerCase().includes(searchQuery) : false;
 
-                // Format time for search - convert UTC to Manila timezone
+                // Format time for search
                 let timeMatch = false;
                 if (attendance.start_time) {
-                    const startTime = new Date(attendance.start_time).toLocaleTimeString('en-US', { 
-                        hour: 'numeric', 
-                        minute: '2-digit',
-                        hour12: true,
-                        timeZone: 'Asia/Manila'
-                    }).toLowerCase();
-                    timeMatch = startTime.includes(searchQuery);
+                    const startDate = new Date(attendance.start_time);
+                    if (!isNaN(startDate.getTime())) {
+                        const startTime = startDate.toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true,
+                        }).toLowerCase();
+                        timeMatch = startTime.includes(searchQuery);
+                    }
                 }
                 if (!timeMatch && attendance.end_time) {
-                    const endTime = new Date(attendance.end_time).toLocaleTimeString('en-US', { 
-                        hour: 'numeric', 
-                        minute: '2-digit',
-                        hour12: true,
-                        timeZone: 'Asia/Manila'
-                    }).toLowerCase();
-                    timeMatch = endTime.includes(searchQuery);
+                    const endDate = new Date(attendance.end_time);
+                    if (!isNaN(endDate.getTime())) {
+                        const endTime = endDate.toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true,
+                        }).toLowerCase();
+                        timeMatch = endTime.includes(searchQuery);
+                    }
                 }
 
                 return dateMatch || locationMatch || typeMatch || remarksMatch || notesMatch || timeMatch;

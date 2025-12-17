@@ -410,9 +410,9 @@
                     <h5 class="modal-title" id="viewStudentsModalLabel">
                         <i class="ri-group-line align-bottom me-2"></i> Students Attendance
                     </h5>
-                    
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                   
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
                 </div>
                 <div class="modal-body">
                     <!-- Loading State -->
@@ -443,7 +443,7 @@
                             </div>
                             <small class="text-muted" id="studentsSearchResults"></small>
                         </div>
-                        
+
 
                         <!-- Bulk Actions Container -->
                         <div id="bulkActionsContainer" class="mb-3 p-3 bg-light rounded border" style="display: none;">
@@ -467,7 +467,7 @@
                         </div>
 
                         <div class="d-flex gap-2 align-items-center mb-2">
-                            <button type="button" class="btn btn-sm btn-soft-primary" id="refreshStudentsTableBtn" 
+                            <button type="button" class="btn btn-sm btn-soft-primary" id="refreshStudentsTableBtn"
                                 onclick="refreshStudentsTable()" title="Refresh Table">
                                 <i class="ri-refresh-line align-bottom"></i> Refresh
                             </button>
@@ -563,10 +563,8 @@
                         </div>
                         <p class="mt-3 text-muted">Loading attendance report...</p>
                     </div>
-                    <iframe id="printAttendanceIframe" 
-                            src="" 
-                            style="width: 100%; height: 70vh; border: none; display: none;"
-                            title="Attendance Report">
+                    <iframe id="printAttendanceIframe" src=""
+                        style="width: 100%; height: 70vh; border: none; display: none;" title="Attendance Report">
                     </iframe>
                 </div>
                 <div class="modal-footer">
@@ -625,16 +623,16 @@
             min-height: 250px !important;
             height: 250px !important;
         }
-        
+
         /* Allow dropdown menus to overflow the container */
         .tasks-wrapper .dropdown-menu {
             z-index: 1050;
         }
-        
+
         /* Ensure attendance cards have enough space for dropdown */
         .tasks-box {
             margin-bottom: 1rem;
         }
     </style>
-    
+
 </div>

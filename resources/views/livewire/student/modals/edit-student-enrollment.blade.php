@@ -42,14 +42,15 @@
                 <div class="@error('editProgramId') is-invalid @enderror"
                     wire:key="edit-program-select-{{ $editYearLevel ?? 'none' }}">
                     <x-select wire:model="editProgramId" :options="$this->editProgramOptions"
-                        placeholder="Select Program" :searchable="true" :disabled="!$editYearLevel"
-                        id="editProgramId" />
+                        placeholder="Select Program" :searchable="true" :disabled="!$editYearLevel || $editYearLevel < \App\Enums\YearLevel::GRADE_11->value" id="editProgramId" />
                 </div>
                 @error('editProgramId')
                     <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
                 @if(!$editYearLevel)
                     <small class="text-muted">Please select a year level first</small>
+                @elseif($editYearLevel < \App\Enums\YearLevel::GRADE_11->value)
+                    <small class="text-muted">Program selection is only required for Grade 11 and 12.</small>
                 @endif
             </div>
             <div class="col-md-6">

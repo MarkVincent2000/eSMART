@@ -27,14 +27,8 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('sections')
                 ->onDelete('set null');
-            $table->foreignId('semester_id')
-                ->nullable()
-                ->constrained('semesters')
-                ->onDelete('set null');
-            $table->foreignId('quarter_id')
-                ->nullable()
-                ->constrained('quarters')
-                ->onDelete('set null');
+            // Store semester details as JSON instead of a foreign key
+            $table->json('semester')->nullable();           // e.g. { "id": 1, "name": "1st Semester", "school_year": "2025-2026" }
             $table->string('school_year');                  // e.g. 2025-2026
 
             // Status / meta
