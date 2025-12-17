@@ -31,13 +31,13 @@ class QuarterSeeder extends Seeder
                 'value' => 1,
                 'name' => '1st Quarter',
                 'description' => '1st Quarter of 1st Semester',
-                'is_active' => false,
+                'is_active' => true,
             ],
             [
                 'value' => 2,
                 'name' => '2nd Quarter',
                 'description' => '2nd Quarter of 1st Semester',
-                'is_active' => false,
+                'is_active' => true,
             ],
         ];
 

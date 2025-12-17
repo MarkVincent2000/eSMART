@@ -19,6 +19,9 @@ Route::prefix('academic')->name('academic.')->group(function () {
     Route::get('/semesters', [App\Http\Controllers\Academic\AcademicController::class, 'getAllSemesters'])
         ->name('semesters.get');
 
+    Route::post('/semester', [App\Http\Controllers\Academic\AcademicController::class, 'storeSemester'])
+        ->name('semester.store');
+
     Route::get('/semester/{id}', [App\Http\Controllers\Academic\AcademicController::class, 'getSemester'])
         ->where('id', '[0-9]+')
         ->name('semester.get');
@@ -26,6 +29,10 @@ Route::prefix('academic')->name('academic.')->group(function () {
     Route::put('/semester/{id}', [App\Http\Controllers\Academic\AcademicController::class, 'updateSemester'])
         ->where('id', '[0-9]+')
         ->name('semester.update');
+
+    Route::put('/semester/{id}/status', [App\Http\Controllers\Academic\AcademicController::class, 'updateSemesterStatus'])
+        ->where('id', '[0-9]+')
+        ->name('semester.updateStatus');
 
     // Quarter routes
     Route::put('/quarter/{id}', [App\Http\Controllers\Academic\AcademicController::class, 'updateQuarter'])

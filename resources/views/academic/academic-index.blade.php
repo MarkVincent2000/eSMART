@@ -3,640 +3,780 @@
     Academic Timeline
 @endsection
 @section('content')
-@component('components.breadcrumb')
-@slot('li_1')
-Academic
-@endslot
-@slot('title')
-Academic Timeline
-@endslot
-@endcomponent
+    @component('components.breadcrumb')
+    @slot('li_1')
+    Academic
+    @endslot
+    @slot('title')
+    Academic Timeline
+    @endslot
+    @endcomponent
 
-<style>
-    /* Academic Timeline Custom Styles */
-    .semester-card {
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-        position: relative;
-    }
-
-    .semester-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: linear-gradient(180deg, var(--semester-color) 0%, var(--semester-color-dark) 100%);
-        transition: width 0.3s ease;
-    }
-
-    .semester-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-    }
-
-    .semester-card:hover::before {
-        width: 6px;
-    }
-
-    .semester-card.first-semester {
-        --semester-color: #405189;
-        --semester-color-dark: #2d3a5f;
-    }
-
-    .semester-card.second-semester {
-        --semester-color: #0ab39c;
-        --semester-color-dark: #088f7a;
-    }
-
-    .semester-header-icon {
-        width: 56px;
-        height: 56px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .semester-header-icon::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.2);
-        transform: translate(-50%, -50%);
-        transition: width 0.6s ease, height 0.6s ease;
-    }
-
-    .semester-card:hover .semester-header-icon::before {
-        width: 200px;
-        height: 200px;
-    }
-
-    .semester-card:hover .semester-header-icon {
-        transform: scale(1.1) rotate(5deg);
-    }
-
-    .quarter-item {
-        transition: all 0.3s ease;
-        border-radius: 8px;
-        padding: 12px 16px;
-        margin-bottom: 8px;
-        background: rgba(0, 0, 0, 0.02);
-        border-left: 3px solid transparent;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .quarter-item::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 3px;
-        height: 100%;
-        background: var(--quarter-color);
-        transform: scaleY(0);
-        transition: transform 0.3s ease;
-    }
-
-    .quarter-item:hover {
-        background: rgba(0, 0, 0, 0.04);
-        transform: translateX(5px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    .quarter-item:hover::before {
-        transform: scaleY(1);
-    }
-
-    .quarter-item.active {
-        border-left-color: var(--quarter-color);
-        background: rgba(var(--quarter-color-rgb), 0.08);
-    }
-
-    .quarter-item.active::before {
-        transform: scaleY(1);
-    }
-
-    .quarter-badge {
-        transition: all 0.3s ease;
-        font-size: 11px;
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-weight: 500;
-    }
-
-    .quarter-item:hover .quarter-badge {
-        transform: scale(1.1);
-    }
-
-    .semester-stats {
-        display: flex;
-        gap: 16px;
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid rgba(0, 0, 0, 0.08);
-    }
-
-    .stat-item {
-        flex: 1;
-        text-align: center;
-        padding: 12px;
-        background: rgba(0, 0, 0, 0.02);
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .stat-item:hover {
-        background: rgba(0, 0, 0, 0.04);
-        transform: translateY(-2px);
-    }
-
-    .stat-value {
-        font-size: 20px;
-        font-weight: 600;
-        color: var(--semester-color);
-        margin-bottom: 4px;
-    }
-
-    .stat-label {
-        font-size: 12px;
-        color: #6c757d;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .empty-state {
-        padding: 40px 20px;
-        text-align: center;
-    }
-
-    .empty-state-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 16px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.02) 100%);
-        animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-        0%, 100% {
-            transform: scale(1);
-            opacity: 1;
+    <style>
+        /* Academic Timeline Custom Styles */
+        .semester-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            position: relative;
         }
-        50% {
-            transform: scale(1.05);
-            opacity: 0.8;
+
+        .semester-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--semester-color) 0%, var(--semester-color-dark) 100%);
+            transition: width 0.3s ease;
         }
-    }
 
-    .duration-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        background: rgba(0, 0, 0, 0.04);
-        border-radius: 20px;
-        font-size: 13px;
-        margin-bottom: 16px;
-    }
-
-    .fade-in {
-        animation: fadeIn 0.6s ease-in;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
+        .semester-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
+
+        .semester-card:hover::before {
+            width: 6px;
         }
-    }
 
-    .stagger-1 { animation-delay: 0.1s; }
-    .stagger-2 { animation-delay: 0.2s; }
-    .stagger-3 { animation-delay: 0.3s; }
-    .stagger-4 { animation-delay: 0.4s; }
+        .semester-card.first-semester {
+            --semester-color: #405189;
+            --semester-color-dark: #2d3a5f;
+        }
 
-    /* Edit Button Styles */
-    .btn-icon {
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        transition: all 0.3s ease;
-    }
+        .semester-card.second-semester {
+            --semester-color: #0ab39c;
+            --semester-color-dark: #088f7a;
+        }
 
-    .btn-icon:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
+        .semester-header-icon {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .btn-soft-primary {
-        background-color: rgba(64, 81, 137, 0.1);
-        border-color: rgba(64, 81, 137, 0.2);
-        color: #405189;
-    }
+        .semester-header-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
 
-    .btn-soft-primary:hover {
-        background-color: rgba(64, 81, 137, 0.2);
-        border-color: rgba(64, 81, 137, 0.3);
-        color: #405189;
-    }
+        .semester-card:hover .semester-header-icon::before {
+            width: 200px;
+            height: 200px;
+        }
 
-    .btn-soft-info {
-        background-color: rgba(10, 179, 156, 0.1);
-        border-color: rgba(10, 179, 156, 0.2);
-        color: #0ab39c;
-    }
+        .semester-card:hover .semester-header-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
 
-    .btn-soft-info:hover {
-        background-color: rgba(10, 179, 156, 0.2);
-        border-color: rgba(10, 179, 156, 0.3);
-        color: #0ab39c;
-    }
-</style>
+        .quarter-item {
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.02);
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
 
-<x-toast-notification />
+        .quarter-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--quarter-color);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .quarter-item:hover {
+            background: rgba(0, 0, 0, 0.04);
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .quarter-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .quarter-item.active {
+            border-left-color: var(--quarter-color);
+            background: rgba(var(--quarter-color-rgb), 0.08);
+        }
+
+        .quarter-item.active::before {
+            transform: scaleY(1);
+        }
+
+        .quarter-badge {
+            transition: all 0.3s ease;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .quarter-item:hover .quarter-badge {
+            transform: scale(1.1);
+        }
+
+        .semester-stats {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--semester-color);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.02) 100%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
+
+        .duration-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 20px;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stagger-1 {
+            animation-delay: 0.1s;
+        }
+
+        .stagger-2 {
+            animation-delay: 0.2s;
+        }
+
+        .stagger-3 {
+            animation-delay: 0.3s;
+        }
+
+        .stagger-4 {
+            animation-delay: 0.4s;
+        }
+
+        /* Edit Button Styles */
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-soft-primary {
+            background-color: rgba(64, 81, 137, 0.1);
+            border-color: rgba(64, 81, 137, 0.2);
+            color: #405189;
+        }
+
+        .btn-soft-primary:hover {
+            background-color: rgba(64, 81, 137, 0.2);
+            border-color: rgba(64, 81, 137, 0.3);
+            color: #405189;
+        }
+
+        .btn-soft-info {
+            background-color: rgba(10, 179, 156, 0.1);
+            border-color: rgba(10, 179, 156, 0.2);
+            color: #0ab39c;
+        }
+
+        .btn-soft-info:hover {
+            background-color: rgba(10, 179, 156, 0.2);
+            border-color: rgba(10, 179, 156, 0.3);
+            color: #0ab39c;
+        }
+    </style>
+
+    <x-toast-notification />
 
 
-<div class="card">
-    <div class="card-body">
-        <div class="row g-2">
-            <div class="col-lg-auto">
-                <div class="hstack gap-2">
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createboardModal"><i class="ri-add-line align-bottom me-1"></i> Create Board</button>
-                </div>
-            </div>
-            <!--end col-->
-            <div class="col-lg-3 col-auto">
-                <div class="search-box">
-                    <input type="text" class="form-control search" id="search-task-options" placeholder="Search for project, tasks...">
-                    <i class="ri-search-line search-icon"></i>
-                </div>
-            </div>
-            <!--end col-->
-        </div>
-        <!--end row-->
-    </div>
-    <!--end card-body-->
-</div>
-
-<div class="row">
-    <!-- 1st Semester Card -->
-    <div class="col-xl-6 mb-4">
-        <div class="card semester-card first-semester fade-in stagger-1" data-semester="first">
-            <div class="card-header bg-transparent border-bottom">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="semester-header-icon bg-primary-subtle">
-                            <i class="ri-calendar-line text-primary fs-3"></i>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h5 class="card-title mb-1 fw-semibold" id="first-semester-name">1st Semester</h5>
-                        <p class="text-muted mb-0 small">
-                            <i class="ri-calendar-event-line align-middle me-1"></i>
-                            School Year: <span id="first-semester-year">2024-2025</span>
-                        </p>
-                    </div>
-                    <div class="flex-shrink-0 d-flex align-items-center gap-2">
-                        <button 
-                            type="button" 
-                            class="btn btn-sm btn-soft-primary btn-icon edit-semester-btn" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#editSemesterModal"
-                            data-semester-id=""
-                            data-semester-type="first"
-                            title="Edit Semester"
-                            id="first-semester-edit-btn"
-                            style="display: none;"
-                        >
-                            <i class="ri-pencil-fill"></i>
-                        </button>
-                        <span class="badge bg-secondary-subtle text-secondary" id="first-semester-status">
-                            <i class="ri-time-line align-middle me-1"></i>Loading...
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="duration-badge">
-                    <i class="ri-calendar-2-line text-primary"></i>
-                    <span><strong>Duration:</strong> <span id="first-semester-duration">Loading...</span></span>
-                </div>
-
-                <div class="mb-3">
-                    <h6 class="mb-3 d-flex align-items-center">
-                        <i class="ri-list-check-2 align-middle me-2 text-primary"></i>
-                        <span>Quarters</span>
-                        <span class="badge bg-primary-subtle text-primary ms-2" id="first-semester-quarters-count">0</span>
-                    </h6>
-                    <div class="quarters-list" id="first-semester-quarters">
-                        <!-- Quarters will be populated dynamically via JavaScript -->
-                    </div>
-                </div>
-
-                <div class="semester-stats">
-                    <div class="stat-item">
-                        <div class="stat-value" style="color: #405189;" id="first-semester-stat-quarters">0</div>
-                        <div class="stat-label">Quarters</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" style="color: #405189;" id="first-semester-stat-active">0</div>
-                        <div class="stat-label">Active</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" style="color: #405189;" id="first-semester-stat-days">0</div>
-                        <div class="stat-label">Days</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- end col -->
-
-    <!-- 2nd Semester Card -->
-    <div class="col-xl-6 mb-4">
-        <div class="card semester-card second-semester fade-in stagger-1" data-semester="second">
-            <div class="card-header bg-transparent border-bottom">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="semester-header-icon bg-info-subtle">
-                            <i class="ri-calendar-line text-info fs-3"></i>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h5 class="card-title mb-1 fw-semibold" id="second-semester-name">2nd Semester</h5>
-                        <p class="text-muted mb-0 small">
-                            <i class="ri-calendar-event-line align-middle me-1"></i>
-                            School Year: <span id="second-semester-year">2024-2025</span>
-                        </p>
-                    </div>
-                    <div class="flex-shrink-0 d-flex align-items-center gap-2">
-                        <button 
-                            type="button" 
-                            class="btn btn-sm btn-soft-info btn-icon edit-semester-btn" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#editSemesterModal"
-                            data-semester-id=""
-                            data-semester-type="second"
-                            title="Edit Semester"
-                            id="second-semester-edit-btn"
-                            style="display: none;"
-                        >
-                            <i class="ri-pencil-fill"></i>
-                        </button>
-                        <span class="badge bg-secondary-subtle text-secondary" id="second-semester-status">
-                            <i class="ri-time-line align-middle me-1"></i>Loading...
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="duration-badge">
-                    <i class="ri-calendar-2-line text-info"></i>
-                    <span><strong>Duration:</strong> <span id="second-semester-duration">Loading...</span></span>
-                </div>
-
-                <div class="mb-3">
-                    <h6 class="mb-3 d-flex align-items-center">
-                        <i class="ri-list-check-2 align-middle me-2 text-info"></i>
-                        <span>Quarters</span>
-                        <span class="badge bg-info-subtle text-info ms-2" id="second-semester-quarters-count">0</span>
-                    </h6>
-                    <div class="quarters-list" id="second-semester-quarters">
-                        <!-- Quarters will be populated dynamically via JavaScript -->
-                    </div>
-                </div>
-
-                <div class="semester-stats">
-                    <div class="stat-item">
-                        <div class="stat-value" style="color: #0ab39c;" id="second-semester-stat-quarters">0</div>
-                        <div class="stat-label">Quarters</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" style="color: #0ab39c;" id="second-semester-stat-active">0</div>
-                        <div class="stat-label">Active</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" style="color: #0ab39c;" id="second-semester-stat-days">0</div>
-                        <div class="stat-label">Days</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- end col -->
-</div>
-<!-- end row -->
-
-<!-- Edit Semester Modal -->
-<div class="modal fade zoomIn" id="editSemesterModal" tabindex="-1" aria-labelledby="editSemesterModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0">
-            <div class="modal-header p-3 bg-primary-subtle">
-                <h5 class="modal-title" id="editSemesterModalLabel">
-                    <i class="ri-pencil-line align-middle me-2"></i>
-                    Edit Semester
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form class="tablelist-form" autocomplete="off" id="editSemesterForm" onsubmit="return false;">
-                <div class="modal-body">
-                    <input type="hidden" id="semesterId" name="semester_id" />
-                    <div class="row g-3">
-                        <div class="col-lg-12">
-                            <label class="form-label">
-                                Semester
-                            </label>
-                            <input 
-                                type="text" 
-                                id="semester_name" 
-                                class="form-control bg-light" 
-                                placeholder="1st Semester"
-                                readonly
-                            />
-                            <small class="text-muted">Semester name is fixed and cannot be changed.</small>
-                        </div>
-                        <!--end col-->
-
-                        <div class="col-lg-12">
-                            <label for="school_year" class="form-label">
-                                School Year <span class="text-danger">*</span>
-                            </label>
-                            <input 
-                                type="text" 
-                                id="school_year" 
-                                class="form-control" 
-                                name="school_year"
-                                placeholder="e.g., 2024-2025"
-                            />
-                            <div class="invalid-feedback" id="school_year-error"></div>
-                        </div>
-                        <!--end col-->
-
-                        <div class="col-lg-6">
-                            <label for="start_date" class="form-label">
-                                Start Date <span class="text-danger">*</span>
-                            </label>
-                            <input 
-                                type="date" 
-                                id="start_date" 
-                                class="form-control" 
-                                name="start_date"
-                            />
-                            <div class="invalid-feedback" id="start_date-error"></div>
-                        </div>
-                        <!--end col-->
-
-                        <div class="col-lg-6">
-                            <label for="end_date" class="form-label">
-                                End Date <span class="text-danger">*</span>
-                            </label>
-                            <input 
-                                type="date" 
-                                id="end_date" 
-                                class="form-control" 
-                                name="end_date"
-                            />
-                            <div class="invalid-feedback" id="end_date-error"></div>
-                        </div>
-                        <!--end col-->
-
-                        <div class="col-lg-6">
-                            <label class="form-label">
-                                Quarters
-                            </label>
-                            @component('components.select-vanilla', [
-                                'name' => 'quarter_ids',
-                                'id' => 'edit-quarter-select',
-                                'label' => null,
-                                'placeholder' => 'Select quarters',
-                                'searchable' => false,
-                                'multiple' => true,
-                                'options' => [],
-                            ])
-                            @endcomponent
-                            <div class="invalid-feedback d-block" id="quarters-error" style="display:none;"></div>
-                        </div>
-                        <!--end col-->
-
-                        <div class="col-lg-6 d-flex align-items-center">
-                            <div>
-                                <div class="form-check form-switch mb-1">
-                                    <input 
-                                        class="form-check-input" 
-                                        type="checkbox" 
-                                        id="is_active" 
-                                        name="is_active"
-                                        value="1"
-                                    />
-                                    <label class="form-check-label" for="is_active">
-                                        Active Semester
-                                    </label>
-                                </div>
-                                <small class="text-muted d-block">Toggle to activate or deactivate this semester.</small>
-                                <small class="text-muted">Quarter selection is static and used for display/organization.</small>
-                            </div>
-                        </div>
-                        <!--end col-->
-                    </div>
-                    <!--end row-->
-                </div>
-                <div class="modal-footer">
-                    <div class="hstack gap-2 justify-content-end">
-                        <button type="button" class="btn btn-light" id="close-modal-btn" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="update-btn">
-                            <i class="ri-save-line align-middle me-1"></i>Update Semester
+    <div class="card">
+        <div class="card-body">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-6 col-sm-12">
+                    <div class="hstack gap-2">
+                        <button class="btn btn-primary" type="button" id="create-semester-btn" data-bs-toggle="modal"
+                            data-bs-target="#editSemesterModal">
+                            <i class="ri-add-line align-bottom me-1"></i>
+                            Create New Semester
                         </button>
                     </div>
                 </div>
-            </form>
-        </div>
-    </div>
-</div>
-<!--end modal-->
-
-<!-- Edit Quarter Modal -->
-<div class="modal fade zoomIn" id="editQuarterModal" tabindex="-1" aria-labelledby="editQuarterModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0">
-            <div class="modal-header p-3 bg-info-subtle">
-                <h5 class="modal-title" id="editQuarterModalLabel">
-                    <i class="ri-pencil-line align-middle me-2"></i>
-                    Edit Quarter
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="editQuarterForm" onsubmit="return false;">
-                <div class="modal-body">
-                    <input type="hidden" id="quarterId" name="quarter_id" />
-                    <div class="mb-3">
-                        <label class="form-label" for="quarter_name">Quarter</label>
-                        <input 
-                            type="text" 
-                            id="quarter_name" 
-                            class="form-control bg-light" 
-                            readonly
-                        />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="quarter_is_active">Status</label>
-                        <div class="form-check form-switch">
-                            <input 
-                                class="form-check-input" 
-                                type="checkbox" 
-                                id="quarter_is_active" 
-                                name="is_active"
-                                value="1"
-                            />
-                            <label class="form-check-label" for="quarter_is_active">
-                                Active
-                            </label>
-                        </div>
-                        <small class="text-muted">Toggle to activate or deactivate this quarter.</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" id="quarter-close-btn">Close</button>
-                    <button type="button" class="btn btn-primary" id="quarter-update-btn">
-                        <i class="ri-save-line align-middle me-1"></i>Update Quarter
+                <div class="col-md-6 col-sm-12 d-flex justify-content-md-end justify-content-start mt-sm-2 mt-md-0">
+                    <button class="btn btn-soft-secondary" type="button" id="edit-semesters-btn" data-bs-toggle="modal"
+                        data-bs-target="#editSemesterModal">
+                        <i class="ri-pencil-line align-bottom me-1"></i>
+                        Edit Semesters
                     </button>
                 </div>
-            </form>
+            </div>
+            <!--end row-->
+        </div>
+        <!--end card-body-->
+    </div>
+
+    <div class="row">
+        <!-- 1st Semester Card -->
+        <div class="col-xl-6 mb-4">
+            <div class="card semester-card first-semester fade-in stagger-1 semester-clickable" data-semester="first">
+                <div class="card-header bg-transparent border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="semester-header-icon bg-primary-subtle">
+                                <i class="ri-calendar-line text-primary fs-3"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="card-title mb-1 fw-semibold" id="first-semester-name">1st Semester</h5>
+                            <p class="text-muted mb-0 small">
+                                <i class="ri-calendar-event-line align-middle me-1"></i>
+                                School Year: <span id="first-semester-year">2024-2025</span>
+                            </p>
+                        </div>
+                        <div class="flex-shrink-0 d-flex align-items-center gap-2">
+                            <span class="badge bg-secondary-subtle text-secondary" id="first-semester-status">
+                                <i class="ri-time-line align-middle me-1"></i>Loading...
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="duration-badge">
+                        <i class="ri-calendar-2-line text-primary"></i>
+                        <span><strong>Duration:</strong> <span id="first-semester-duration">Loading...</span></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="mb-3 d-flex align-items-center">
+                            <i class="ri-list-check-2 align-middle me-2 text-primary"></i>
+                            <span>Quarters</span>
+                            <span class="badge bg-primary-subtle text-primary ms-2"
+                                id="first-semester-quarters-count">0</span>
+                        </h6>
+                        <div class="quarters-list" id="first-semester-quarters">
+                            <!-- Quarters will be populated dynamically via JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="semester-stats">
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #405189;" id="first-semester-stat-quarters">0</div>
+                            <div class="stat-label">Quarters</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #405189;" id="first-semester-stat-active">0</div>
+                            <div class="stat-label">Active</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #405189;" id="first-semester-stat-days">0</div>
+                            <div class="stat-label">Days</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end col -->
+
+        <!-- 2nd Semester Card -->
+        <div class="col-xl-6 mb-4">
+            <div class="card semester-card second-semester fade-in stagger-1 semester-clickable" data-semester="second">
+                <div class="card-header bg-transparent border-bottom">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="semester-header-icon bg-info-subtle">
+                                <i class="ri-calendar-line text-info fs-3"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="card-title mb-1 fw-semibold" id="second-semester-name">2nd Semester</h5>
+                            <p class="text-muted mb-0 small">
+                                <i class="ri-calendar-event-line align-middle me-1"></i>
+                                School Year: <span id="second-semester-year">2024-2025</span>
+                            </p>
+                        </div>
+                        <div class="flex-shrink-0 d-flex align-items-center gap-2">
+                            <span class="badge bg-secondary-subtle text-secondary" id="second-semester-status">
+                                <i class="ri-time-line align-middle me-1"></i>Loading...
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="duration-badge">
+                        <i class="ri-calendar-2-line text-info"></i>
+                        <span><strong>Duration:</strong> <span id="second-semester-duration">Loading...</span></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="mb-3 d-flex align-items-center">
+                            <i class="ri-list-check-2 align-middle me-2 text-info"></i>
+                            <span>Quarters</span>
+                            <span class="badge bg-info-subtle text-info ms-2" id="second-semester-quarters-count">0</span>
+                        </h6>
+                        <div class="quarters-list" id="second-semester-quarters">
+                            <!-- Quarters will be populated dynamically via JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="semester-stats">
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #0ab39c;" id="second-semester-stat-quarters">0</div>
+                            <div class="stat-label">Quarters</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #0ab39c;" id="second-semester-stat-active">0</div>
+                            <div class="stat-label">Active</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #0ab39c;" id="second-semester-stat-days">0</div>
+                            <div class="stat-label">Days</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end col -->
+    </div>
+    <!-- end row -->
+
+    <div class="row">
+        <div class="card" id="inactiveSemesterList">
+            <div class="d-flex align-items-center mt-4">
+                <h4 class="mb-0 d-flex align-items-center">
+                    <i class="ri-list-check-2 align-middle me-2 text-primary"></i>
+                    <span>Previous Semesters</span>
+                </h4>
+            </div>
+            <div class="card-header">
+
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <div class="search-box">
+                            <input type="text" class="form-control search" id="inactive-semester-search"
+                                placeholder="Search school year...">
+                            <i class="ri-search-line search-icon"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-auto ms-auto">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted">Sort by: </span>
+                            <select class="form-control mb-0" data-choices data-choices-search-false
+                                id="inactive-semester-sort">
+                                <option value="school_year">School Year</option>
+                                <option value="first_semester">1st Semester</option>
+                                <option value="second_semester">2nd Semester</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div>
+
+
+                    <div class="table-responsive table-card mb-3">
+                        <table class="table align-middle table-nowrap mb-0" id="inactiveSemesterTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>School Year</th>
+                                    <th>1st Semester</th>
+                                    <th>2nd Semester</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inactiveSemesterTbody">
+                            </tbody>
+                        </table>
+                        <div class="noresult" id="inactive-semester-noresult" style="display: none">
+                            <div class="text-center">
+                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                    colors="primary:#121331,secondary:#08a88a" style="width:75px;height:75px">
+                                </lord-icon>
+                                <h5 class="mt-2">No inactive semesters found</h5>
+                                <p class="text-muted mb-0">There are currently no inactive semesters that match
+                                    your filters.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <div class="pagination-wrap hstack gap-2">
+                            <a class="page-item pagination-prev disabled" href="#" id="inactive-semester-prev">
+                                Previous
+                            </a>
+                            <ul class="pagination listjs-pagination mb-0"></ul>
+                            <a class="page-item pagination-next" href="#" id="inactive-semester-next">
+                                Next
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--end card-->
+    </div>
+
+    <!-- Reactivate Semester Modal -->
+    <div class="modal fade" id="reactivateSemesterModal" tabindex="-1" aria-labelledby="reactivateSemesterModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-header p-3 bg-warning-subtle">
+                    <h5 class="modal-title" id="reactivateSemesterModalLabel">
+                        <i class="ri-history-line align-middle me-2"></i>
+                        Set Semesters as Active Again
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="reactivateSemesterForm" onsubmit="return false;">
+                    <div class="modal-body">
+                        <input type="hidden" id="reactivate_first_id" />
+                        <input type="hidden" id="reactivate_second_id" />
+                        <input type="hidden" id="reactivate_school_year" />
+
+                        <p class="mb-2">
+                            You are about to set the semesters for
+                            <strong id="reactivate_school_year_label"></strong>
+                            as active again.
+                        </p>
+                        <p class="text-muted mb-0">
+                            The currently active semesters (and all of their quarters) will be set to inactive.
+                            The selected semesters and their quarters will become the active ones displayed on the
+                            cards.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="reactivate-semester-confirm-btn">
+                            <i class="ri-check-line align-middle me-1"></i>Confirm
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-<!--end quarter modal-->
+
+
+
+    <!-- Edit Semester Modal -->
+    <div class="modal fade" id="editSemesterModal" data-bs-backdrop="static" tabindex="-1"
+        aria-labelledby="editSemesterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0">
+                <div class="modal-header p-3 bg-primary-subtle">
+                    <h5 class="modal-title" id="editSemesterModalLabel">
+                        <i class="ri-pencil-line align-middle me-2"></i>
+                        <span id="editSemesterModalTitleText">Edit Semester</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form class="tablelist-form" autocomplete="off" id="editSemesterForm" onsubmit="return false;">
+                    <div class="modal-body">
+                        <input type="hidden" id="semesterId" name="semester_id" />
+                        <input type="hidden" id="first_semester_id" />
+                        <input type="hidden" id="second_semester_id" />
+                        <div class="row g-3">
+                            <div class="col-lg-12">
+                                <label for="school_year" class="form-label">
+                                    School Year <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" id="school_year" class="form-control" name="school_year"
+                                    placeholder="e.g., 2024-2025" />
+                                <div class="invalid-feedback" id="school_year-error"></div>
+                            </div>
+                            <!--end col-->
+
+                            {{-- Edit mode: single semester details --}}
+                            <div id="edit-semester-section" class="row g-3">
+                                <div class="col-lg-12">
+                                    <label class="form-label" for="semester_name">
+                                        Semester
+                                    </label>
+                                    <input type="text" id="semester_name" class="form-control bg-light" readonly />
+                                    <small class="text-muted">Semester name is fixed as 1st or 2nd Semester.</small>
+                                </div>
+                                <!--end col-->
+
+                                <div class="col-lg-6">
+                                    <label for="start_date" class="form-label">
+                                        Start Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" id="start_date" class="form-control" name="start_date" />
+                                    <div class="invalid-feedback" id="start_date-error"></div>
+                                </div>
+                                <!--end col-->
+
+                                <div class="col-lg-6">
+                                    <label for="end_date" class="form-label">
+                                        End Date <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="date" id="end_date" class="form-control" name="end_date" />
+                                    <div class="invalid-feedback" id="end_date-error"></div>
+                                </div>
+                                <!--end col-->
+
+                                <div class="col-lg-6">
+                                    <label class="form-label">
+                                        Quarters
+                                    </label>
+                                    @component('components.select-vanilla', [
+                                        'name' => 'quarter_ids',
+                                        'id' => 'edit-quarter-select',
+                                        'label' => null,
+                                        'placeholder' => 'Select quarters',
+                                        'searchable' => false,
+                                        'multiple' => true,
+                                        'options' => [],
+                                    ])
+                                    @endcomponent
+                                    <div class="invalid-feedback d-block" id="quarters-error" style="display:none;">
+                                    </div>
+                                </div>
+                                <!--end col-->
+
+                                <div class="col-lg-6 d-flex align-items-center">
+                                    <div>
+                                        <div class="form-check form-switch mb-1">
+                                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
+                                                value="1" />
+                                            <label class="form-check-label" for="is_active">
+                                                Active Semester
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block">Toggle to activate or deactivate this
+                                            semester.</small>
+                                        <small class="text-muted">Quarter selection is static and used for
+                                            display/organization.</small>
+                                    </div>
+                                </div>
+                                <!--end col-->
+                            </div>
+
+                            {{-- Create mode: define both 1st and 2nd semester (dates only) --}}
+                            <div id="create-semester-section" class="row g-3" style="display:none;">
+                                <div class="col-12">
+                                    <small class="text-muted">Both 1st and 2nd Semester will be created for the given
+                                        school year.</small>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="border rounded p-3 h-100">
+                                        <h6 class="fw-semibold mb-3">1st Semester</h6>
+                                        <div class="mb-3">
+                                            <label for="first_start_date" class="form-label">
+                                                Start Date <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="date" id="first_start_date" class="form-control"
+                                                name="first_start_date" />
+                                            <div class="invalid-feedback" id="first_start_date-error"></div>
+                                        </div>
+                                        <div class="mb-0">
+                                            <label for="first_end_date" class="form-label">
+                                                End Date <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="date" id="first_end_date" class="form-control"
+                                                name="first_end_date" />
+                                            <div class="invalid-feedback" id="first_end_date-error"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="border rounded p-3 h-100">
+                                        <h6 class="fw-semibold mb-3">2nd Semester</h6>
+                                        <div class="mb-3">
+                                            <label for="second_start_date" class="form-label">
+                                                Start Date <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="date" id="second_start_date" class="form-control"
+                                                name="second_start_date" />
+                                            <div class="invalid-feedback" id="second_start_date-error"></div>
+                                        </div>
+                                        <div class="mb-0">
+                                            <label for="second_end_date" class="form-label">
+                                                End Date <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="date" id="second_end_date" class="form-control"
+                                                name="second_end_date" />
+                                            <div class="invalid-feedback" id="second_end_date-error"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end row-->
+                    </div>
+                    <div class="modal-footer">
+                        <div class="hstack gap-2 justify-content-end">
+                            <button type="button" class="btn btn-light" id="close-modal-btn"
+                                data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="update-btn">
+                                <i class="ri-save-line align-middle me-1"></i>
+                                <span id="update-btn-text">Update Semester</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Semester Status Modal (quick toggle of active/inactive) --}}
+    <div class="modal fade" id="semesterStatusModal" tabindex="-1" aria-labelledby="semesterStatusModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-header p-3 bg-info-subtle">
+                    <h5 class="modal-title" id="semesterStatusModalLabel">
+                        <i class="ri-toggle-line align-middle me-2"></i>
+                        Semester Status
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="semesterStatusForm" onsubmit="return false;">
+                    <div class="modal-body">
+                        <input type="hidden" id="status_semester_id" />
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Semester</label>
+                            <h6 id="status_semester_name" class="mb-0"></h6>
+                            <small class="text-muted">School Year:
+                                <span id="status_semester_year"></span></small>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label">Status</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="status_is_active" />
+                                <label class="form-check-label" for="status_is_active">
+                                    Active Semester
+                                </label>
+                            </div>
+                            <small class="text-muted d-block">Activating this semester will also activate all of its
+                                quarters.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="semester-status-save-btn">
+                            <i class="ri-save-line align-middle me-1"></i>Save Status
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!--end modal-->
 
 @endsection
 @section('script')
 
-<script src="{{URL::asset('build/js/pages/academic-timeline.js')}}"></script>
+    <script src="{{URL::asset('build/js/pages/academic-timeline.js')}}"></script>
 
-<!-- App js -->
-<script src="{{URL::asset('build/js/app.js')}}"></script>
+    <!-- App js -->
+    <script src="{{URL::asset('build/js/app.js')}}"></script>
 
 
 @endsection

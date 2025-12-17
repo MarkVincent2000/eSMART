@@ -30,7 +30,7 @@
                         <div>
                             <div class="d-flex justify-content-between mb-2">
                                 <p class="text-muted text-uppercase fs-12 fw-medium mb-2">Semester</p>
-                                <a href="enrollment.semester-index" type="button">
+                                <a href="academic.academic-index" type="button">
                                     <x-button color="primary" size="sm" icon="ri-settings-3-line"
                                         tooltip="Configure Semesters" icon-position="left" :iconOnly="true"></x-button>
                                 </a>
