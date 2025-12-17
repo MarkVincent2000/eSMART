@@ -19,7 +19,7 @@
                                         <div class="position-relative h-100 d-flex flex-column">
                                             <div class="mb-4">
                                                 <a href="{{ url('/') }}" class="d-block">
-                                                    <img src="{{ URL::asset('build/images/logo-light.png') }}" alt=""
+                                                    <img src="{{ URL::asset('build/images/smart-logo-light.png') }}" alt=""
                                                         height="20">
                                                 </a>
                                             </div>

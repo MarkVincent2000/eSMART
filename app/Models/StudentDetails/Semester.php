@@ -42,5 +42,13 @@ class Semester extends Model
     {
         return $this->hasMany(StudentInfo::class);
     }
+
+    /**
+     * Get all quarters for this semester.
+     */
+    public function quarters(): HasMany
+    {
+        return $this->hasMany(Quarter::class);
+    }
 }
 

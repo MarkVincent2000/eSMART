@@ -31,6 +31,10 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('semesters')
                 ->onDelete('set null');
+            $table->foreignId('quarter_id')
+                ->nullable()
+                ->constrained('quarters')
+                ->onDelete('set null');
             $table->string('school_year');                  // e.g. 2025-2026
 
             // Status / meta
