@@ -53,11 +53,24 @@
 <div
     x-data="{
         @if($hasWireModel)
-        show: @entangle($attributes->wire('model')),
+            show: @entangle($attributes->wire('model')),
         @else
-        show: @js($show),
+            show: @js($show),
         @endif
-        closeOnBackdrop: @js($closeOnBackdrop)
+        closeOnBackdrop: @js($closeOnBackdrop),
+        bounce: false,
+        triggerBounce() {
+            // Reset bounce to false first to allow re-triggering
+            this.bounce = false;
+            // Use $nextTick to ensure the DOM updates before setting bounce to true
+            this.$nextTick(() => {
+                this.bounce = true;
+                // Reset after animation completes (0.6s)
+                setTimeout(() => {
+                    this.bounce = false;
+                }, 600);
+            });
+        }
     }"
     x-on:close.stop="show = false"
     x-on:keydown.escape.window="show && closeOnBackdrop && (show = false)"
@@ -79,8 +92,8 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7);"
-        x-on:click="closeOnBackdrop && (show = false)"
+        style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); cursor: pointer;"
+        x-on:click="closeOnBackdrop ? (show = false) : triggerBounce()"
     ></div>
 
     <!-- Modal Dialog Container -->
@@ -88,16 +101,21 @@
         <div
             x-show="show"
             x-trap.noscroll="show"
-            x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 transform -translate-y-12 scale-95"
+            x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 transform -translate-y-12 scale-95"
             style="width: 100%; {{ $normalizedSize === 'sm' ? 'max-width: 24rem;' : ($normalizedSize === 'lg' ? 'max-width: 32rem;' : ($normalizedSize === 'xl' ? 'max-width: 60rem;' : ($normalizedSize === 'fullscreen' ? 'max-width: 100%;' : 'max-width: 28rem;'))) }} margin: 0 auto; {{ $maxWidth ? 'max-width: ' . $maxWidth . ';' : '' }}"
         >
-            <div class="card mb-0 shadow-lg overflow-{{ $overflow }}" style="border-radius: 0.5rem;">
-                <!-- Modal Header -->
+        <div 
+            x-bind:class="{ 'modal-bounce': bounce }"
+            class="card mb-0 shadow-lg overflow-{{ $overflow }}" 
+            style="border-radius: 0.5rem; will-change: transform;"
+            x-on:click.stop
+        >
+                    <!-- Modal Header -->
                 @if($showHeader)
                 <div class="card-header border-bottom d-flex align-items-center justify-content-between">
                     @if(isset($header))
@@ -138,4 +156,3 @@
         </div>
     </div>
 </div>
-

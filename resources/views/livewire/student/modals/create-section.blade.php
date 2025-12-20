@@ -1,5 +1,5 @@
 <x-modal id="create-section-modal" wire:model="showSectionModal" :title="$sectionId ? 'Edit Section' : 'Create Section'"
-    size="lg" :centered="true" :show-footer="true">
+    size="lg" :centered="true" :show-footer="true" :close-on-backdrop="false">
     <form wire:submit.prevent="saveSection">
         <div class="row g-3">
             <div class="col-md-12">
