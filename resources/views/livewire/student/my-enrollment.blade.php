@@ -358,15 +358,15 @@
                     <div class="@error('programId') is-invalid @enderror"
                         wire:key="program-select-{{ $yearLevel ?? 'none' }}">
                         <x-select wire:model="programId" :options="$this->programOptions" placeholder="Select Program"
-                            :searchable="true" :disabled="!$yearLevel || $yearLevel < \App\Enums\YearLevel::GRADE_11->value" id="programId" />
+                            :searchable="true" :disabled="!$yearLevel || empty($this->programOptions)" id="programId" />
                     </div>
                     @error('programId')
                         <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                     @if(!$yearLevel)
                         <small class="text-muted">Please select a year level first</small>
-                    @elseif($yearLevel < \App\Enums\YearLevel::GRADE_11->value)
-                        <small class="text-muted">Program selection is only required for Grade 11 and 12.</small>
+                    @elseif(empty($this->programOptions))
+                        <small class="text-warning">No programs available for the selected year level.</small>
                     @endif
                 </div>
 

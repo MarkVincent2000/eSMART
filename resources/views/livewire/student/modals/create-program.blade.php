@@ -24,6 +24,28 @@
             </div>
 
             <div class="col-md-12">
+                <label class="form-label">Year Levels <span class="text-danger">*</span></label>
+                <div class="@error('programYearLevels') is-invalid @enderror">
+                    @foreach(\App\Enums\YearLevel::options() as $option)
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" wire:model="programYearLevels"
+                                value="{{ $option['value'] }}" id="programYearLevel{{ $option['value'] }}">
+                            <label class="form-check-label" for="programYearLevel{{ $option['value'] }}">
+                                {{ $option['label'] }}
+                            </label>
+                        </div>
+                    @endforeach
+                </div>
+                @error('programYearLevels')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+                @error('programYearLevels.*')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+                <small class="text-muted">Select one or more year levels for this program</small>
+            </div>
+
+            <div class="col-md-12">
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="programActive" wire:model="programActive">
                     <label class="form-check-label" for="programActive">

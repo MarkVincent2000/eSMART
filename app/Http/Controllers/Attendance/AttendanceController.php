@@ -204,6 +204,124 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Get students based on semester and section filters
+     * Used for preview in attendance creation form
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getFormDataStudents(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'semester_id' => 'required|exists:semesters,id',
+                'section_ids' => 'nullable|array',
+                'section_ids.*' => 'exists:sections,id',
+                'add_all_sections' => 'nullable|boolean',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $semesterId = $request->input('semester_id');
+            $addAllSections = $request->boolean('add_all_sections', false);
+            
+            // Get section IDs
+            $sectionIds = [];
+            if ($addAllSections) {
+                // Get all active sections
+                $sectionIds = Section::where('active', true)->pluck('id')->toArray();
+            } else {
+                $sectionIds = $request->input('section_ids', []);
+                // Filter out empty values and convert to integers
+                $sectionIds = array_filter(array_map('intval', $sectionIds), function($id) {
+                    return $id > 0;
+                });
+            }
+
+            if (empty($sectionIds)) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'students' => []
+                    ]
+                ]);
+            }
+
+            // Get students from the specified sections whose JSON semester array contains the semester ID
+            // NOTE: StudentInfo stores semester as JSON array in the "semester" column
+            // Format: [{"id": 3, "name": "1st Semester", "school_year": "2026-2027"}, ...]
+            // We need to check if any element in the array has the matching id
+            
+            // Get all students first, then filter in PHP for reliability
+            // This ensures we catch all students regardless of database JSON query limitations
+            $allStudents = StudentInfo::whereIn('section_id', $sectionIds)
+                ->whereIn('status', ['enrolled', 'enroll'])
+                ->with(['user'])
+                ->get();
+            
+            // Filter students whose semester array contains the matching semester ID
+            $students = $allStudents->filter(function($student) use ($semesterId) {
+                if (empty($student->semester) || !is_array($student->semester)) {
+                    return false;
+                }
+                // Check if any semester in the array has the matching id
+                foreach ($student->semester as $sem) {
+                    if (isset($sem['id']) && (int)$sem['id'] === (int)$semesterId) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            // Log for debugging
+            Log::info('getFormDataStudents', [
+                'semester_id' => $semesterId,
+                'section_ids' => $sectionIds,
+                'add_all_sections' => $addAllSections,
+                'total_students_found' => $allStudents->count(),
+                'filtered_students_count' => $students->count(),
+            ]);
+
+            // Format students data
+            $studentsData = $students->map(function($student) {
+                $user = $student->user;
+                $studentName = 'Unknown';
+                
+                if ($user) {
+                    $studentName = $user->name ?? 
+                        trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) ?? 
+                        'Unknown';
+                }
+                
+                return [
+                    'id' => $student->id,
+                    'name' => $studentName,
+                    'student_id' => $student->student_id ?? null,
+                ];
+            })->sortBy('name')->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'students' => $studentsData
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch students: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Store a newly created attendance session
      * 
      * @param \Illuminate\Http\Request $request

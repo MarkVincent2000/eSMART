@@ -121,6 +121,18 @@
                                 </div>
                             </div>
 
+                            <!-- Students Preview -->
+                            <div class="col-lg-12">
+                                <label class="form-label">Students <small class="text-muted">(based on selected semester
+                                        and sections)</small></label>
+                                <div id="studentsPreview" class="d-flex flex-wrap gap-2 p-3" style="min-height: 50px;">
+                                    <div class="text-muted w-100 text-center py-2">
+                                        <small>Select semester and section(s) to view students</small>
+                                    </div>
+                                </div>
+                                <small class="text-muted" id="studentsCount"></small>
+                            </div>
+
                             <!-- Date -->
                             <div class="col-lg-12">
                                 <label for="attendanceDate" class="form-label">Date <span

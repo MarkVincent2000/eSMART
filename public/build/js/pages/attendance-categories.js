@@ -15,6 +15,10 @@
     // Permission check - default to false if not set
     const canManageAttendance = window.canManageAttendance || false;
 
+    // Current user info - set from API response
+    let currentUserId = null;
+    let isUserRole = false;
+
     // Global storage for all categories data (for search functionality)
     let allCategoriesData = [];
 
@@ -221,6 +225,12 @@
             const result = await response.json();
 
             if (result.success && result.data) {
+                // Store user info from meta if available
+                if (result.meta) {
+                    currentUserId = result.meta.user_id || null;
+                    isUserRole = result.meta.is_user_role || false;
+                }
+                
                 // Store all categories data for search
                 allCategoriesData = result.data;
                 displayCategories(result.data);
@@ -500,9 +510,26 @@
                                     <i class="ri-more-fill fs-16"></i>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-end">
-                                    <a class="dropdown-item" href="javascript:void(0);" onclick="viewAttendance(${attendance.id})">
+                                    ${(() => {
+                                        // Check if user has role "user" and if they have a StudentAttendance record
+                                        if (isUserRole && currentUserId) {
+                                            // Check if attendance has student_attendances for this user
+                                            const studentAttendances = attendance.student_attendances || attendance.studentAttendances || [];
+                                            const hasStudentAttendance = studentAttendances.some(sa => {
+                                                const userId = sa.user_id || (sa.user && sa.user.id);
+                                                return userId && parseInt(userId) === parseInt(currentUserId);
+                                            });
+                                            
+                                            // Only show View if user has a StudentAttendance record
+                                            if (!hasStudentAttendance) {
+                                                return ''; // Don't show View option
+                                            }
+                                        }
+                                        // Show View option for non-user roles or if user has StudentAttendance
+                                        return `<a class="dropdown-item" href="javascript:void(0);" onclick="viewAttendance(${attendance.id})">
                                         <i class="ri-eye-line align-bottom me-2 text-muted"></i> View
-                                    </a>
+                                        </a>`;
+                                    })()}
                                      ${canManageAttendance ? `
                                     <a class="dropdown-item" href="javascript:void(0);" onclick="viewStudents(${attendance.id})">
                                         <i class="ri-group-line align-bottom me-2 text-muted"></i> Students
@@ -577,6 +604,9 @@
         selectedCategoryId = categoryId;
         currentAttendanceId = null; // Reset edit mode
         
+        // Initialize modal listeners if not already done
+        initializeAttendanceModalListeners();
+        
         // Reset form
         resetAttendanceForm();
         
@@ -638,6 +668,9 @@
             vanillaSectionSelect.setValue([]);
             vanillaSectionSelect.enable();
         }
+        
+        // Reset students preview
+        loadStudentsPreview();
     }
 
     // Load attendance data for editing
@@ -1234,18 +1267,226 @@
                     vanillaSectionSelect.enable();
                 }
             }
+            
+            // Refresh students preview when "Add All Sections" is toggled
+            setTimeout(() => {
+                loadStudentsPreview();
+            }, 100);
         });
     }
 
-    // Handle modal close event to clear form and flatpickr
+    // Load students preview based on selected semester and sections
+    async function loadStudentsPreview() {
+        const semesterSelect = document.getElementById('attendanceSemester');
+        const vanillaSectionSelect = window['vanillaSelect_attendanceSection'];
+        const studentsPreview = document.getElementById('studentsPreview');
+        const studentsCount = document.getElementById('studentsCount');
+        
+        if (!studentsPreview) {
+            console.warn('Students preview element not found');
+            return;
+        }
+        
+        const semesterId = semesterSelect ? semesterSelect.value : '';
+        const sectionIdsRaw = vanillaSectionSelect ? (vanillaSectionSelect.getValue() || []) : [];
+        
+        // Ensure sectionIds is an array
+        const sectionIds = Array.isArray(sectionIdsRaw) ? sectionIdsRaw : (sectionIdsRaw ? [sectionIdsRaw] : []);
+        
+        // Filter out empty values and convert to integers
+        const validSectionIds = sectionIds
+            .filter(id => id && id !== '' && id !== null)
+            .map(id => parseInt(id, 10))
+            .filter(id => !isNaN(id) && id > 0);
+        
+        // Check if "Add All Sections" is enabled
+        const addAllSections = document.getElementById('addAllSections')?.checked || false;
+        
+        console.log('Loading students preview:', {
+            semesterId: semesterId,
+            sectionIds: validSectionIds,
+            addAllSections: addAllSections,
+            rawSectionIds: sectionIdsRaw
+        });
+        
+        // If no semester or no sections selected, show placeholder
+        if (!semesterId || (validSectionIds.length === 0 && !addAllSections)) {
+            studentsPreview.innerHTML = `
+                <div class="text-muted w-100 text-center py-2">
+                    <small>Select semester and section(s) to view students</small>
+                </div>
+            `;
+            if (studentsCount) studentsCount.textContent = '';
+            return;
+        }
+        
+        // Show loading state
+        studentsPreview.innerHTML = `
+            <div class="text-muted w-100 text-center py-2">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <small>Loading students...</small>
+            </div>
+        `;
+        
+        try {
+            // Build query parameters
+            const params = new URLSearchParams();
+            params.append('semester_id', semesterId);
+            
+            // If "Add All Sections" is enabled, don't send section_ids
+            if (addAllSections) {
+                params.append('add_all_sections', '1');
+            } else {
+                validSectionIds.forEach(id => {
+                    params.append('section_ids[]', id);
+                });
+            }
+            
+            const url = `/attendance/form-data/students?${params.toString()}`;
+            console.log('Fetching students from:', url);
+            
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                },
+            });
+            
+            console.log('Response status:', response.status, response.statusText);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Response error:', errorText);
+                throw new Error(`Failed to load students: ${response.status} ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('API Response:', result);
+            
+            if (result.success && result.data && result.data.students) {
+                const students = result.data.students;
+                console.log('Students found:', students.length, students);
+                
+                if (students.length === 0) {
+                    studentsPreview.innerHTML = `
+                        <div class="text-muted w-100 text-center py-2">
+                            <small>No students found for the selected semester and section(s)</small>
+                        </div>
+                    `;
+                    if (studentsCount) studentsCount.textContent = '0 students';
+                } else {
+                    // Display students as badges
+                    const badgesHtml = students.map(student => {
+                        const studentName = escapeHtml(student.name || 'Unknown');
+                        return `<span class="badge bg-primary-subtle text-primary">${studentName}</span>`;
+                    }).join('');
+                    
+                    studentsPreview.innerHTML = badgesHtml;
+                    if (studentsCount) {
+                        studentsCount.textContent = `${students.length} student(s)`;
+                    }
+                }
+            } else {
+                console.warn('Unexpected response format:', result);
+                studentsPreview.innerHTML = `
+                    <div class="text-muted w-100 text-center py-2">
+                        <small>No students found</small>
+                    </div>
+                `;
+                if (studentsCount) studentsCount.textContent = '';
+            }
+        } catch (error) {
+            console.error('Error loading students preview:', error);
+            console.error('Error details:', {
+                semesterId: semesterId,
+                sectionIds: validSectionIds,
+                addAllSections: addAllSections,
+                error: error.message
+            });
+            studentsPreview.innerHTML = `
+                <div class="text-danger w-100 text-center py-2">
+                    <small>Failed to load students. Please try again.</small>
+                    <br><small class="text-muted">Check console for details</small>
+                </div>
+            `;
+            if (studentsCount) studentsCount.textContent = '';
+        }
+    }
+
+    // Watch for changes in semester and section selections
+    let semesterSelectListenerAdded = false;
+    function initializeSemesterSelectListener() {
+        const attendanceSemesterSelect = document.getElementById('attendanceSemester');
+        if (attendanceSemesterSelect && !semesterSelectListenerAdded) {
+            attendanceSemesterSelect.addEventListener('change', function() {
+                loadStudentsPreview();
+            });
+            semesterSelectListenerAdded = true;
+        }
+    }
+
+    // Watch for changes in section selection (vanilla select)
+    // We need to use a custom event or polling since vanilla select doesn't have a standard change event
+    let sectionChangeInterval = null;
+    let lastSectionValues = [];
+    
+    function watchSectionChanges() {
+        const vanillaSectionSelect = window['vanillaSelect_attendanceSection'];
+        if (vanillaSectionSelect) {
+            const currentValues = vanillaSectionSelect.getValue() || [];
+            // Convert to array and sort for comparison
+            const currentArray = Array.isArray(currentValues) ? currentValues : (currentValues ? [currentValues] : []);
+            const currentValuesStr = JSON.stringify(currentArray.map(String).sort());
+            const lastValuesStr = JSON.stringify(lastSectionValues.map(String).sort());
+            
+            if (currentValuesStr !== lastValuesStr) {
+                lastSectionValues = [...currentArray];
+                loadStudentsPreview();
+            }
+        }
+    }
+    
+    // Initialize modal event listeners (only once)
+    let modalListenersInitialized = false;
+    function initializeAttendanceModalListeners() {
+        if (modalListenersInitialized) return;
+        
     const createAttendanceModal = document.getElementById('createAttendanceModal');
     if (createAttendanceModal) {
+            // Combined event handler for when modal is shown
+            createAttendanceModal.addEventListener('shown.bs.modal', function() {
+                // Initialize semester select listener if not already added
+                initializeSemesterSelectListener();
+                
+                // Load students preview immediately if semester and sections are already selected
+                setTimeout(() => {
+                    loadStudentsPreview();
+                }, 100);
+                
+                // Start polling for section changes
+                if (sectionChangeInterval) {
+                    clearInterval(sectionChangeInterval);
+                }
+                sectionChangeInterval = setInterval(watchSectionChanges, 500);
+            }, { once: false });
+            
+            // Combined event handler for when modal is hidden
         createAttendanceModal.addEventListener('hidden.bs.modal', function () {
+                // Stop polling when modal is closed
+                if (sectionChangeInterval) {
+                    clearInterval(sectionChangeInterval);
+                    sectionChangeInterval = null;
+                }
+                lastSectionValues = [];
+                
+                // Reset form and flatpickr
             resetAttendanceForm();
             currentAttendanceId = null;
             selectedCategoryId = null;
             updateModalForCreate(); // Reset to create mode
-        });
+            }, { once: false });
+            
+            modalListenersInitialized = true;
+        }
     }
 
     // Store category ID for deletion
@@ -2957,6 +3198,9 @@
     window.editAttendance = async function(attendanceId) {
         console.log('Edit attendance:', attendanceId);
         currentAttendanceId = attendanceId;
+        
+        // Initialize modal listeners if not already done
+        initializeAttendanceModalListeners();
         
         // Load form data first
         await loadAttendanceFormData();

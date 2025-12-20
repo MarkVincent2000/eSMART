@@ -17,6 +17,10 @@
         GET_STUDENT_ATTENDANCES: (id) => `/attendance/view/students?id=${id}`,
         TIME_IN: '/attendance/students/time-in',
         TIME_OUT: '/attendance/students/time-out',
+        GET_COMMENTS: '/attendance/comments',
+        POST_COMMENT: '/attendance/comments',
+        UPDATE_COMMENT: (id) => `/attendance/comments/${id}`,
+        DELETE_COMMENT: (id) => `/attendance/comments/${id}`,
     };
     
     // Get attendance ID from URL query parameter or window variable
@@ -33,7 +37,12 @@
     // Get student attendance ID from page data (if available)
     function getStudentAttendanceId() {
         // This will be set from the blade template
-        return window.currentStudentAttendanceId || null;
+        const id = window.currentStudentAttendanceId;
+        // Convert to number if it's a string, or return null if it's actually null/undefined
+        if (id === null || id === undefined || id === 'null') {
+            return null;
+        }
+        return parseInt(id) || null;
     }
 
     // Get CSRF token
@@ -152,6 +161,9 @@
         
         // Update time entries tab label on load
         updateTimeEntriesTabLabelOnLoad();
+        
+        // Initialize comments functionality
+        initializeComments();
     }
     
     /**
@@ -1283,6 +1295,966 @@
                 } catch (error) {
                     console.warn('Failed to initialize Flatpickr on date/time input:', input, error);
                 }
+            }
+        });
+    }
+
+    // ==================== Comments Functionality ====================
+    
+    // Comments state
+    let commentsData = [];
+    let selectedFiles = [];
+    let replyingToCommentId = null;
+
+    /**
+     * Initialize comments functionality
+     */
+    function initializeComments() {
+        // Wait a bit to ensure window variables are set
+        setTimeout(() => {
+            const studentAttendanceId = getStudentAttendanceId();
+            const attendanceId = getAttendanceId();
+            const isCreator = window.currentUserId && window.attendanceCreatorId && window.currentUserId === window.attendanceCreatorId;
+            const container = document.getElementById('commentsContainer');
+            
+            if (!container) {
+                console.error('Comments container not found');
+                return;
+            }
+            
+            console.log('Initializing comments. Student Attendance ID:', studentAttendanceId);
+            console.log('Attendance ID:', attendanceId);
+            console.log('Is Creator:', isCreator);
+            console.log('Window currentStudentAttendanceId:', window.currentStudentAttendanceId);
+            
+            // Allow loading comments if user has studentAttendanceId OR is the creator
+            if (!studentAttendanceId && !isCreator) {
+                console.warn('No student attendance ID found and user is not the creator. Comments will not load.');
+                container.innerHTML = 
+                    '<div class="text-center py-4"><p class="text-muted mb-0">No attendance session selected. You may need to be enrolled in this attendance session to view comments.</p></div>';
+                // Still setup the form in case user gets enrolled later
+                setupCommentForm();
+                setupFileAttachment();
+                return;
+            }
+
+            // Load comments
+            loadComments();
+
+            // Setup comment form
+            setupCommentForm();
+
+            // Setup file attachment button
+            setupFileAttachment();
+        }, 100);
+    }
+
+    /**
+     * Load comments from API
+     */
+    function loadComments() {
+        const studentAttendanceId = getStudentAttendanceId();
+        const attendanceId = getAttendanceId();
+        const isCreator = window.currentUserId && window.attendanceCreatorId && window.currentUserId === window.attendanceCreatorId;
+        const container = document.getElementById('commentsContainer');
+        
+        if (!container) {
+            console.error('Comments container not found');
+            return;
+        }
+
+        // Build API URL - use attendance_id if creator, otherwise use student_attendance_id
+        let apiUrl;
+        if (isCreator && attendanceId && !studentAttendanceId) {
+            // Creator viewing all comments from attendance session
+            apiUrl = `${API.GET_COMMENTS}?attendance_id=${attendanceId}`;
+        } else if (studentAttendanceId) {
+            // Regular user viewing their own comments
+            apiUrl = `${API.GET_COMMENTS}?student_attendance_id=${studentAttendanceId}`;
+        } else {
+            console.warn('Cannot load comments: No student attendance ID and not creator');
+            container.innerHTML = '<div class="text-center py-4"><p class="text-muted mb-0">No attendance session selected.</p></div>';
+            return;
+        }
+
+        console.log('Loading comments from:', apiUrl);
+
+        fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken()
+            }
+        })
+        .then(response => {
+            console.log('Comments API response status:', response.status, response.statusText);
+            if (!response.ok) {
+                // Try to parse as JSON first, then fallback to text
+                return response.json().then(err => {
+                    console.error('Comments API error response (JSON):', err);
+                    throw new Error(err.message || `HTTP ${response.status}: ${response.statusText}`);
+                }).catch(() => {
+                    return response.text().then(text => {
+                        console.error('Comments API error response (text):', text);
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    });
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Comments API response data:', data);
+            if (data.success && data.data && data.data.comments) {
+                commentsData = data.data.comments;
+                console.log('Loaded', commentsData.length, 'comments');
+                renderComments(commentsData);
+            } else {
+                console.log('No comments found or invalid response format', data);
+                container.innerHTML = '<div class="text-center py-4"><p class="text-muted mb-0">No comments yet. Be the first to comment!</p></div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading comments:', error);
+            container.innerHTML = '<div class="text-center py-4"><p class="text-danger mb-0">Failed to load comments: ' + error.message + '</p></div>';
+        });
+    }
+
+    /**
+     * Render comments in the container
+     */
+    function renderComments(comments) {
+        const container = document.getElementById('commentsContainer');
+        if (!container) return;
+
+        if (!comments || comments.length === 0) {
+            container.innerHTML = '<div class="text-center py-4"><p class="text-muted mb-0">No comments yet. Be the first to comment!</p></div>';
+            return;
+        }
+
+        let html = '';
+        comments.forEach(comment => {
+            html += renderComment(comment);
+        });
+
+        container.innerHTML = html;
+
+        // Reinitialize simplebar if needed
+        if (typeof SimpleBar !== 'undefined') {
+            const simplebarElement = container.closest('[data-simplebar]');
+            if (simplebarElement && !simplebarElement.SimpleBar) {
+                new SimpleBar(simplebarElement);
+            }
+        }
+    }
+
+    /**
+     * Render a single comment (with replies)
+     */
+    function renderComment(comment, isReply = false) {
+        const marginClass = isReply ? 'mt-3' : 'mb-4';
+        // All replies get same single-level indentation (ms-3), regardless of nesting depth
+        const indentClass = isReply ? 'ms-3' : '';
+        
+        // Check if current user owns this comment OR is the attendance creator
+        // Convert to numbers for comparison to avoid type mismatch issues
+        const currentUserId = parseInt(window.currentUserId) || null;
+        const creatorId = parseInt(window.attendanceCreatorId) || null;
+        const commentUserId = parseInt(comment.user.id) || null;
+        
+        const isOwner = currentUserId && commentUserId && currentUserId === commentUserId;
+        const isCreator = currentUserId && creatorId && currentUserId === creatorId;
+        const canManage = isOwner || isCreator;
+        
+        let html = `
+            <div class="d-flex ${marginClass} ${indentClass}" data-comment-id="${comment.id}">
+                <div class="flex-shrink-0">
+                    <img src="${escapeHtml(comment.user.avatar_url)}" alt="${escapeHtml(comment.user.name)}"
+                        class="avatar-xs rounded-circle material-shadow"
+                        onerror="this.onerror=null; this.src='/build/images/users/user-dummy-img.jpg';" />
+                </div>
+                <div class="flex-grow-1 ms-3 position-relative">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h5 class="fs-13 mb-1">
+                                <a href="javascript:void(0);">${escapeHtml(comment.user.name)}</a>
+                                <small class="text-muted">${escapeHtml(comment.created_at_formatted)}</small>
+                            </h5>
+                        </div>
+                        ${canManage ? `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="ri-more-2-fill fs-16"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item edit-comment-btn" href="javascript:void(0);" data-comment-id="${comment.id}">
+                                    <i class="ri-edit-line align-bottom me-2"></i> Edit
+                                </a></li>
+                                <li><a class="dropdown-item delete-comment-btn text-danger" href="javascript:void(0);" data-comment-id="${comment.id}">
+                                    <i class="ri-delete-bin-line align-bottom me-2"></i> Delete
+                                </a></li>
+                            </ul>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="comment-body-container" id="commentBody_${comment.id}">
+                        <p class="text-muted mb-2">${escapeHtml(comment.body)}</p>
+                    </div>
+                    <div class="comment-edit-container" id="commentEdit_${comment.id}" style="display: none;">
+                        <textarea class="form-control form-control-sm mb-2" id="commentEditTextarea_${comment.id}" rows="3">${escapeHtml(comment.body)}</textarea>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary btn-sm comment-save-btn" data-comment-id="${comment.id}">
+                                <i class="ri-save-line align-bottom me-1"></i> Save
+                            </button>
+                            <button class="btn btn-light btn-sm comment-cancel-edit-btn" data-comment-id="${comment.id}">
+                                <i class="ri-close-line align-bottom me-1"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+        `;
+
+        // Render attachments if any
+        if (comment.attachments && comment.attachments.length > 0) {
+            html += '<div class="row g-2 mb-2">';
+            comment.attachments.forEach(attachment => {
+                if (attachment.is_image) {
+                    html += `
+                        <div class="col-lg-1 col-sm-2 col-6">
+                            <img src="${escapeHtml(attachment.file_url)}" alt="${escapeHtml(attachment.original_name)}"
+                                class="img-fluid rounded" style="cursor: pointer;"
+                                onclick="window.open('${escapeHtml(attachment.file_url)}', '_blank')">
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="col-lg-1 col-sm-2 col-6">
+                            <div class="border rounded p-2 text-center" style="cursor: pointer;"
+                                onclick="window.open('${escapeHtml(attachment.file_url)}', '_blank')">
+                                <i class="ri-file-line fs-20"></i>
+                                <small class="d-block text-truncate" style="max-width: 60px;" title="${escapeHtml(attachment.original_name)}">
+                                    ${escapeHtml(attachment.original_name)}
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            html += '</div>';
+        }
+
+        // Reply button and inline reply form (available for all comments, including nested replies)
+        html += `
+            <div class="mt-2">
+                <a href="javascript:void(0);" class="badge text-muted bg-light reply-btn" data-comment-id="${comment.id}">
+                    <i class="mdi mdi-reply"></i> Reply
+                </a>
+            </div>
+            <!-- Inline Reply Form -->
+            <div class="reply-form-container mt-3" id="replyForm_${comment.id}" style="display: none;">
+                <div class="d-flex align-items-start gap-2">
+                    <div class="flex-shrink-0">
+                        <img src="${escapeHtml(window.currentUserAvatar || '/build/images/users/user-dummy-img.jpg')}" alt="You"
+                            class="avatar-xs rounded-circle material-shadow"
+                            onerror="this.onerror=null; this.src='/build/images/users/user-dummy-img.jpg';" />
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-sm reply-input" 
+                                id="replyInput_${comment.id}" 
+                                placeholder="Write a reply..."
+                                data-comment-id="${comment.id}">
+                            <button class="btn btn-primary btn-sm reply-submit-btn" 
+                                type="button" 
+                                data-comment-id="${comment.id}"
+                                title="Post reply">
+                                <i class="ri-send-plane-line"></i>
+                            </button>
+                            <button class="btn btn-light btn-sm reply-cancel-btn" 
+                                type="button" 
+                                data-comment-id="${comment.id}"
+                                title="Cancel">
+                                <i class="ri-close-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        // Render replies AFTER closing the parent comment div
+        // This ensures all replies have the same single indent level
+        if (comment.replies && comment.replies.length > 0) {
+            comment.replies.forEach(reply => {
+                // All replies get same single indent, regardless of nesting depth
+                html += renderComment(reply, true);
+            });
+        }
+
+        return html;
+    }
+
+    /**
+     * Setup comment form handlers
+     */
+    function setupCommentForm() {
+        const form = document.getElementById('commentForm');
+        const textarea = document.getElementById('commentTextarea');
+        const postBtn = document.getElementById('postCommentBtn');
+
+        if (!form || !textarea || !postBtn) {
+            console.warn('Comment form elements not found', { form: !!form, textarea: !!textarea, postBtn: !!postBtn });
+            return;
+        }
+
+        console.log('Setting up comment form handlers');
+
+        // Prevent form submission
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Form submit prevented, calling postComment');
+            postComment();
+            return false;
+        };
+
+        // Handle button click instead of form submit
+        postBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Post comment button clicked');
+            postComment();
+            return false;
+        };
+
+        // Handle Enter key in textarea (Ctrl+Enter to submit)
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                postComment();
+            }
+        });
+
+        // Handle reply button clicks (use event delegation on document)
+        // This is already set up, but ensure it's not duplicated
+        if (!document.commentReplyHandlerSet) {
+            document.addEventListener('click', function(e) {
+                // Handle reply button click
+                if (e.target.closest('.reply-btn')) {
+                    e.preventDefault();
+                    const replyBtn = e.target.closest('.reply-btn');
+                    const commentId = parseInt(replyBtn.getAttribute('data-comment-id'));
+                    startReply(commentId);
+                }
+                // Handle reply submit button click
+                if (e.target.closest('.reply-submit-btn')) {
+                    e.preventDefault();
+                    const submitBtn = e.target.closest('.reply-submit-btn');
+                    const commentId = parseInt(submitBtn.getAttribute('data-comment-id'));
+                    postReply(commentId);
+                }
+                // Handle reply cancel button click
+                if (e.target.closest('.reply-cancel-btn')) {
+                    e.preventDefault();
+                    const cancelBtn = e.target.closest('.reply-cancel-btn');
+                    const commentId = parseInt(cancelBtn.getAttribute('data-comment-id'));
+                    cancelReply(commentId);
+                }
+                // Handle edit comment button click
+                if (e.target.closest('.edit-comment-btn')) {
+                    e.preventDefault();
+                    const editBtn = e.target.closest('.edit-comment-btn');
+                    const commentId = parseInt(editBtn.getAttribute('data-comment-id'));
+                    startEditComment(commentId);
+                }
+                // Handle cancel edit button click
+                if (e.target.closest('.comment-cancel-edit-btn')) {
+                    e.preventDefault();
+                    const cancelBtn = e.target.closest('.comment-cancel-edit-btn');
+                    const commentId = parseInt(cancelBtn.getAttribute('data-comment-id'));
+                    cancelEditComment(commentId);
+                }
+                // Handle save comment button click
+                if (e.target.closest('.comment-save-btn')) {
+                    e.preventDefault();
+                    const saveBtn = e.target.closest('.comment-save-btn');
+                    const commentId = parseInt(saveBtn.getAttribute('data-comment-id'));
+                    saveEditComment(commentId);
+                }
+                // Handle delete comment button click
+                if (e.target.closest('.delete-comment-btn')) {
+                    e.preventDefault();
+                    const deleteBtn = e.target.closest('.delete-comment-btn');
+                    const commentId = parseInt(deleteBtn.getAttribute('data-comment-id'));
+                    deleteComment(commentId);
+                }
+            });
+
+            // Handle Enter key in reply inputs
+            document.addEventListener('keydown', function(e) {
+                if (e.target.classList.contains('reply-input')) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        const commentId = parseInt(e.target.getAttribute('data-comment-id'));
+                        postReply(commentId);
+                    }
+                }
+            });
+
+            document.commentReplyHandlerSet = true;
+        }
+    }
+
+    /**
+     * Start replying to a comment - Show inline reply form
+     */
+    function startReply(commentId) {
+        replyingToCommentId = commentId;
+        const replyForm = document.getElementById(`replyForm_${commentId}`);
+        const replyInput = document.getElementById(`replyInput_${commentId}`);
+        const comment = findCommentById(commentId);
+        
+        if (replyForm && replyInput && comment) {
+            // Show the reply form
+            replyForm.style.display = 'block';
+            // Pre-fill with @username mention
+            replyInput.value = `@${comment.user.name} `;
+            // Focus on the input and move cursor to end
+            replyInput.focus();
+            replyInput.setSelectionRange(replyInput.value.length, replyInput.value.length);
+            // Scroll to the reply form
+            replyForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else if (comment) {
+            // Fallback: use main textarea if inline form not found
+            const textarea = document.getElementById('commentTextarea');
+            if (textarea) {
+                textarea.value = `@${comment.user.name} `;
+                textarea.focus();
+                textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+                textarea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+    }
+
+    /**
+     * Cancel reply - Hide inline reply form
+     */
+    function cancelReply(commentId) {
+        const replyForm = document.getElementById(`replyForm_${commentId}`);
+        const replyInput = document.getElementById(`replyInput_${commentId}`);
+        
+        if (replyForm) {
+            replyForm.style.display = 'none';
+        }
+        if (replyInput) {
+            replyInput.value = '';
+        }
+        
+        if (replyingToCommentId === commentId) {
+            replyingToCommentId = null;
+        }
+    }
+
+    /**
+     * Post reply from inline reply form
+     */
+    function postReply(commentId) {
+        const replyInput = document.getElementById(`replyInput_${commentId}`);
+        
+        if (!replyInput) {
+            console.error('Reply input not found for comment:', commentId);
+            return;
+        }
+
+        const body = replyInput.value.trim();
+        if (!body) {
+            showToast('Error', 'Please enter a reply', 'error');
+            return;
+        }
+
+        const studentAttendanceId = getStudentAttendanceId();
+        const attendanceId = getAttendanceId();
+        const isCreator = window.currentUserId && window.attendanceCreatorId && parseInt(window.currentUserId) === parseInt(window.attendanceCreatorId);
+        
+        // Allow posting if user has studentAttendanceId OR is the creator
+        if (!studentAttendanceId && !isCreator) {
+            showToast('Error', 'No attendance session selected', 'error');
+            return;
+        }
+
+        const submitBtn = document.querySelector(`.reply-submit-btn[data-comment-id="${commentId}"]`);
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        }
+
+        // Create FormData for file uploads
+        const formData = new FormData();
+        if (isCreator && attendanceId && !studentAttendanceId) {
+            // Creator posting via attendance_id
+            formData.append('attendance_id', attendanceId);
+        } else {
+            // Regular user posting via student_attendance_id
+            formData.append('student_attendance_id', studentAttendanceId);
+        }
+        formData.append('body', body);
+        formData.append('parent_id', commentId);
+
+        console.log('Posting reply:', { studentAttendanceId, attendanceId, isCreator, body, parent_id: commentId });
+
+        fetch(API.POST_COMMENT, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => {
+            console.log('Post reply response status:', response.status);
+            if (!response.ok) {
+                return response.json().then(err => {
+                    console.error('Post reply error response:', err);
+                    throw new Error(err.message || err.errors || `HTTP ${response.status}: ${response.statusText}`);
+                }).catch(() => {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Post reply success response:', data);
+            if (data.success) {
+                // Clear the reply input
+                replyInput.value = '';
+                // Hide the reply form
+                cancelReply(commentId);
+                // Reload comments to show the new reply
+                loadComments();
+            } else {
+                throw new Error(data.message || 'Failed to post reply');
+            }
+        })
+        .catch(error => {
+            console.error('Error posting reply:', error);
+            showToast('Error', error.message || 'Failed to post reply', 'error');
+        })
+        .finally(() => {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="ri-send-plane-line"></i>';
+            }
+        });
+    }
+
+    /**
+     * Find comment by ID (including in replies)
+     */
+    function findCommentById(id, comments = commentsData) {
+        for (let comment of comments) {
+            if (comment.id === id) {
+                return comment;
+            }
+            if (comment.replies && comment.replies.length > 0) {
+                const found = findCommentById(id, comment.replies);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Post a new comment or reply
+     */
+    function postComment() {
+        console.log('postComment() called');
+        
+        const studentAttendanceId = getStudentAttendanceId();
+        const attendanceId = getAttendanceId();
+        const isCreator = window.currentUserId && window.attendanceCreatorId && parseInt(window.currentUserId) === parseInt(window.attendanceCreatorId);
+        const textarea = document.getElementById('commentTextarea');
+        const postBtn = document.getElementById('postCommentBtn');
+        
+        if (!postBtn) {
+            console.error('Post comment button not found');
+            showToast('Error', 'Post button not found', 'error');
+            return;
+        }
+        
+        const spinner = postBtn.querySelector('.spinner-border');
+
+        // Allow posting if user has studentAttendanceId OR is the creator
+        if (!studentAttendanceId && !isCreator) {
+            console.warn('No student attendance ID and not creator');
+            showToast('Error', 'No attendance session selected', 'error');
+            return;
+        }
+
+        if (!textarea) {
+            console.error('Textarea not found');
+            showToast('Error', 'Comment textarea not found', 'error');
+            return;
+        }
+
+        const body = textarea.value.trim();
+        if (!body) {
+            console.warn('Empty comment body');
+            showToast('Error', 'Please enter a comment', 'error');
+            return;
+        }
+
+        console.log('Posting comment:', { studentAttendanceId, attendanceId, isCreator, body, replyingToCommentId, filesCount: selectedFiles.length });
+
+        // Disable button and show spinner
+        postBtn.disabled = true;
+        if (spinner) spinner.classList.remove('d-none');
+
+        // Create FormData for file uploads
+        const formData = new FormData();
+        if (isCreator && attendanceId && !studentAttendanceId) {
+            // Creator posting via attendance_id
+            formData.append('attendance_id', attendanceId);
+        } else {
+            // Regular user posting via student_attendance_id
+            formData.append('student_attendance_id', studentAttendanceId);
+        }
+        formData.append('body', body);
+        
+        if (replyingToCommentId) {
+            formData.append('parent_id', replyingToCommentId);
+        }
+
+        // Add files
+        selectedFiles.forEach((file, index) => {
+            formData.append(`attachments[${index}]`, file);
+        });
+
+        console.log('Sending POST request to:', API.POST_COMMENT);
+
+        fetch(API.POST_COMMENT, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => {
+            console.log('Post comment response status:', response.status);
+            // Check if response is ok
+            if (!response.ok) {
+                // If response is not ok, try to parse error message
+                return response.json().then(err => {
+                    console.error('Post comment error response:', err);
+                    throw new Error(err.message || err.errors || `HTTP ${response.status}: ${response.statusText}`);
+                }).catch(() => {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Post comment success response:', data);
+            if (data.success) {
+                showToast('Success', 'Comment posted successfully', 'success');
+                textarea.value = '';
+                selectedFiles = [];
+                replyingToCommentId = null;
+                updateAttachmentsPreview();
+                loadComments(); // Reload comments
+            } else {
+                throw new Error(data.message || 'Failed to post comment');
+            }
+        })
+        .catch(error => {
+            console.error('Error posting comment:', error);
+            showToast('Error', error.message || 'Failed to post comment', 'error');
+        })
+        .finally(() => {
+            postBtn.disabled = false;
+            if (spinner) spinner.classList.add('d-none');
+        });
+    }
+
+    /**
+     * Setup file attachment functionality
+     */
+    function setupFileAttachment() {
+        const attachmentBtn = document.getElementById('commentAttachmentBtn');
+        const fileInput = document.getElementById('commentFileInput');
+
+        if (!attachmentBtn || !fileInput) return;
+
+        attachmentBtn.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            // Validate file count
+            if (selectedFiles.length + files.length > 5) {
+                showToast('Error', 'Maximum 5 files allowed', 'error');
+                return;
+            }
+
+            // Validate file sizes and types
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 
+                                 'application/pdf', 'application/msword', 
+                                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                                 'application/vnd.ms-excel',
+                                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                 'text/plain'];
+
+            files.forEach(file => {
+                if (file.size > maxSize) {
+                    showToast('Error', `File ${file.name} is too large. Maximum size is 5MB.`, 'error');
+                    return;
+                }
+                if (!allowedTypes.includes(file.type)) {
+                    showToast('Error', `File ${file.name} is not a supported file type.`, 'error');
+                    return;
+                }
+                selectedFiles.push(file);
+            });
+
+            updateAttachmentsPreview();
+        });
+    }
+
+    /**
+     * Update attachments preview
+     */
+    function updateAttachmentsPreview() {
+        const previewContainer = document.getElementById('commentAttachmentsPreview');
+        if (!previewContainer) return;
+
+        previewContainer.innerHTML = '';
+
+        selectedFiles.forEach((file, index) => {
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'position-relative d-inline-block';
+            fileDiv.style.cssText = 'max-width: 100px;';
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    fileDiv.innerHTML = `
+                        <img src="${e.target.result}" alt="${escapeHtml(file.name)}" 
+                            class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1" 
+                            onclick="removeAttachment(${index})" style="padding: 2px 6px; font-size: 10px;">
+                            <i class="ri-close-line"></i>
+                        </button>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                fileDiv.innerHTML = `
+                    <div class="border rounded p-2 text-center" style="width: 100px; height: 100px;">
+                        <i class="ri-file-line fs-20"></i>
+                        <small class="d-block text-truncate" style="max-width: 90px;" title="${escapeHtml(file.name)}">
+                            ${escapeHtml(file.name)}
+                        </small>
+                        <button type="button" class="btn btn-sm btn-danger mt-1" 
+                            onclick="removeAttachment(${index})" style="padding: 2px 6px; font-size: 10px;">
+                            <i class="ri-close-line"></i>
+                        </button>
+                    </div>
+                `;
+            }
+
+            previewContainer.appendChild(fileDiv);
+        });
+    }
+
+    /**
+     * Remove attachment from selection
+     */
+    window.removeAttachment = function(index) {
+        selectedFiles.splice(index, 1);
+        updateAttachmentsPreview();
+        
+        // Reset file input
+        const fileInput = document.getElementById('commentFileInput');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    };
+
+    /**
+     * Start editing a comment - Show textarea
+     */
+    function startEditComment(commentId) {
+        const commentBody = document.getElementById(`commentBody_${commentId}`);
+        const commentEdit = document.getElementById(`commentEdit_${commentId}`);
+        const commentTextarea = document.getElementById(`commentEditTextarea_${commentId}`);
+        
+        if (commentBody && commentEdit && commentTextarea) {
+            // Hide comment body, show edit form
+            commentBody.style.display = 'none';
+            commentEdit.style.display = 'block';
+            // Focus on textarea
+            commentTextarea.focus();
+            commentTextarea.setSelectionRange(commentTextarea.value.length, commentTextarea.value.length);
+        }
+    }
+
+    /**
+     * Cancel editing a comment - Hide textarea, show comment body
+     */
+    function cancelEditComment(commentId) {
+        const commentBody = document.getElementById(`commentBody_${commentId}`);
+        const commentEdit = document.getElementById(`commentEdit_${commentId}`);
+        const commentTextarea = document.getElementById(`commentEditTextarea_${commentId}`);
+        
+        if (commentBody && commentEdit && commentTextarea) {
+            // Hide edit form, show comment body
+            commentEdit.style.display = 'none';
+            commentBody.style.display = 'block';
+            // Reset textarea to original value
+            const comment = findCommentById(commentId);
+            if (comment) {
+                commentTextarea.value = comment.body;
+            }
+        }
+    }
+
+    /**
+     * Save edited comment
+     */
+    function saveEditComment(commentId) {
+        const commentTextarea = document.getElementById(`commentEditTextarea_${commentId}`);
+        const saveBtn = document.querySelector(`.comment-save-btn[data-comment-id="${commentId}"]`);
+        
+        if (!commentTextarea) {
+            console.error('Comment textarea not found for comment:', commentId);
+            return;
+        }
+
+        const body = commentTextarea.value.trim();
+        if (!body) {
+            showToast('Error', 'Please enter a comment', 'error');
+            return;
+        }
+
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        }
+
+        console.log('Updating comment:', { commentId, body });
+
+        fetch(API.UPDATE_COMMENT(commentId), {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ body })
+        })
+        .then(response => {
+            console.log('Update comment response status:', response.status);
+            if (!response.ok) {
+                return response.json().then(err => {
+                    console.error('Update comment error response:', err);
+                    throw new Error(err.message || err.errors || `HTTP ${response.status}: ${response.statusText}`);
+                }).catch(() => {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Update comment success response:', data);
+            if (data.success) {
+                showToast('Success', 'Comment updated successfully', 'success');
+                // Reload comments to show updated comment
+                loadComments();
+            } else {
+                throw new Error(data.message || 'Failed to update comment');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating comment:', error);
+            showToast('Error', error.message || 'Failed to update comment', 'error');
+        })
+        .finally(() => {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="ri-save-line align-bottom me-1"></i> Save';
+            }
+        });
+    }
+
+    /**
+     * Delete a comment
+     */
+    function deleteComment(commentId) {
+        // Confirm deletion with SweetAlert
+        Swal.fire({
+            title: 'Delete Comment?',
+            text: 'Are you sure you want to delete this comment? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#f06548',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, Delete',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log('Deleting comment:', commentId);
+
+                fetch(API.DELETE_COMMENT(commentId), {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    console.log('Delete comment response status:', response.status);
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            console.error('Delete comment error response:', err);
+                            throw new Error(err.message || err.errors || `HTTP ${response.status}: ${response.statusText}`);
+                        }).catch(() => {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Delete comment success response:', data);
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: 'Comment has been deleted successfully.',
+                            icon: 'success',
+                            confirmButtonColor: '#405189',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        // Reload comments to remove deleted comment
+                        loadComments();
+                    } else {
+                        throw new Error(data.message || 'Failed to delete comment');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting comment:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message || 'Failed to delete comment',
+                        icon: 'error',
+                        confirmButtonColor: '#405189'
+                    });
+                });
             }
         });
     }

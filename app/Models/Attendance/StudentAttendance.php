@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
 use App\Traits\LoggerTrait;
+use App\Traits\HasComments;
 use App\Models\User;
 
 class StudentAttendance extends Model
 {
-    use HasFactory, LoggerTrait, SoftDeletes;
+    use HasFactory, LoggerTrait, SoftDeletes, HasComments;
 
     /**
      * The table associated with the model.

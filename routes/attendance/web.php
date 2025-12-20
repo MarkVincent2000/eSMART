@@ -31,9 +31,10 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
     });
 
     // Attendance Session Routes
-    Route::get('/', [AttendanceController::class, 'index'])->name('index');
+    Route::get('/', [AttendanceController::class, 'index'])->name('index')->middleware('student.attendance');
     Route::get('/attendances', [AttendanceController::class, 'getAttendances'])->name('get-attendances');
     Route::get('/form-data', [AttendanceController::class, 'getFormData'])->name('form-data');
+    Route::get('/form-data/students', [AttendanceController::class, 'getFormDataStudents'])->name('form-data-students');
     Route::post('/', [AttendanceController::class, 'store'])->name('store');
     Route::post('/{id}/students', [AttendanceController::class, 'storeStudentAttendances'])->name('store-students')->where('id', '[0-9]+');
     // Student Attendance Routes (folder only - using query parameters to avoid plugin path issues)
@@ -41,8 +42,9 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
     Route::post('/students/time-in', [StudentAttendanceController::class, 'timeIn'])->name('students.time-in');
     Route::post('/students/time-out', [StudentAttendanceController::class, 'timeOut'])->name('students.time-out');
     // Print route must be before /{id} route to avoid route conflicts
-    Route::get('/{id}/print', [AttendanceController::class, 'printPdf'])->name('print')->where('id', '[0-9]+');
-    Route::get('/{id}', [AttendanceController::class, 'show'])->name('show')->where('id', '[0-9]+');
+    // Apply middleware to ensure students can only access attendances they belong to
+    Route::get('/{id}/print', [AttendanceController::class, 'printPdf'])->name('print')->where('id', '[0-9]+')->middleware('student.attendance');
+    Route::get('/{id}', [AttendanceController::class, 'show'])->name('show')->where('id', '[0-9]+')->middleware('student.attendance');
     Route::put('/{id}', [AttendanceController::class, 'update'])->name('update')->where('id', '[0-9]+');
     Route::delete('/{id}', [AttendanceController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
     Route::post('/{id}/lock', [AttendanceController::class, 'lock'])->name('lock')->where('id', '[0-9]+');
@@ -55,4 +57,10 @@ Route::prefix('attendance')->name('attendance.')->group(function () {
     Route::post('/students/{id}/update-remarks', [AttendanceController::class, 'updateStudentAttendanceRemarks'])->name('students.update-remarks')->where('id', '[0-9]+');
     Route::post('/students/bulk-approve', [AttendanceController::class, 'bulkApproveStudentAttendances'])->name('students.bulk-approve');
     Route::post('/students/bulk-disapprove', [AttendanceController::class, 'bulkDisapproveStudentAttendances'])->name('students.bulk-disapprove');
+    
+    // Comment Routes
+    Route::get('/comments', [StudentAttendanceController::class, 'getComments'])->name('comments.index');
+    Route::post('/comments', [StudentAttendanceController::class, 'storeComment'])->name('comments.store');
+    Route::put('/comments/{id}', [StudentAttendanceController::class, 'updateComment'])->name('comments.update')->where('id', '[0-9]+');
+    Route::delete('/comments/{id}', [StudentAttendanceController::class, 'deleteComment'])->name('comments.delete')->where('id', '[0-9]+');
 });

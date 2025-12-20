@@ -34,9 +34,21 @@ class AttendanceCategoryController extends Controller
     public function index()
     {
         try {
-            $categories = AttendanceCategory::with(['attendances' => function($query) {
-                $query->with(['semester', 'sections', 'creator'])
-                    ->orderBy('date', 'desc')
+            $userId = Auth::id();
+            $user = Auth::user();
+            $isUserRole = $user && $user->hasRole('user');
+            
+            $categories = AttendanceCategory::with(['attendances' => function($query) use ($userId, $isUserRole) {
+                $query->with(['semester', 'sections', 'creator']);
+                
+                // If user has "user" role, eager load their student attendance
+                if ($isUserRole && $userId) {
+                    $query->with(['studentAttendances' => function($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    }]);
+                }
+                
+                $query->orderBy('date', 'desc')
                     ->orderBy('created_at', 'desc'); // Sort by newest first
             }])
                 ->orderBy('display_order', 'asc')
@@ -45,7 +57,11 @@ class AttendanceCategoryController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $categories
+                'data' => $categories,
+                'meta' => [
+                    'user_id' => $userId,
+                    'is_user_role' => $isUserRole
+                ]
             ]);
         } catch (\Exception $e) {
             Log::error('Error fetching attendance categories: ' . $e->getMessage());

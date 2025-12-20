@@ -62,18 +62,27 @@
             <div class="col-md-6">
                 <label class="form-label text-muted">Section</label>
                 <div>
-                    @if($this->selectedStudentInfo->section)
-                        <span>{{ $this->selectedStudentInfo->section->name }}</span>
+                    @php
+                        $section = $this->selectedStudentInfo->section;
+                    @endphp
+                    @if($section)
+                        @if(is_object($section) && isset($section->name))
+                            <span>{{ $section->name }}</span>
+                        @elseif(is_array($section) && isset($section['name']))
+                            <span>{{ $section['name'] }}</span>
+                        @else
+                            <span class="text-muted">Section ID: {{ $this->selectedStudentInfo->section_id }}</span>
+                        @endif
                     @else
                         <span class="text-muted">Not assigned</span>
                     @endif
                 </div>
             </div>
             <div class="col-md-6">
-                <label class="form-label text-muted">Semester</label>
+                <label class="form-label text-muted">Semester(s)</label>
                 <div>
-                    @if($this->selectedStudentInfo->semester)
-                        <span>{{ $this->selectedStudentInfo->semester->name }}</span>
+                    @if($this->selectedStudentInfo->semester && !empty($this->selectedStudentInfo->semester))
+                        <span>{{ $this->selectedStudentInfo->semester_names }}</span>
                     @else
                         <span class="text-muted">Not assigned</span>
                     @endif

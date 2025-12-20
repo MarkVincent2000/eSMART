@@ -7,6 +7,8 @@
     @include('livewire.student.modals.view-student-enrollment')
     @include('livewire.student.modals.edit-student-enrollment')
     @include('livewire.student.modals.delete-student-enrollment')
+    @include('livewire.student.modals.bulk-status-update')
+    @include('livewire.student.modals.print-students')
     <div class="row">
         <div class="col-xl-3 col-lg-4">
             <div class="card">
@@ -29,7 +31,7 @@
                     <div class="card-body border-bottom">
                         <div>
                             <div class="d-flex justify-content-between mb-2">
-                                <p class="text-muted text-uppercase fs-12 fw-medium mb-2">Semester</p>
+                                <p class="text-muted text-uppercase fs-12 fw-medium mb-2">School Year</p>
                                 <a href="academic.academic-index" type="button">
                                     <x-button color="primary" size="sm" icon="ri-settings-3-line"
                                         tooltip="Configure Semesters" icon-position="left" :iconOnly="true"></x-button>
@@ -39,7 +41,7 @@
                             <div class="search-box search-box-sm d-flex flex-column gap-2">
                                 <div class="position-relative">
                                     <input type="text" class="form-control bg-light border-0"
-                                        placeholder="Search Semesters..." style="padding-right: 35px;"
+                                        placeholder="Search School Year..." style="padding-right: 35px;"
                                         wire:model.live.debounce.300ms="semesterSearch">
                                     <i class="ri-search-line search-icon position-absolute top-50 translate-middle-y"
                                         style="right: 10px; pointer-events: none; z-index: 1;"></i>
@@ -47,23 +49,39 @@
                             </div>
 
                             <div class="d-flex flex-column gap-2 mt-3 filter-check">
-                                @forelse($semesters as $semester)
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="{{ $semester->id }}"
-                                            id="semester_{{ $semester->id }}" wire:model.change="selectedSemesters">
-                                        <label class="form-check-label d-flex align-items-center gap-2"
-                                            for="semester_{{ $semester->id }}">
-                                            <span class="small">{{ $semester->name }} <span
-                                                    class="text-muted">({{ $semester->school_year }})</span></span>
-                                            @if($semester->is_active)
-                                                <span class="badge bg-success-subtle text-success small">Active</span>
-
-                                            @endif
-                                        </label>
+                                @forelse($semesters as $group)
+                                    @php
+                                        $schoolYear = $group['school_year'];
+                                        $semesterGroup = collect($group['semesters']);
+                                    @endphp
+                                    <div class="border rounded p-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="{{ $schoolYear }}"
+                                                id="school_year_{{ $schoolYear }}" wire:model.change="selectedSchoolYears">
+                                            <label class="form-check-label fw-semibold d-flex align-items-center gap-2"
+                                                for="school_year_{{ $schoolYear }}">
+                                                <span class="small">{{ $schoolYear }}</span>
+                                                @if($semesterGroup->where('is_active', true)->isNotEmpty())
+                                                    <span class="badge bg-success-subtle text-success small">Active</span>
+                                                @endif
+                                            </label>
+                                        </div>
+                                        <div class="ms-4 mt-2">
+                                            @foreach($semesterGroup as $semester)
+                                                <div class="small text-muted d-flex align-items-center gap-2 mb-1">
+                                                    <i class="ri-circle-fill" style="font-size: 4px;"></i>
+                                                    <span>{{ $semester['name'] }}</span>
+                                                    @if($semester['is_active'] ?? false)
+                                                        <span class="badge bg-success-subtle text-success"
+                                                            style="font-size: 9px;">Active</span>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                        </div>
                                     </div>
                                 @empty
                                     <div class="text-muted text-center py-2">
-                                        <small>No semesters found</small>
+                                        <small>No school years found</small>
                                     </div>
                                 @endforelse
                                 @if($totalSemesters > $semesterLimit)
@@ -255,13 +273,18 @@
                     <div class="card-header border-0">
                         <div class="row g-4">
                             <div class="col-sm">
-                                <div class="d-flex justify-content-sm-end">
+                                <div class="d-flex justify-content-sm-end align-items-center gap-2">
                                     <div class="search-box ms-2">
                                         <input type="text" class="form-control" id="searchStudentList"
                                             placeholder="Search Students..."
                                             wire:model.live.debounce.300ms="studentSearch">
                                         <i class="ri-search-line search-icon"></i>
                                     </div>
+                                    <x-button color="primary" icon="ri-printer-line" icon-position="left"
+                                        wire:click="printStudents" wire-target="printStudents">
+                                        Print
+                                    </x-button>
+
                                 </div>
                             </div>
                         </div>
@@ -337,10 +360,45 @@
                     </div>
                     <!-- end card header -->
                     <div class="card-body">
+                        @if (!empty($this->selected))
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="text-muted">Selected: <strong>{{ count($this->selected) }}</strong>
+                                        student(s)</span>
+                                </div>
+                                <div>
+                                    <x-button color="primary" icon="ri-edit-line" icon-position="left"
+                                        wire:click="openBulkStatusModal" wire-target="openBulkStatusModal">
+                                        Update Status
+                                    </x-button>
+
+                                </div>
+                            </div>
+                        @endif
+
+                        @if ($this->selectPage && !$this->selectAll && $this->studentInfos->total() > $this->studentInfos->count())
+                            <div class="alert alert-info py-2 mb-3">
+                                You have selected <strong>{{ count($this->selected) }}</strong> student(s) on this page.
+                                <a href="#" wire:click.prevent="selectAllMatching" class="alert-link fw-bold">
+                                    Select all <strong>{{ $this->studentInfos->total() }}</strong> student(s)?
+                                </a>
+                            </div>
+                        @elseif($this->selectAll)
+                            <div class="alert alert-success py-2 mb-3">
+                                You have selected all <strong>{{ $this->studentInfos->total() }}</strong> student(s).
+                            </div>
+                        @endif
+
                         <div class="table-responsive">
                             <table class="table align-middle table-nowrap mb-0">
                                 <thead class="table-light">
                                     <tr>
+                                        <th scope="col" style="width: 40px;">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                    wire:model.live="selectPage">
+                                            </div>
+                                        </th>
                                         <th scope="col">ID #</th>
                                         <th scope="col">Name</th>
                                         <th scope="col">Program</th>
@@ -355,6 +413,12 @@
                                 <tbody>
                                     @forelse($this->studentInfos as $studentInfo)
                                         <tr wire:key="student-{{ $studentInfo->id }}">
+                                            <th scope="row">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        wire:model.live="selected" value="{{ $studentInfo->id }}">
+                                                </div>
+                                            </th>
                                             <td>
                                                 <strong>{{ $studentInfo->student_number }}</strong>
                                             </td>
@@ -436,7 +500,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="text-center text-muted py-4">
+                                            <td colspan="10" class="text-center text-muted py-4">
                                                 <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
                                                     colors="primary:#405189,secondary:#0ab39c"
                                                     style="width:72px;height:72px">

@@ -29,9 +29,14 @@ class ManageStudent extends Component
     public $studentStatus = 'all'; // 'all', 'pending', 'enrolled', 'inactive', 'graduated'
     
     // Filter properties
-    public $selectedSemesters = [];
+    public $selectedSchoolYears = []; // Changed from selectedSemesters to selectedSchoolYears
     public $selectedSections = [];
     public $selectedPrograms = [];
+    
+    // Selection properties for checkboxes
+    public $selected = [];
+    public $selectAll = false;
+    public $selectPage = false;
     
     /**
      * Sync properties with URL query string
@@ -72,6 +77,15 @@ class ManageStudent extends Component
     public $deleteStudentInfoId = null;
     public $deleteStudentNumber = null;
     
+    // Bulk status update modal state
+    public $showBulkStatusModal = false;
+    public $bulkStatus = 'pending';
+    
+    // Print modal state
+    public $showPrintModal = false;
+    public $printStep = 1; // 1 = filters, 2 = preview
+    public $printUrl = '';
+    
     // Edit enrollment form fields
     public $editStudentNumber = '';
     public $editProgramId = null;
@@ -88,6 +102,7 @@ class ManageStudent extends Component
     // Program form fields
     public $programCode = '';
     public $programName = '';
+    public $programYearLevels = [];
     public $programActive = true;
     
     // Search
@@ -109,6 +124,7 @@ class ManageStudent extends Component
 
     public function loadSemesters()
     {
+        // Get unique school years with their semesters
         $baseQuery = Semester::query();
         
         if ($this->semesterSearch) {
@@ -118,13 +134,27 @@ class ManageStudent extends Component
             });
         }
         
-        // Get total count before limiting
-        $this->totalSemesters = $baseQuery->count();
-        
-        $this->semesters = $baseQuery->orderBy('is_active', 'desc') // Active semesters first
+        // Get all semesters grouped by school year
+        $allSemesters = $baseQuery->orderBy('school_year', 'desc')
             ->orderBy('name')
-            ->limit($this->semesterLimit)
             ->get();
+        
+        // Group by school year
+        $groupedByYear = $allSemesters->groupBy('school_year');
+        
+        // Get total count of unique school years
+        $this->totalSemesters = $groupedByYear->count();
+        
+        // Limit the results by school year groups and convert to array for Livewire serialization
+        $limitedGroups = $groupedByYear->take($this->semesterLimit);
+        
+        // Convert to array format that Livewire can handle
+        $this->semesters = $limitedGroups->map(function($semesters, $schoolYear) {
+            return [
+                'school_year' => $schoolYear,
+                'semesters' => $semesters->values()->all()
+            ];
+        })->values();
     }
 
     public function updatedSemesterSearch()
@@ -346,6 +376,7 @@ class ManageStudent extends Component
         $this->programId = $program->id;
         $this->programCode = $program->code;
         $this->programName = $program->name;
+        $this->programYearLevels = $program->getYearLevelValues();
         $this->programActive = $program->active;
         
         $this->resetErrorBag();
@@ -363,6 +394,7 @@ class ManageStudent extends Component
         $this->programId = null;
         $this->programCode = '';
         $this->programName = '';
+        $this->programYearLevels = [];
         $this->programActive = true;
         $this->resetErrorBag();
     }
@@ -374,6 +406,8 @@ class ManageStudent extends Component
         $rules = [
             'programCode' => 'required|string|max:255',
             'programName' => 'required|string|max:255',
+            'programYearLevels' => 'required|array|min:1',
+            'programYearLevels.*' => 'required|integer|in:' . implode(',', YearLevel::values()),
             'programActive' => 'boolean',
         ];
         
@@ -390,6 +424,12 @@ class ManageStudent extends Component
             'programCode.unique' => 'This program code already exists.',
             'programName.required' => 'Program name is required.',
             'programName.unique' => 'This program name already exists.',
+            'programYearLevels.required' => 'At least one year level is required.',
+            'programYearLevels.array' => 'Year levels must be an array.',
+            'programYearLevels.min' => 'At least one year level must be selected.',
+            'programYearLevels.*.required' => 'Each year level is required.',
+            'programYearLevels.*.integer' => 'Year level must be a number.',
+            'programYearLevels.*.in' => 'Year level must be between Grade 7 and Grade 12.',
         ]);
         
         $programData = [
@@ -401,9 +441,11 @@ class ManageStudent extends Component
         if ($isEditing) {
             $program = Program::findOrFail($this->programId);
             $program->update($programData);
+            $program->syncYearLevels($this->programYearLevels);
             $message = 'Program updated successfully!';
         } else {
-            Program::create($programData);
+            $program = Program::create($programData);
+            $program->syncYearLevels($this->programYearLevels);
             $message = 'Program created successfully!';
         }
         
@@ -492,18 +534,11 @@ class ManageStudent extends Component
             $query->where('status', $this->studentStatus);
         }
         
-        // Semester filter (by school year, since semester is stored as JSON)
-        if (!empty($this->selectedSemesters)) {
-            $semesterIds = array_filter(array_map('intval', $this->selectedSemesters));
-            if (!empty($semesterIds)) {
-                $schoolYears = Semester::whereIn('id', $semesterIds)
-                    ->pluck('school_year')
-                    ->unique()
-                    ->toArray();
-
-                if (!empty($schoolYears)) {
-                    $query->whereIn('school_year', $schoolYears);
-                }
+        // School year filter (since semester is stored as JSON in student_info)
+        if (!empty($this->selectedSchoolYears)) {
+            $schoolYears = array_filter($this->selectedSchoolYears);
+            if (!empty($schoolYears)) {
+                $query->whereIn('school_year', $schoolYears);
             }
         }
         
@@ -536,7 +571,7 @@ class ManageStudent extends Component
         $this->resetPage();
     }
 
-    public function updatedSelectedSemesters()
+    public function updatedSelectedSchoolYears()
     {
         $this->resetPage();
     }
@@ -551,14 +586,192 @@ class ManageStudent extends Component
         $this->resetPage();
     }
 
+    public function updatedSelectPage($value)
+    {
+        $pageIds = $this->studentInfos->pluck('id')->map(fn($id) => (string) $id)->toArray();
+
+        if ($value) {
+            $this->selected = array_unique(array_merge($this->selected, $pageIds));
+        } else {
+            $this->selected = array_diff($this->selected, $pageIds);
+            $this->selectAll = false;
+        }
+    }
+
+    public function updatedSelected()
+    {
+        $this->selectAll = false;
+        
+        $pageIds = $this->studentInfos->pluck('id')->map(fn($id) => (string) $id)->toArray();
+        
+        if (empty($pageIds)) {
+            $this->selectPage = false;
+            return;
+        }
+
+        $this->selectPage = count(array_intersect($pageIds, $this->selected)) === count($pageIds);
+    }
+
+    public function selectAllMatching()
+    {
+        $this->selectAll = true;
+        $this->selectPage = true;
+        
+        // Apply same filters as studentInfos() method
+        $query = StudentInfo::with(['user', 'program', 'section']);
+        
+        // Search filter
+        if ($this->studentSearch) {
+            $query->where(function($q) {
+                $q->where('student_number', 'like', '%' . $this->studentSearch . '%')
+                  ->orWhere('school_year', 'like', '%' . $this->studentSearch . '%')
+                  ->orWhereHas('user', function($userQuery) {
+                      $userQuery->where('name', 'like', '%' . $this->studentSearch . '%')
+                                ->orWhere('email', 'like', '%' . $this->studentSearch . '%');
+                  })
+                  ->orWhereHas('program', function($programQuery) {
+                      $programQuery->where('name', 'like', '%' . $this->studentSearch . '%')
+                                   ->orWhere('code', 'like', '%' . $this->studentSearch . '%');
+                  })
+                  ->orWhereHas('section', function($sectionQuery) {
+                      $sectionQuery->where('name', 'like', '%' . $this->studentSearch . '%');
+                  });
+            });
+        }
+        
+        // Status filter
+        if ($this->studentStatus !== 'all') {
+            $query->where('status', $this->studentStatus);
+        }
+        
+        // School year filter (since semester is stored as JSON in student_info)
+        if (!empty($this->selectedSchoolYears)) {
+            $schoolYears = array_filter($this->selectedSchoolYears);
+            if (!empty($schoolYears)) {
+                $query->whereIn('school_year', $schoolYears);
+            }
+        }
+        
+        // Section filter
+        if (!empty($this->selectedSections)) {
+            $sectionIds = array_filter(array_map('intval', $this->selectedSections));
+            if (!empty($sectionIds)) {
+                $query->whereIn('section_id', $sectionIds);
+            }
+        }
+        
+        // Program filter
+        if (!empty($this->selectedPrograms)) {
+            $programIds = array_filter(array_map('intval', $this->selectedPrograms));
+            if (!empty($programIds)) {
+                $query->whereIn('program_id', $programIds);
+            }
+        }
+        
+        $this->selected = $query->orderBy('created_at', 'desc')
+            ->pluck('id')
+            ->map(fn($id) => (string) $id)
+            ->toArray();
+    }
+
     public function clearAllFilters()
     {
-        $this->selectedSemesters = [];
+        $this->selectedSchoolYears = [];
         $this->selectedSections = [];
         $this->selectedPrograms = [];
         $this->studentSearch = '';
         $this->studentStatus = 'all';
+        $this->selected = [];
+        $this->selectAll = false;
+        $this->selectPage = false;
         $this->resetPage();
+    }
+
+    public function openBulkStatusModal()
+    {
+        if (empty($this->selected)) {
+            $this->dispatch('show-toast', [
+                'message' => 'Please select at least one student.',
+                'type' => 'warning',
+                'title' => 'No Selection'
+            ]);
+            return;
+        }
+        
+        $this->bulkStatus = 'pending';
+        $this->resetErrorBag();
+        $this->showBulkStatusModal = true;
+    }
+
+    public function closeBulkStatusModal()
+    {
+        $this->showBulkStatusModal = false;
+        $this->bulkStatus = 'pending';
+        $this->resetErrorBag();
+    }
+
+    public function saveBulkStatusUpdate()
+    {
+        if (empty($this->selected)) {
+            $this->dispatch('show-toast', [
+                'message' => 'Please select at least one student.',
+                'type' => 'warning',
+                'title' => 'No Selection'
+            ]);
+            return;
+        }
+
+        $this->validate([
+            'bulkStatus' => 'required|in:pending,enrolled,inactive,graduated',
+        ], [
+            'bulkStatus.required' => 'Status is required.',
+            'bulkStatus.in' => 'Status must be one of: pending, enrolled, inactive, graduated.',
+        ]);
+
+        $selectedIds = array_filter(array_map('intval', $this->selected));
+        
+        if (empty($selectedIds)) {
+            $this->dispatch('show-toast', [
+                'message' => 'No valid students selected.',
+                'type' => 'error',
+                'title' => 'Error'
+            ]);
+            return;
+        }
+
+        $updatedCount = StudentInfo::whereIn('id', $selectedIds)
+            ->update(['status' => $this->bulkStatus]);
+
+        // Send notifications to updated students
+        try {
+            $updatedStudents = StudentInfo::whereIn('id', $selectedIds)
+                ->with('user')
+                ->get();
+            
+            foreach ($updatedStudents as $student) {
+                try {
+                    $this->notifyStudentEnrollmentUpdated($student);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send notification to student: ' . $e->getMessage(), [
+                        'student_id' => $student->id
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Error sending bulk status update notifications: ' . $e->getMessage());
+        }
+
+        $this->closeBulkStatusModal();
+        $this->selected = [];
+        $this->selectAll = false;
+        $this->selectPage = false;
+        $this->resetPage();
+
+        $this->dispatch('show-toast', [
+            'message' => "Successfully updated {$updatedCount} student(s) status to " . ucfirst($this->bulkStatus) . ".",
+            'type' => 'success',
+            'title' => 'Status Updated'
+        ]);
     }
 
     public function getStatusCount($status)
@@ -589,18 +802,11 @@ class ManageStudent extends Component
             $query->where('status', $status);
         }
         
-        // Apply semester filter (by school year, since semester is stored as JSON)
-        if (!empty($this->selectedSemesters)) {
-            $semesterIds = array_filter(array_map('intval', $this->selectedSemesters));
-            if (!empty($semesterIds)) {
-                $schoolYears = Semester::whereIn('id', $semesterIds)
-                    ->pluck('school_year')
-                    ->unique()
-                    ->toArray();
-
-                if (!empty($schoolYears)) {
-                    $query->whereIn('school_year', $schoolYears);
-                }
+        // Apply school year filter (since semester is stored as JSON in student_info)
+        if (!empty($this->selectedSchoolYears)) {
+            $schoolYears = array_filter($this->selectedSchoolYears);
+            if (!empty($schoolYears)) {
+                $query->whereIn('school_year', $schoolYears);
             }
         }
         
@@ -706,13 +912,33 @@ class ManageStudent extends Component
     {
         // Reset section when year level changes
         $this->editSectionId = null;
+        
+        // Reset program if it's not available for the new year level
+        if ($this->editProgramId && $this->editYearLevel) {
+            $program = Program::find($this->editProgramId);
+            if ($program) {
+                $availableYearLevels = $program->getYearLevelValues();
+                if (!in_array($this->editYearLevel, $availableYearLevels)) {
+                    $this->editProgramId = null;
+                }
+            }
+        }
     }
 
     #[Computed]
     public function editProgramOptions()
     {
-        return Program::where('active', true)
-            ->orderBy('code')
+        $query = Program::where('active', true);
+        
+        // Filter by year level if selected
+        if ($this->editYearLevel) {
+            // Query the pivot table directly using the year_level integer value
+            $query->whereHas('yearLevelPivots', function($q) {
+                $q->where('year_level', $this->editYearLevel);
+            });
+        }
+        
+        return $query->orderBy('code')
             ->orderBy('name')
             ->get()
             ->map(function($program) {
@@ -786,6 +1012,18 @@ class ManageStudent extends Component
             'editStatus.in' => 'Status must be one of: pending, enrolled, inactive, graduated.',
             'editEnrolledAt.date' => 'Enrolled at must be a valid date.',
         ]);
+        
+        // Additional validation: Check if the selected program is available for the selected year level
+        if ($this->editProgramId && $this->editYearLevel) {
+            $program = Program::find($this->editProgramId);
+            if ($program) {
+                $availableYearLevels = $program->getYearLevelValues();
+                if (!in_array($this->editYearLevel, $availableYearLevels)) {
+                    $this->addError('editProgramId', 'The selected program is not available for the selected year level.');
+                    return;
+                }
+            }
+        }
         
         // Update StudentInfo record
         $updateData = [
@@ -974,6 +1212,102 @@ class ManageStudent extends Component
             // Log error but don't fail the enrollment update
             Log::error("Failed to send notification for student enrollment {$studentInfo->id}: " . $e->getMessage());
         }
+    }
+
+    public function printStudents()
+    {
+        $this->printStep = 1;
+        $this->printUrl = '';
+        $this->resetErrorBag();
+        $this->showPrintModal = true;
+    }
+
+    public function closePrintModal()
+    {
+        $this->showPrintModal = false;
+        $this->printStep = 1;
+        $this->printUrl = '';
+        $this->resetErrorBag();
+    }
+
+    public function nextPrintStep()
+    {
+        // Generate print URL with current filters
+        $params = [];
+        
+        if ($this->studentStatus !== 'all') {
+            $params['status'] = $this->studentStatus;
+        }
+        
+        if (!empty($this->selectedSchoolYears)) {
+            $params['school_years'] = implode(',', $this->selectedSchoolYears);
+        }
+        
+        if (!empty($this->selectedSections)) {
+            $params['sections'] = implode(',', $this->selectedSections);
+        }
+        
+        if (!empty($this->selectedPrograms)) {
+            $params['programs'] = implode(',', $this->selectedPrograms);
+        }
+        
+        if ($this->studentSearch) {
+            $params['search'] = $this->studentSearch;
+        }
+        
+        // Build URL with query parameters
+        $this->printUrl = route('students.print') . '?' . http_build_query($params);
+        $this->printStep = 2;
+    }
+
+    public function previousPrintStep()
+    {
+        $this->printStep = 1;
+        $this->printUrl = '';
+    }
+
+    #[Computed]
+    public function printFilterSummary()
+    {
+        $filters = [];
+        
+        // Status
+        if ($this->studentStatus !== 'all') {
+            $filters['Status'] = ucfirst($this->studentStatus);
+        }
+        
+        // School Years
+        if (!empty($this->selectedSchoolYears)) {
+            $schoolYears = array_filter($this->selectedSchoolYears);
+            if (!empty($schoolYears)) {
+                $filters['School Years'] = implode(', ', $schoolYears);
+            }
+        }
+        
+        // Sections
+        if (!empty($this->selectedSections)) {
+            $sectionIds = array_filter(array_map('intval', $this->selectedSections));
+            if (!empty($sectionIds)) {
+                $sections = Section::whereIn('id', $sectionIds)->get();
+                $filters['Sections'] = $sections->map(fn($s) => $s->name)->join(', ');
+            }
+        }
+        
+        // Programs
+        if (!empty($this->selectedPrograms)) {
+            $programIds = array_filter(array_map('intval', $this->selectedPrograms));
+            if (!empty($programIds)) {
+                $programs = Program::whereIn('id', $programIds)->get();
+                $filters['Programs'] = $programs->map(fn($p) => $p->code . ' - ' . $p->name)->join(', ');
+            }
+        }
+        
+        // Search
+        if ($this->studentSearch) {
+            $filters['Search'] = $this->studentSearch;
+        }
+        
+        return $filters;
     }
 
     public function render()

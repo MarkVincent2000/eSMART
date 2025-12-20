@@ -37,4 +37,9 @@ require __DIR__.'/attendance/web.php';
 // Academic Routes
 require __DIR__.'/academic/web.php';
 
+// Student Routes
+Route::middleware('auth')->group(function () {
+    Route::get('/students/print', [App\Http\Controllers\Student\StudentController::class, 'print'])->name('students.print');
+});
+
 Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->name('index');

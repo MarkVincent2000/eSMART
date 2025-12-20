@@ -143,7 +143,7 @@ class MyEnrollment extends Component
         }
         
         // Verify the enrollment belongs to the current user
-        $studentInfo = StudentInfo::with(['user', 'program', 'section', 'semester'])
+        $studentInfo = StudentInfo::with(['user', 'program', 'section'])
             ->where('id', $studentInfoId)
             ->where('user_id', $user->id)
             ->first();
@@ -197,15 +197,35 @@ class MyEnrollment extends Component
 
     public function updatedYearLevel()
     {
-        // Reset section when year level changes
+        // Reset section and program when year level changes
         $this->sectionId = null;
+        
+        // Reset program if it's not available for the new year level
+        if ($this->programId && $this->yearLevel) {
+            $program = Program::find($this->programId);
+            if ($program) {
+                $availableYearLevels = $program->getYearLevelValues();
+                if (!in_array($this->yearLevel, $availableYearLevels)) {
+                    $this->programId = null;
+                }
+            }
+        }
     }
 
     #[Computed]
     public function programs()
     {
-        return Program::where('active', true)
-            ->orderBy('code')
+        $query = Program::where('active', true);
+        
+        // Filter by year level if selected
+        if ($this->yearLevel) {
+            // Query the pivot table directly using the year_level integer value
+            $query->whereHas('yearLevelPivots', function($q) {
+                $q->where('year_level', $this->yearLevel);
+            });
+        }
+        
+        return $query->orderBy('code')
             ->orderBy('name')
             ->get();
     }
@@ -282,8 +302,21 @@ class MyEnrollment extends Component
             'yearLevel.in' => 'Year level must be between Grade 7 and Grade 12.',
             'programId.required' => 'Program is required for Grade 11-12 students.',
             'programId.exists' => 'Selected program is invalid.',
+            'sectionId.required' => 'Section is required.',
             'sectionId.exists' => 'Selected section is invalid.',
         ]);
+        
+        // Additional validation: Check if the selected program is available for the selected year level
+        if ($this->programId && $this->yearLevel) {
+            $program = Program::find($this->programId);
+            if ($program) {
+                $availableYearLevels = $program->getYearLevelValues();
+                if (!in_array($this->yearLevel, $availableYearLevels)) {
+                    $this->addError('programId', 'The selected program is not available for the selected year level.');
+                    return;
+                }
+            }
+        }
         
         // Check enrollment eligibility based on school year rule
         if (!$this->canEnroll($this->yearLevel)) {

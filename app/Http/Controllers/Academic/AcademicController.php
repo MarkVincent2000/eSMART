@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Academic;
 use App\Http\Controllers\Controller;
 use App\Models\StudentDetails\Semester;
 use App\Models\StudentDetails\Quarter;
+use App\Models\StudentDetails\StudentInfo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -308,6 +309,9 @@ class AcademicController extends Controller
                 // If semester is active, set all its quarters to active as well
                 if ($newIsActive) {
                     Quarter::where('semester_id', $semester->id)->update(['is_active' => true]);
+                    
+                    // Update student statuses: set to 'graduated' if their semester JSON doesn't match the newly activated semester
+                    $this->updateStudentStatusesForNewSemester($semester);
                 }
 
                 // Refresh the model to get updated values
@@ -440,6 +444,9 @@ class AcademicController extends Controller
                 if ($newIsActive) {
                     // Activate all quarters belonging to this semester
                     Quarter::where('semester_id', $semester->id)->update(['is_active' => true]);
+                    
+                    // Update student statuses: set to 'graduated' if their semester JSON doesn't match the newly activated semester
+                    $this->updateStudentStatusesForNewSemester($semester);
                 }
             });
 
@@ -559,6 +566,9 @@ class AcademicController extends Controller
                     $second->save();
                     Quarter::where('semester_id', $second->id)->update(['is_active' => false]);
                 }
+                
+                // Update student statuses: set back to 'enrolled' if their semester JSON matches the reactivated semester
+                $this->updateStudentStatusesForReactivatedSemesters($first, $second);
             });
 
             return response()->json([
@@ -711,6 +721,9 @@ class AcademicController extends Controller
                 // If semester is active, set all its quarters to active as well
                 if ($newIsActive && $semester->id) {
                     Quarter::where('semester_id', $semester->id)->update(['is_active' => true]);
+                    
+                    // Update student statuses: set to 'graduated' if their semester JSON doesn't match the new active semester
+                    $this->updateStudentStatusesForNewSemester($semester);
                 }
             });
 
@@ -843,5 +856,198 @@ class AcademicController extends Controller
                 'message' => 'Failed to update quarter: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Update student statuses when a new semester is created and set as active.
+     * Students whose semester JSON doesn't match the new active semester will be set to 'graduated'.
+     * 
+     * @param \App\Models\StudentDetails\Semester $newActiveSemester
+     * @return void
+     */
+    private function updateStudentStatusesForNewSemester(Semester $newActiveSemester)
+    {
+        try {
+            // Get all enrolled students
+            $students = StudentInfo::whereIn('status', ['enrolled', 'pending'])
+                ->get();
+
+            $graduatedCount = 0;
+
+            foreach ($students as $student) {
+                // Check if student's semester JSON contains the new active semester
+                $hasMatchingSemester = $this->studentHasMatchingSemester(
+                    $student->semester,
+                    $newActiveSemester->id,
+                    $newActiveSemester->school_year
+                );
+
+                // If student's semester JSON doesn't match the new active semester, set to graduated
+                if (!$hasMatchingSemester) {
+                    $student->status = 'graduated';
+                    $student->save();
+                    $graduatedCount++;
+                }
+            }
+
+            if ($graduatedCount > 0) {
+                Log::info("Updated {$graduatedCount} student(s) to 'graduated' status for new active semester", [
+                    'semester_id' => $newActiveSemester->id,
+                    'semester_name' => $newActiveSemester->name,
+                    'school_year' => $newActiveSemester->school_year,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error updating student statuses for new semester', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'semester_id' => $newActiveSemester->id,
+            ]);
+            // Don't throw - allow semester creation to continue even if status update fails
+        }
+    }
+
+    /**
+     * Update student statuses when semesters are reactivated.
+     * - Students whose semester JSON matches the reactivated semester will be set back to 'enrolled'.
+     * - Students whose semester JSON doesn't match will be set to 'inactive' or 'graduated' based on school year.
+     * 
+     * @param \App\Models\StudentDetails\Semester $firstSemester
+     * @param \App\Models\StudentDetails\Semester|null $secondSemester
+     * @return void
+     */
+    private function updateStudentStatusesForReactivatedSemesters(Semester $firstSemester, ?Semester $secondSemester = null)
+    {
+        try {
+            // Get all students (including enrolled ones to check if they should be updated)
+            $students = StudentInfo::whereIn('status', ['enrolled', 'pending', 'graduated', 'inactive'])
+                ->get();
+
+            $enrolledCount = 0;
+            $inactiveCount = 0;
+            $graduatedCount = 0;
+            
+            $semestersToCheck = [$firstSemester];
+            if ($secondSemester) {
+                $semestersToCheck[] = $secondSemester;
+            }
+            
+            // Get the school year of reactivated semesters
+            $reactivatedSchoolYear = $firstSemester->school_year;
+
+            foreach ($students as $student) {
+                // Check if student's semester JSON matches any of the reactivated semesters
+                $hasMatchingSemester = false;
+                
+                foreach ($semestersToCheck as $semester) {
+                    if ($this->studentHasMatchingSemester(
+                        $student->semester,
+                        $semester->id,
+                        $semester->school_year
+                    )) {
+                        $hasMatchingSemester = true;
+                        break;
+                    }
+                }
+
+                if ($hasMatchingSemester) {
+                    // If student's semester JSON matches a reactivated semester, set back to enrolled
+                    if (!in_array($student->status, ['enrolled', 'pending'])) {
+                        $student->status = 'enrolled';
+                        $student->save();
+                        $enrolledCount++;
+                    }
+                } else {
+                    // If student's semester JSON doesn't match, update based on school year
+                    $studentSchoolYear = $student->school_year ?? null;
+                    
+                    // Check if student has any semesters in their JSON from the same school year
+                    $hasSemesterInSameSchoolYear = false;
+                    if (!empty($student->semester) && is_array($student->semester)) {
+                        foreach ($student->semester as $semesterData) {
+                            if (is_array($semesterData) && ($semesterData['school_year'] ?? null) === $reactivatedSchoolYear) {
+                                $hasSemesterInSameSchoolYear = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if ($studentSchoolYear && $studentSchoolYear !== $reactivatedSchoolYear) {
+                        // Different school year - set to graduated
+                        if ($student->status !== 'graduated') {
+                            $student->status = 'graduated';
+                            $student->save();
+                            $graduatedCount++;
+                        }
+                    } elseif ($hasSemesterInSameSchoolYear) {
+                        // Same school year but different semester ID - set to inactive
+                        if ($student->status !== 'inactive') {
+                            $student->status = 'inactive';
+                            $student->save();
+                            $inactiveCount++;
+                        }
+                    } else {
+                        // No semester data or different school year - set to graduated as fallback
+                        if ($student->status !== 'graduated') {
+                            $student->status = 'graduated';
+                            $student->save();
+                            $graduatedCount++;
+                        }
+                    }
+                }
+            }
+
+            if ($enrolledCount > 0 || $inactiveCount > 0 || $graduatedCount > 0) {
+                Log::info("Updated student statuses for reactivated semester(s)", [
+                    'enrolled_count' => $enrolledCount,
+                    'inactive_count' => $inactiveCount,
+                    'graduated_count' => $graduatedCount,
+                    'first_semester_id' => $firstSemester->id,
+                    'second_semester_id' => $secondSemester?->id,
+                    'school_year' => $firstSemester->school_year,
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error updating student statuses for reactivated semesters', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'first_semester_id' => $firstSemester->id,
+                'second_semester_id' => $secondSemester?->id,
+            ]);
+            // Don't throw - allow semester reactivation to continue even if status update fails
+        }
+    }
+
+    /**
+     * Check if a student's semester JSON array contains a semester with matching ID and school year.
+     * 
+     * @param array|null $studentSemesterJson The student's semester JSON array
+     * @param int $semesterId The semester ID to match
+     * @param string $schoolYear The school year to match
+     * @return bool
+     */
+    private function studentHasMatchingSemester($studentSemesterJson, int $semesterId, string $schoolYear): bool
+    {
+        if (empty($studentSemesterJson) || !is_array($studentSemesterJson)) {
+            return false;
+        }
+
+        foreach ($studentSemesterJson as $semesterData) {
+            if (!is_array($semesterData)) {
+                continue;
+            }
+
+            $studentSemesterId = $semesterData['id'] ?? null;
+            $studentSchoolYear = $semesterData['school_year'] ?? null;
+
+            // Match both ID and school year
+            if ($studentSemesterId == $semesterId && $studentSchoolYear === $schoolYear) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
