@@ -8,7 +8,7 @@
 @section('content')
 
     <div id="user-profile-wrapper">
-        <livewire:profile.user-profile />
+        <livewire:profile.user-profile :userId="request()->query('user_id')" />
     </div>
 
 @endsection

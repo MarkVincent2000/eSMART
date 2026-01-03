@@ -5,6 +5,8 @@ namespace App\Models\StudentDetails;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\User;
 use App\Traits\LoggerTrait;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -74,6 +76,35 @@ class StudentInfo extends Model
     public function section(): BelongsTo
     {
         return $this->belongsTo(Section::class);
+    }
+
+    /**
+     * Get all assignments assigned to this student.
+     */
+    public function assignments(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\Grading\Assignment::class, 'assignment_student', 'student_info_id', 'assignment_id')
+            ->using(\App\Models\Grading\AssignmentStudent::class)
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all classrooms this student is enrolled in.
+     */
+    public function classrooms(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\Grading\Classroom::class, 'classroom_student', 'student_info_id', 'classroom_id')
+            ->using(\App\Models\Grading\ClassroomStudent::class)
+            ->withPivot('role', 'status', 'enrolled_at')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all grades for this student.
+     */
+    public function grades(): HasMany
+    {
+        return $this->hasMany(\App\Models\Grading\Grade::class);
     }
 
     // Note:

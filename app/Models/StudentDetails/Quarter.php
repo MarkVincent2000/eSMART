@@ -56,4 +56,12 @@ class Quarter extends Model
     {
         return $this->hasMany(StudentInfo::class);
     }
+
+    /**
+     * Get all grades for this quarter.
+     */
+    public function grades(): HasMany
+    {
+        return $this->hasMany(\App\Models\Grading\Grade::class);
+    }
 }

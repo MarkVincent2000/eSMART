@@ -11,6 +11,7 @@ class UserProfile extends Component
 {
 
     public $userProfile;
+    public $userId = null;
     /**
      * Controls which profile tab is active.
      * Valid values: 'overview', 'activities'.
@@ -18,9 +19,23 @@ class UserProfile extends Component
     public $activeTab = 'overview';
     public $activitiesPerPage = 5;
 
-    public function mount()
+    public function mount($userId = null)
     {
-        $this->userProfile = Auth::user();
+        // Get user ID from parameter or query string
+        $this->userId = $userId ?? request()->query('user_id');
+        
+        // Load the specified user or default to authenticated user
+        if ($this->userId) {
+            $this->userProfile = User::find($this->userId);
+            
+            // If user not found, fall back to authenticated user
+            if (!$this->userProfile) {
+                $this->userProfile = Auth::user();
+                $this->userId = null;
+            }
+        } else {
+            $this->userProfile = Auth::user();
+        }
 
         // Read the desired tab from the query string (?tab=overview|activities)
         $tab = request()->query('tab', 'overview');
@@ -38,7 +53,7 @@ class UserProfile extends Component
 
     public function getProfileCompletionPercentageProperty()
     {
-        $user = Auth::user();
+        $user = $this->userProfile ?? Auth::user();
         if (!$user) {
             return 0;
         }

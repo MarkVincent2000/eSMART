@@ -52,5 +52,13 @@ class Semester extends Model
     {
         return $this->hasMany(Quarter::class);
     }
+
+    /**
+     * Get all grades for this semester.
+     */
+    public function grades(): HasMany
+    {
+        return $this->hasMany(\App\Models\Grading\Grade::class);
+    }
 }
 

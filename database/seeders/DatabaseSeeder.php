@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             SemesterSeeder::class,
             QuarterSeeder::class,
             AttendanceCategorySeeder::class,
+            SubjectSeeder::class,
         ]);
     }
 }

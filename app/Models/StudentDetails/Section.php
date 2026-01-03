@@ -53,5 +53,13 @@ class Section extends Model
             ->using(EventSection::class)
             ->withTimestamps();
     }
+
+    /**
+     * Get all grades for this section.
+     */
+    public function grades(): HasMany
+    {
+        return $this->hasMany(\App\Models\Grading\Grade::class);
+    }
 }
 
