@@ -88,6 +88,9 @@
                     <x-sidebar.nav-link href="enrollment.my-info-index" icon="ri-book-open-line" title="My Enrollment" />
                 @endcan
 
+                <x-sidebar.title title="Menu" />
+                <x-sidebar.nav-link href="dashboard.index" icon="ri-dashboard-2-line" title="Dashboard" />
+
 
                 <x-sidebar.title title="Activities" />
                 <x-sidebar.nav-link href="engagement.index" icon="ri-calendar-event-line" title="Events" />

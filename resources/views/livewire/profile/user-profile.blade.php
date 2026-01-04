@@ -73,6 +73,14 @@
                                     class="d-none d-md-inline-block">Activity Logs</span>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link fs-14 {{ $activeTab === 'users' ? 'active' : '' }}"
+                                data-bs-toggle="tab" href="#users-tab" role="tab"
+                                onclick="updateProfileTab('users')">
+                                <i class="ri-user-line d-inline-block d-md-none"></i> <span
+                                    class="d-none d-md-inline-block">Users</span>
+                            </a>
+                        </li>
                     </ul>
                     <div class="flex-shrink-0">
                         <a href="profile.index-profile-settings" class="btn btn-success"><i
@@ -327,6 +335,136 @@
                                         </div>
                                     @endif
                                 </div>
+                            </div>
+                            <!--end card-body-->
+                        </div>
+                        <!--end card-->
+                    </div>
+                    <!--end tab-pane-->
+                    <div class="tab-pane fade {{ $activeTab === 'users' ? 'show active' : '' }}" id="users-tab"
+                        role="tabpanel">
+                        <div class="card">
+                            <div class="card-header align-items-center d-flex">
+                                <h5 class="card-title mb-0 flex-grow-1">All Users</h5>
+                                <div class="flex-shrink-0">
+                                    <div class="search-box ms-2">
+                                        <input type="text" class="form-control search" placeholder="Search users..."
+                                            wire:model.live.debounce.300ms="userSearch">
+                                        <i class="ri-search-line search-icon"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive table-card">
+                                    <table class="table table-nowrap align-middle mb-0">
+                                        <thead class="table-light text-muted">
+                                            <tr>
+                                                <th scope="col">User</th>
+                                                <th scope="col">Email</th>
+                                                <th scope="col">Roles</th>
+                                                <th scope="col">Status</th>
+                                                <th scope="col">Joined</th>
+                                                <th scope="col" class="text-end">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($users as $user)
+                                                @php
+                                                    $userPhoto = $user->photo_path
+                                                        ? (str_starts_with($user->photo_path, 'http')
+                                                            ? $user->photo_path
+                                                            : asset('storage/' . ltrim($user->photo_path, '/')))
+                                                        : ($user->avatar
+                                                            ? (str_starts_with($user->avatar, 'http')
+                                                                ? $user->avatar
+                                                                : asset('storage/' . ltrim($user->avatar, '/')))
+                                                            : asset('build/images/users/user-dummy-img.jpg'));
+                                                    
+                                                    $userName = $user->name ?? trim(implode(' ', array_filter([
+                                                        $user->first_name,
+                                                        $user->middle_name,
+                                                        $user->last_name
+                                                    ]))) . ($user->name_extension ? ', ' . $user->name_extension : '');
+                                                @endphp
+                                                <tr class="user-row" 
+                                                    style="cursor: pointer; transition: background-color 0.2s ease;"
+                                                    onclick="window.location.href='profile.index?user_id={{ $user->id }}'"
+                                                    wire:key="user-row-{{ $user->id }}"
+                                                    onmouseover="this.style.backgroundColor='rgba(var(--vz-primary-rgb), 0.05)'"
+                                                    onmouseout="this.style.backgroundColor=''">
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="flex-shrink-0">
+                                                                <img src="{{ $userPhoto }}" alt=""
+                                                                    class="avatar-xs rounded-circle">
+                                                            </div>
+                                                            <div class="flex-grow-1 ms-2">
+                                                                <h6 class="mb-0 text-primary">
+                                                                    {{ $userName ?: 'N/A' }}
+                                                                    <i class="ri-external-link-line ms-1 fs-12 align-middle"></i>
+                                                                </h6>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-muted">{{ $user->email }}</span>
+                                                    </td>
+                                                    <td>
+                                                        @if($user->roles && $user->roles->count() > 0)
+                                                            @foreach($user->roles->take(2) as $role)
+                                                                <span class="badge bg-primary-subtle text-primary me-1">
+                                                                    {{ $role->name }}
+                                                                </span>
+                                                            @endforeach
+                                                            @if($user->roles->count() > 2)
+                                                                <span class="badge bg-secondary-subtle text-secondary">
+                                                                    +{{ $user->roles->count() - 2 }}
+                                                                </span>
+                                                            @endif
+                                                        @else
+                                                            <span class="text-muted">No roles</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if($user->active_status)
+                                                            <span class="badge bg-success-subtle text-success">Active</span>
+                                                        @else
+                                                            <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-muted">{{ $user->created_at->format('d M Y') }}</span>
+                                                    </td>
+                                                    <td class="text-end" onclick="event.stopPropagation();">
+                                                        <button type="button" 
+                                                            class="btn btn-sm btn-soft-primary btn-hover"
+                                                            onclick="window.location.href='profile.index?user_id={{ $user->id }}'"
+                                                            title="View Profile">
+                                                            <i class="ri-eye-line align-middle"></i>
+                                                            <span class="d-none d-md-inline ms-1">View Profile</span>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="6" class="text-center text-muted py-4">
+                                                        @if($userSearch)
+                                                            No users found matching "{{ $userSearch }}".
+                                                        @else
+                                                            No users found.
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                @if(isset($users) && $users instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator && $users->hasPages())
+                                    <div class="mt-3">
+                                        {{ $users->links() }}
+                                    </div>
+                                @endif
                             </div>
                             <!--end card-body-->
                         </div>

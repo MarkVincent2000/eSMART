@@ -44,7 +44,7 @@
             const params = new URLSearchParams(window.location.search);
             const tab = params.get('tab');
             if (tab) {
-                const targetId = tab === 'overview' ? 'overview-tab' : tab;
+                const targetId = tab === 'overview' ? 'overview-tab' : (tab === 'users' ? 'users-tab' : tab);
                 const tabLink = document.querySelector(`.profile-nav a[href="#${targetId}"]`);
                 if (tabLink && typeof bootstrap !== 'undefined') {
                     const tabInstance = bootstrap.Tab.getOrCreateInstance(tabLink);

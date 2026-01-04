@@ -17,10 +17,10 @@
                                         style="background-color: rgba(13,110,253,0.5) !important;">
                                         <div class="bg-overlay"></div>
                                         <div class="position-relative h-100 d-flex flex-column">
-                                            <div class="mb-4">
+                                            <div class="mb-1 text-center">
                                                 <a href="{{ url('/') }}" class="d-block">
-                                                    <img src="{{ URL::asset('build/images/smart-logo-light.png') }}" alt=""
-                                                        height="20">
+                                                    <img src="{{ URL::asset('build/images/smart-logo-sm3.png') }}" alt=""
+                                                        height="100">
                                                 </a>
                                             </div>
                                             <div class="mt-auto">
@@ -101,10 +101,10 @@
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <div class="float-end">
+                                                    {{-- <div class="float-end">
                                                         <a href="{{ route('password.update') }}" class="text-muted">Forgot
                                                             password?</a>
-                                                    </div>
+                                                    </div> --}}
                                                     <label class="form-label" for="password-input">Password <span
                                                             class="text-danger">*</span></label>
                                                     <div class="position-relative auth-pass-inputgroup mb-3">

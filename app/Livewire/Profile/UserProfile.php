@@ -6,18 +6,22 @@ use App\Models\ActivityLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class UserProfile extends Component
 {
+    use WithPagination;
 
     public $userProfile;
     public $userId = null;
     /**
      * Controls which profile tab is active.
-     * Valid values: 'overview', 'activities'.
+     * Valid values: 'overview', 'activities', 'users'.
      */
     public $activeTab = 'overview';
     public $activitiesPerPage = 5;
+    public $usersPerPage = 10;
+    public $userSearch = '';
 
     public function mount($userId = null)
     {
@@ -37,18 +41,48 @@ class UserProfile extends Component
             $this->userProfile = Auth::user();
         }
 
-        // Read the desired tab from the query string (?tab=overview|activities)
+        // Read the desired tab from the query string (?tab=overview|activities|users)
         $tab = request()->query('tab', 'overview');
-        if (!in_array($tab, ['overview', 'activities'], true)) {
+        if (!in_array($tab, ['overview', 'activities', 'users'], true)) {
             $tab = 'overview';
         }
 
         $this->activeTab = $tab;
     }
+    
+    public function updatedUserSearch()
+    {
+        $this->resetPage('usersPage');
+    }
 
     public function loadMoreActivities(): void
     {
         $this->activitiesPerPage += 5;
+    }
+
+    /**
+     * Navigate to a user's profile page.
+     *
+     * @param int $userId
+     * @return \Illuminate\Http\RedirectResponse|void
+     */
+    public function viewUserProfile($userId)
+    {
+        // Validate that the user exists
+        $user = User::find($userId);
+        
+        if (!$user) {
+            $this->dispatch('show-toast', [
+                'message' => 'User not found.',
+                'type' => 'error',
+                'title' => 'Error'
+            ]);
+            return;
+        }
+
+        // Redirect to profile page with user_id parameter
+        // Using dot notation format: profile.index (matches sidebar links)
+        return redirect()->to('profile.index?user_id=' . $userId);
     }
 
     public function getProfileCompletionPercentageProperty()
@@ -118,11 +152,32 @@ class UserProfile extends Component
 
         $personalDetails = $user ? $user->personalDetails : null;
 
+        // Get users for the users tab
+        $users = collect();
+        if ($this->activeTab === 'users') {
+            $usersQuery = User::query()
+                ->select('id', 'name', 'first_name', 'last_name', 'middle_name', 'name_extension', 'email', 'active_status', 'created_at', 'photo_path', 'avatar')
+                ->with('roles');
+            
+            if (!empty($this->userSearch)) {
+                $usersQuery->where(function($q) {
+                    $q->where('name', 'like', '%' . $this->userSearch . '%')
+                      ->orWhere('first_name', 'like', '%' . $this->userSearch . '%')
+                      ->orWhere('last_name', 'like', '%' . $this->userSearch . '%')
+                      ->orWhere('middle_name', 'like', '%' . $this->userSearch . '%')
+                      ->orWhere('email', 'like', '%' . $this->userSearch . '%');
+                });
+            }
+            
+            $users = $usersQuery->latest()->paginate($this->usersPerPage, pageName: 'usersPage');
+        }
+
         return view('livewire.profile.user-profile', [
             'user' => $user,
             'activityLogs' => $activityLogs,
             'hasMoreActivityLogs' => $hasMoreActivityLogs,
             'personalDetails' => $personalDetails,
+            'users' => $users,
         ]);
     }
 }
