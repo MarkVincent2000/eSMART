@@ -44,6 +44,17 @@ class LoginController extends Controller
     }
 
     /**
+     * Show the login form.
+     * Override to ensure we use the correct view.
+     *
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Contracts\View\Factory
+     */
+    public function showLoginForm()
+    {
+        return view('auth.login');
+    }
+
+    /**
      * Get the needed authorization credentials from the request.
      *
      * @param  \Illuminate\Http\Request  $request

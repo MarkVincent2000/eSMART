@@ -18,23 +18,72 @@ class HomeController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        // Only apply auth middleware to specific methods
+        $this->middleware('auth')->except(['landing', 'root']);
     }
 
     /**
      * Show the application dashboard.
+     * This is a catch-all route for views that don't have specific routes.
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
     public function index(Request $request)
     {
-        if (view()->exists($request->path())) {
-            return view($request->path());
+        $path = $request->path();
+        
+        // Don't handle auth routes - let Laravel's Auth::routes() handle them
+        $authRoutes = ['login', 'register', 'password/reset', 'password/email', 'password/confirm', 'email/verify', 'logout'];
+        if (in_array($path, $authRoutes) || str_starts_with($path, 'auth-')) {
+            return abort(404);
         }
+        
+        // Convert dot notation to slash notation for view paths
+        $viewPath = str_replace('.', '/', $path);
+        
+        if (view()->exists($viewPath)) {
+            return view($viewPath);
+        }
+        
         return abort(404);
     }
 
+    /**
+     * Show the landing page (public, no auth required).
+     *
+     * @return \Illuminate\Contracts\Support\Renderable|\Illuminate\Http\RedirectResponse
+     */
     public function root()
+    {
+        // If user is authenticated, redirect to dashboard
+        if (Auth::check()) {
+            return redirect('/dashboard');
+        }
+        
+        return view('landing.index');
+    }
+
+    /**
+     * Show the landing page (alternative route).
+     *
+     * @return \Illuminate\Contracts\Support\Renderable|\Illuminate\Http\RedirectResponse
+     */
+    public function landing()
+    {
+        // If user is authenticated, redirect to dashboard
+        if (Auth::check()) {
+            return redirect('/dashboard');
+        }
+        
+        return view('landing.index');
+    }
+
+    /**
+     * Show the dashboard (requires authentication).
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function dashboard()
     {
         return view('dashboard.index');
     }

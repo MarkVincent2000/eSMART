@@ -18,7 +18,14 @@ Auth::routes();
 //Language Translation
 Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
+// Landing page (public, no auth required)
 Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');
+Route::get('/landing', [App\Http\Controllers\HomeController::class, 'landing'])->name('landing');
+
+// Dashboard (requires authentication)
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\HomeController::class, 'dashboard'])->name('dashboard');
+});
 
 // Custom grouped routes
 
