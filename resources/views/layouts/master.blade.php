@@ -38,6 +38,27 @@
             background-color: #fff !important;
         }
 
+        /* Dark mode styling for select dropdown - using galaxy theme colors */
+        [data-bs-theme="dark"] .select-dropdown-dark,
+        html[data-bs-theme="dark"] .select-dropdown-dark {
+            background-color: var(--vz-secondary-bg, #05192f) !important;
+            /* Galaxy theme dark mode secondary background color */
+        }
+
+        /* Galaxy theme specific dark mode for select dropdown */
+        [data-theme="galaxy"][data-bs-theme="dark"] .select-dropdown-dark,
+        html[data-theme="galaxy"][data-bs-theme="dark"] .select-dropdown-dark {
+            background-color: var(--vz-secondary-bg, #05192f) !important;
+            /* Galaxy theme dark mode secondary background color */
+        }
+
+        /* Light mode - white background for select dropdown */
+        [data-bs-theme="light"] .select-dropdown-dark,
+        :not([data-bs-theme]) .select-dropdown-dark,
+        html:not([data-bs-theme="dark"]) .select-dropdown-dark {
+            background-color: #fff !important;
+        }
+
         /* Alpine.js Cloak */
         [x-cloak] {
             display: none !important;

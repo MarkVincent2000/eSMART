@@ -125,7 +125,7 @@
         <div 
             x-show="open" 
             x-transition
-            class="card position-absolute w-100 shadow mt-1 z-3" 
+            class="card position-absolute w-100 shadow mt-1 z-3 select-dropdown-dark" 
             style="max-height: 300px; display: none;"
         >
             <div class="card-body p-0 d-flex flex-column" style="max-height: 300px;">
