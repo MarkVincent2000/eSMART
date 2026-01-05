@@ -6,7 +6,7 @@
         <div class="row g-4 mb-3">
             <div class="col-sm-auto">
                 <div>
-                    <a href="{{ url('/assingments') }}" class="btn btn-light">
+                    <a href="{{ url('/assingments.index') }}" class="btn btn-light">
                         <i class="ri-arrow-left-line align-bottom me-1"></i> Back to Classes
                     </a>
                 </div>

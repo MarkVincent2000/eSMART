@@ -1107,7 +1107,7 @@ class Classwork extends Component
                     'type' => 'assignment_created',
                     'title' => 'New Assignment',
                     'body' => "A new assignment has been posted: {$assignment->title} by {$creatorName}",
-                    'url' => url('/assingments?id=' . $assignment->classroom_id . '#assignment-' . $assignment->id),
+                    'url' => url('/assingments.index?id=' . $assignment->classroom_id . '#assignment-' . $assignment->id),
                     'notifiable_type' => Assignment::class,
                     'notifiable_id' => $assignment->id,
                     'data' => [
@@ -1154,7 +1154,7 @@ class Classwork extends Component
             'type' => 'submission_submitted',
             'title' => 'New Submission',
             'body' => "{$studentName} has submitted the assignment: {$assignment->title}",
-            'url' => url('/assingments?id=' . $assignment->classroom_id),
+            'url' => url('/assingments.index?id=' . $assignment->classroom_id),
             'notifiable_type' => \App\Models\Grading\AssignmentSubmission::class,
             'notifiable_id' => $submission->id,
             'data' => [
@@ -1195,7 +1195,7 @@ class Classwork extends Component
                 'type' => 'submission_graded',
                 'title' => 'Assignment Graded',
                 'body' => "Your submission for '{$assignment->title}' has been graded: {$submission->points_earned}/{$assignment->points_possible} points" . ($percentage ? " ({$percentage}%)" : ''),
-                'url' => url('/assingments?id=' . $assignment->classroom_id),
+                'url' => url('/assingments.index?id=' . $assignment->classroom_id),
                 'notifiable_type' => \App\Models\Grading\AssignmentSubmission::class,
                 'notifiable_id' => $submission->id,
                 'data' => [
@@ -1226,7 +1226,7 @@ class Classwork extends Component
                 'type' => 'submission_graded_by_other',
                 'title' => 'Submission Graded',
                 'body' => "{$graderName} has graded {$studentName}'s submission for '{$assignment->title}'",
-                'url' => url('/assingments?id=' . $assignment->classroom_id),
+                'url' => url('/assingments.index?id=' . $assignment->classroom_id),
                 'notifiable_type' => \App\Models\Grading\AssignmentSubmission::class,
                 'notifiable_id' => $submission->id,
                 'data' => [

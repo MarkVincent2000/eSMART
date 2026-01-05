@@ -478,7 +478,7 @@ class Task extends Component
                     'type' => 'classroom_created',
                     'title' => 'New Class Created',
                     'body' => "You have been enrolled in a new class: {$classroom->name} by {$creatorName}",
-                    'url' => url('/assingments?id=' . $classroom->id),
+                    'url' => url('/assingments.index?id=' . $classroom->id),
                     'notifiable_type' => Classroom::class,
                     'notifiable_id' => $classroom->id,
                     'data' => [

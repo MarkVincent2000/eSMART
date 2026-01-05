@@ -22,7 +22,7 @@
             <div class="layout-wrapper landing">
                 <nav class="navbar navbar-expand-lg navbar-landing fixed-top" id="navbar">
                     <div class="container">
-                        <a class="navbar-brand" href="index">
+                        <a class="navbar-brand" href="dashboard">
                             <img src="{{ URL::asset('build/images/smart-logo-dark.png') }}" class="card-logo card-logo-dark"
                                 alt="logo dark" height="17">
                             <img src="{{ URL::asset('build/images/smart-logo-light.png') }}" class="card-logo card-logo-light"
@@ -596,7 +596,7 @@
                                     </div>
 
                                     <div class="mt-4">
-                                        <a href="index" class="btn btn-primary">Learn More <i
+                                        <a href="dashboard" class="btn btn-primary">Learn More <i
                                                 class="ri-arrow-right-line align-middle ms-1"></i></a>
                                     </div>
                                 </div>
