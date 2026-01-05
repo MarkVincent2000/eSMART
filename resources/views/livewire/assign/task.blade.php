@@ -48,7 +48,7 @@
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li>
                                                     <a class="dropdown-item"
-                                                        href="{{ url('/assingments?id=' . $classroom->id) }}">
+                                                        href="{{ url('/assingments.index?id=' . $classroom->id) }}">
                                                         <i class="ri-eye-fill align-bottom me-2 text-muted"></i> View
                                                     </a>
                                                 </li>

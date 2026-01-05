@@ -5,7 +5,7 @@
 
     [data-theme="galaxy"] { 
 
-        $primary:                   #8c68cd;
+        $primary:                   #1e3a5f;
         $secondary:                 #4788ff;
         $danger:                    #ee6352;
         $warning:                   #ffca5b;
@@ -102,23 +102,23 @@
 
         &[data-sidebar="dark"] {
             //vertical dark
-            --#{$prefix}vertical-menu-bg:                               #{rgb(72, 38, 104)};
-            --#{$prefix}vertical-menu-border:                           #{rgb(72, 38, 104)};
-            --#{$prefix}vertical-menu-item-color:                       #e2c4ff;
+            --#{$prefix}vertical-menu-bg:                               #{rgb(30, 58, 95)};
+            --#{$prefix}vertical-menu-border:                           #{rgb(30, 58, 95)};
+            --#{$prefix}vertical-menu-item-color:                       #b8c5d6;
             --#{$prefix}vertical-menu-item-bg:                          #{rgba($white, .15)};
             --#{$prefix}vertical-menu-item-hover-color:                 #{$white};
             --#{$prefix}vertical-menu-item-active-color:                #{$white};
             --#{$prefix}vertical-menu-item-active-bg:                   #{rgba($white, .15)};
-            --#{$prefix}vertical-menu-sub-item-color:                   #c2a7db;
+            --#{$prefix}vertical-menu-sub-item-color:                   #9db0c7;
             --#{$prefix}vertical-menu-sub-item-hover-color:             #{$white};
             --#{$prefix}vertical-menu-sub-item-active-color:            #{$white};
-            --#{$prefix}vertical-menu-title-color:                      #c2a7db;
-            --#{$prefix}twocolumn-menu-iconview-bg:                     #432361;
+            --#{$prefix}vertical-menu-title-color:                      #9db0c7;
+            --#{$prefix}twocolumn-menu-iconview-bg:                     #{rgb(26, 50, 82)};
             --#{$prefix}vertical-menu-box-shadow:                       0 2px 4px rgba(15, 34, 58, 0.12);
             --#{$prefix}vertical-menu-dropdown-box-shadow:              0 2px 4px rgba(15, 34, 58, 0.12);
             --#{$prefix}sidebar-user-bg:                                #{rgba($white, .08)};
             --#{$prefix}sidebar-user-name-text:                         #{$white};
-            --#{$prefix}sidebar-user-name-sub-text:                     #{tint-color(rgb(72, 38, 104), 65%)};
+            --#{$prefix}sidebar-user-name-sub-text:                     #{tint-color(rgb(30, 58, 95), 65%)};
         }
 
         // Topbar - (Default Light)

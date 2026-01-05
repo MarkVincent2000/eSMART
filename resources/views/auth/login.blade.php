@@ -13,14 +13,17 @@
                         <div class="card overflow-hidden card-bg-fill galaxy-border-none">
                             <div class="row g-0">
                                 <div class="col-lg-6">
-                                    <div class="p-lg-5 p-4 bg-primary h-100"
+                                    <div class="p-lg-5 p-4 auth-one-bg h-100"
                                         style="background-color: rgba(13,110,253,0.5) !important;">
                                         <div class="bg-overlay"></div>
                                         <div class="position-relative h-100 d-flex flex-column">
                                             <div class="mb-1 text-center">
-                                                <a href="{{ url('/') }}" class="d-block">
+                                                <a href="{{ url('/') }}" class="d-block text-decoration-none">
                                                     <img src="{{ URL::asset('build/images/smart-logo-sm3.png') }}" alt=""
                                                         height="100">
+                                                    <h3 class="text-white mt-2 mb-0 fw-semibold"
+                                                        style="text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
+                                                        Smart</h3>
                                                 </a>
                                             </div>
                                             <div class="mt-auto">

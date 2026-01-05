@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-layout="vertical" data-topbar="light"
-    data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default"
-    data-theme-colors="default">
+    data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="galaxy"
+    data-theme-colors="galaxy">
 
 <head>
     <meta charset="utf-8" />
@@ -17,6 +17,27 @@
 
 
     <style>
+        /* Dark mode styling for modal card - using galaxy theme colors */
+        [data-bs-theme="dark"] .modal-card-dark,
+        html[data-bs-theme="dark"] .modal-card-dark {
+            background-color: var(--vz-secondary-bg, #05192f) !important;
+            /* Galaxy theme dark mode secondary background color */
+        }
+
+        /* Galaxy theme specific dark mode */
+        [data-theme="galaxy"][data-bs-theme="dark"] .modal-card-dark,
+        html[data-theme="galaxy"][data-bs-theme="dark"] .modal-card-dark {
+            background-color: var(--vz-secondary-bg, #05192f) !important;
+            /* Galaxy theme dark mode secondary background color */
+        }
+
+        /* Light mode - white background */
+        [data-bs-theme="light"] .modal-card-dark,
+        :not([data-bs-theme]) .modal-card-dark,
+        html:not([data-bs-theme="dark"]) .modal-card-dark {
+            background-color: #fff !important;
+        }
+
         /* Alpine.js Cloak */
         [x-cloak] {
             display: none !important;
@@ -149,6 +170,19 @@
     </style>
 
     @livewireStyles
+
+    {{--
+    <script>
+        // Force dark mode always
+        (function () {
+            // Set dark mode in sessionStorage
+            if (typeof (Storage) !== "undefined") {
+                sessionStorage.setItem("data-bs-theme", "dark");
+            }
+            // Set dark mode attribute on document element
+            document.documentElement.setAttribute("data-bs-theme", "dark");
+        })();
+    </script> --}}
 </head>
 
 <body>

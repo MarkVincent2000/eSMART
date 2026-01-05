@@ -1,5 +1,5 @@
 /*!
-* sweetalert2 v11.14.4
+* sweetalert2 v11.26.4
 * Released under the MIT License.
 */
 function _assertClassBrand(e, t, n) {
@@ -66,7 +66,7 @@ const swalPrefix = 'swal2-';
  */
 
 /** @type {SwalClass[]} */
-const classNames = ['container', 'shown', 'height-auto', 'iosfix', 'popup', 'modal', 'no-backdrop', 'no-transition', 'toast', 'toast-shown', 'show', 'hide', 'close', 'title', 'html-container', 'actions', 'confirm', 'deny', 'cancel', 'default-outline', 'footer', 'icon', 'icon-content', 'image', 'input', 'file', 'range', 'select', 'radio', 'checkbox', 'label', 'textarea', 'inputerror', 'input-label', 'validation-message', 'progress-steps', 'active-progress-step', 'progress-step', 'progress-step-line', 'loader', 'loading', 'styled', 'top', 'top-start', 'top-end', 'top-left', 'top-right', 'center', 'center-start', 'center-end', 'center-left', 'center-right', 'bottom', 'bottom-start', 'bottom-end', 'bottom-left', 'bottom-right', 'grow-row', 'grow-column', 'grow-fullscreen', 'rtl', 'timer-progress-bar', 'timer-progress-bar-container', 'scrollbar-measure', 'icon-success', 'icon-warning', 'icon-info', 'icon-question', 'icon-error'];
+const classNames = ['container', 'shown', 'height-auto', 'iosfix', 'popup', 'modal', 'no-backdrop', 'no-transition', 'toast', 'toast-shown', 'show', 'hide', 'close', 'title', 'html-container', 'actions', 'confirm', 'deny', 'cancel', 'footer', 'icon', 'icon-content', 'image', 'input', 'file', 'range', 'select', 'radio', 'checkbox', 'label', 'textarea', 'inputerror', 'input-label', 'validation-message', 'progress-steps', 'active-progress-step', 'progress-step', 'progress-step-line', 'loader', 'loading', 'styled', 'top', 'top-start', 'top-end', 'top-left', 'top-right', 'center', 'center-start', 'center-end', 'center-left', 'center-right', 'bottom', 'bottom-start', 'bottom-end', 'bottom-left', 'bottom-right', 'grow-row', 'grow-column', 'grow-fullscreen', 'rtl', 'timer-progress-bar', 'timer-progress-bar-container', 'scrollbar-measure', 'icon-success', 'icon-warning', 'icon-info', 'icon-question', 'icon-error', 'draggable', 'dragging'];
 const swalClasses = classNames.reduce((acc, className) => {
   acc[className] = swalPrefix + className;
   return acc;
@@ -133,8 +133,7 @@ const warnOnce = message => {
  * @param {string} deprecatedParam
  * @param {string?} useInstead
  */
-const warnAboutDeprecation = function (deprecatedParam) {
-  let useInstead = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+const warnAboutDeprecation = (deprecatedParam, useInstead = null) => {
   warnOnce(`"${deprecatedParam}" is deprecated and will be removed in the next major release.${useInstead ? ` Use "${useInstead}" instead.` : ''}`);
 };
 
@@ -142,25 +141,25 @@ const warnAboutDeprecation = function (deprecatedParam) {
  * If `arg` is a function, call it (with no arguments or context) and return the result.
  * Otherwise, just pass the value through
  *
- * @param {Function | any} arg
- * @returns {any}
+ * @param {(() => *) | *} arg
+ * @returns {*}
  */
 const callIfFunction = arg => typeof arg === 'function' ? arg() : arg;
 
 /**
- * @param {any} arg
+ * @param {*} arg
  * @returns {boolean}
  */
 const hasToPromiseFn = arg => arg && typeof arg.toPromise === 'function';
 
 /**
- * @param {any} arg
- * @returns {Promise<any>}
+ * @param {*} arg
+ * @returns {Promise<*>}
  */
 const asPromise = arg => hasToPromiseFn(arg) ? arg.toPromise() : Promise.resolve(arg);
 
 /**
- * @param {any} arg
+ * @param {*} arg
  * @returns {boolean}
  */
 const isPromise = arg => arg && Promise.resolve(arg) === arg;
@@ -538,13 +537,13 @@ const getDirectChildByClass = (elem, className) => {
 /**
  * @param {HTMLElement} elem
  * @param {string} property
- * @param {*} value
+ * @param {string | number | null | undefined} value
  */
 const applyNumericalStyle = (elem, property, value) => {
-  if (value === `${parseInt(value)}`) {
+  if (value === `${parseInt(`${value}`)}`) {
     value = parseInt(value);
   }
-  if (value || parseInt(value) === 0) {
+  if (value || parseInt(`${value}`) === 0) {
     elem.style.setProperty(property, typeof value === 'number' ? `${value}px` : value);
   } else {
     elem.style.removeProperty(property);
@@ -555,8 +554,7 @@ const applyNumericalStyle = (elem, property, value) => {
  * @param {HTMLElement | null} elem
  * @param {string} display
  */
-const show = function (elem) {
-  let display = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'flex';
+const show = (elem, display = 'flex') => {
   if (!elem) {
     return;
   }
@@ -577,8 +575,7 @@ const hide = elem => {
  * @param {HTMLElement | null} elem
  * @param {string} display
  */
-const showWhenInnerHtmlPresent = function (elem) {
-  let display = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'block';
+const showWhenInnerHtmlPresent = (elem, display = 'block') => {
   if (!elem) {
     return;
   }
@@ -606,11 +603,10 @@ const setStyle = (parent, selector, property, value) => {
 
 /**
  * @param {HTMLElement} elem
- * @param {any} condition
+ * @param {boolean | string | null | undefined} condition
  * @param {string} display
  */
-const toggle = function (elem, condition) {
-  let display = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 'flex';
+const toggle = (elem, condition, display = 'flex') => {
   if (condition) {
     show(elem, display);
   } else {
@@ -638,6 +634,22 @@ const allButtonsAreHidden = () => !isVisible$1(getConfirmButton()) && !isVisible
 const isScrollable = elem => !!(elem.scrollHeight > elem.clientHeight);
 
 /**
+ * @param {HTMLElement} element
+ * @param {HTMLElement} stopElement
+ * @returns {boolean}
+ */
+const selfOrParentIsScrollable = (element, stopElement) => {
+  let parent = element;
+  while (parent && parent !== stopElement) {
+    if (isScrollable(parent)) {
+      return true;
+    }
+    parent = parent.parentElement;
+  }
+  return false;
+};
+
+/**
  * borrowed from https://stackoverflow.com/a/46352119
  *
  * @param {HTMLElement} elem
@@ -654,8 +666,7 @@ const hasCssAnimation = elem => {
  * @param {number} timer
  * @param {boolean} reset
  */
-const animateTimerProgressBar = function (timer) {
-  let reset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+const animateTimerProgressBar = (timer, reset = false) => {
   const timerProgressBar = getTimerProgressBar();
   if (!timerProgressBar) {
     return;
@@ -792,11 +803,12 @@ const setupAccessibility = params => {
 const setupRTL = targetElement => {
   if (window.getComputedStyle(targetElement).direction === 'rtl') {
     addClass(getContainer(), swalClasses.rtl);
+    globalState.isRTL = true;
   }
 };
 
 /**
- * Add modal + backdrop + no-war message for Russians to DOM
+ * Add modal + backdrop to DOM
  *
  * @param {SweetAlertOptions} params
  */
@@ -813,8 +825,13 @@ const init = params => {
     addClass(container, swalClasses['no-transition']);
   }
   setInnerHtml(container, sweetHTML);
+  container.dataset['swal2Theme'] = params.theme;
   const targetElement = getTarget(params.target);
   targetElement.appendChild(container);
+  if (params.topLayer) {
+    container.setAttribute('popover', '');
+    container.showPopover();
+  }
   setupAccessibility(params);
   setupRTL(targetElement);
   addInputChangeListeners();
@@ -842,7 +859,7 @@ const parseHtmlToContainer = (param, target) => {
 };
 
 /**
- * @param {any} param
+ * @param {object} param
  * @param {HTMLElement} target
  */
 const handleObject = (param, target) => {
@@ -859,7 +876,7 @@ const handleObject = (param, target) => {
 
 /**
  * @param {HTMLElement} target
- * @param {any} elem
+ * @param {object} elem
  */
 const handleJqueryElem = (target, elem) => {
   target.textContent = '';
@@ -944,19 +961,34 @@ function handleButtonsStyling(confirmButton, denyButton, cancelButton, params) {
   }
   addClass([confirmButton, denyButton, cancelButton], swalClasses.styled);
 
-  // Buttons background colors
+  // Apply custom background colors to action buttons
   if (params.confirmButtonColor) {
-    confirmButton.style.backgroundColor = params.confirmButtonColor;
-    addClass(confirmButton, swalClasses['default-outline']);
+    confirmButton.style.setProperty('--swal2-confirm-button-background-color', params.confirmButtonColor);
   }
   if (params.denyButtonColor) {
-    denyButton.style.backgroundColor = params.denyButtonColor;
-    addClass(denyButton, swalClasses['default-outline']);
+    denyButton.style.setProperty('--swal2-deny-button-background-color', params.denyButtonColor);
   }
   if (params.cancelButtonColor) {
-    cancelButton.style.backgroundColor = params.cancelButtonColor;
-    addClass(cancelButton, swalClasses['default-outline']);
+    cancelButton.style.setProperty('--swal2-cancel-button-background-color', params.cancelButtonColor);
   }
+
+  // Apply the outline color to action buttons
+  applyOutlineColor(confirmButton);
+  applyOutlineColor(denyButton);
+  applyOutlineColor(cancelButton);
+}
+
+/**
+ * @param {HTMLElement} button
+ */
+function applyOutlineColor(button) {
+  const buttonStyle = window.getComputedStyle(button);
+  if (buttonStyle.getPropertyValue('--swal2-action-button-focus-box-shadow')) {
+    // If the button already has a custom outline color, no need to change it
+    return;
+  }
+  const outlineColor = buttonStyle.backgroundColor.replace(/rgba?\((\d+), (\d+), (\d+).*/, 'rgba($1, $2, $3, 0.5)');
+  button.style.setProperty('--swal2-action-button-focus-box-shadow', buttonStyle.getPropertyValue('--swal2-outline').replace(/ rgba\(.*/, ` ${outlineColor}`));
 }
 
 /**
@@ -1395,7 +1427,7 @@ const renderFooter = (instance, params) => {
     return;
   }
   showWhenInnerHtmlPresent(footer);
-  toggle(footer, params.footer, 'block');
+  toggle(footer, Boolean(params.footer), 'block');
   if (params.footer) {
     parseHtmlToContainer(params.footer, footer);
   }
@@ -1439,6 +1471,10 @@ const renderIcon = (instance, params) => {
 
   // Animate icon
   addClass(icon, params.showClass && params.showClass.icon);
+
+  // Re-adjust the success icon on system theme change
+  const colorSchemeQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+  colorSchemeQueryList.addEventListener('change', adjustSuccessIconBackgroundColor);
 };
 
 /**
@@ -1476,11 +1512,18 @@ const adjustSuccessIconBackgroundColor = () => {
     successIconParts[i].style.backgroundColor = popupBackgroundColor;
   }
 };
-const successIconHtml = `
-  <div class="swal2-success-circular-line-left"></div>
+
+/**
+ *
+ * @param {SweetAlertOptions} params
+ * @returns {string}
+ */
+const successIconHtml = params => `
+  ${params.animation ? '<div class="swal2-success-circular-line-left"></div>' : ''}
   <span class="swal2-success-line-tip"></span> <span class="swal2-success-line-long"></span>
-  <div class="swal2-success-ring"></div> <div class="swal2-success-fix"></div>
-  <div class="swal2-success-circular-line-right"></div>
+  <div class="swal2-success-ring"></div>
+  ${params.animation ? '<div class="swal2-success-fix"></div>' : ''}
+  ${params.animation ? '<div class="swal2-success-circular-line-right"></div>' : ''}
 `;
 const errorIconHtml = `
   <span class="swal2-x-mark">
@@ -1502,7 +1545,7 @@ const setContent = (icon, params) => {
   if (params.iconHtml) {
     newContent = iconContent(params.iconHtml);
   } else if (params.icon === 'success') {
-    newContent = successIconHtml;
+    newContent = successIconHtml(params);
     oldContent = oldContent.replace(/ style=".*?"/g, ''); // undo adjustSuccessIconBackgroundColor()
   } else if (params.icon === 'error') {
     newContent = errorIconHtml;
@@ -1569,6 +1612,94 @@ const renderImage = (instance, params) => {
   applyCustomClass(image, params, 'image');
 };
 
+let dragging = false;
+let mousedownX = 0;
+let mousedownY = 0;
+let initialX = 0;
+let initialY = 0;
+
+/**
+ * @param {HTMLElement} popup
+ */
+const addDraggableListeners = popup => {
+  popup.addEventListener('mousedown', down);
+  document.body.addEventListener('mousemove', move);
+  popup.addEventListener('mouseup', up);
+  popup.addEventListener('touchstart', down);
+  document.body.addEventListener('touchmove', move);
+  popup.addEventListener('touchend', up);
+};
+
+/**
+ * @param {HTMLElement} popup
+ */
+const removeDraggableListeners = popup => {
+  popup.removeEventListener('mousedown', down);
+  document.body.removeEventListener('mousemove', move);
+  popup.removeEventListener('mouseup', up);
+  popup.removeEventListener('touchstart', down);
+  document.body.removeEventListener('touchmove', move);
+  popup.removeEventListener('touchend', up);
+};
+
+/**
+ * @param {MouseEvent | TouchEvent} event
+ */
+const down = event => {
+  const popup = getPopup();
+  if (event.target === popup || getIcon().contains(/** @type {HTMLElement} */event.target)) {
+    dragging = true;
+    const clientXY = getClientXY(event);
+    mousedownX = clientXY.clientX;
+    mousedownY = clientXY.clientY;
+    initialX = parseInt(popup.style.insetInlineStart) || 0;
+    initialY = parseInt(popup.style.insetBlockStart) || 0;
+    addClass(popup, 'swal2-dragging');
+  }
+};
+
+/**
+ * @param {MouseEvent | TouchEvent} event
+ */
+const move = event => {
+  const popup = getPopup();
+  if (dragging) {
+    let {
+      clientX,
+      clientY
+    } = getClientXY(event);
+    const deltaX = clientX - mousedownX;
+    // In RTL mode, negate the horizontal delta since insetInlineStart refers to the right edge
+    popup.style.insetInlineStart = `${initialX + (globalState.isRTL ? -deltaX : deltaX)}px`;
+    popup.style.insetBlockStart = `${initialY + (clientY - mousedownY)}px`;
+  }
+};
+const up = () => {
+  const popup = getPopup();
+  dragging = false;
+  removeClass(popup, 'swal2-dragging');
+};
+
+/**
+ * @param {MouseEvent | TouchEvent} event
+ * @returns {{ clientX: number, clientY: number }}
+ */
+const getClientXY = event => {
+  let clientX = 0,
+    clientY = 0;
+  if (event.type.startsWith('mouse')) {
+    clientX = /** @type {MouseEvent} */event.clientX;
+    clientY = /** @type {MouseEvent} */event.clientY;
+  } else if (event.type.startsWith('touch')) {
+    clientX = /** @type {TouchEvent} */event.touches[0].clientX;
+    clientY = /** @type {TouchEvent} */event.touches[0].clientY;
+  }
+  return {
+    clientX,
+    clientY
+  };
+};
+
 /**
  * @param {SweetAlert} instance
  * @param {SweetAlertOptions} params
@@ -1609,6 +1740,13 @@ const renderPopup = (instance, params) => {
 
   // Classes
   addClasses$1(popup, params);
+  if (params.draggable && !params.toast) {
+    addClass(popup, swalClasses.draggable);
+    addDraggableListeners(popup);
+  } else {
+    removeClass(popup, swalClasses.draggable);
+    removeDraggableListeners(popup);
+  }
 };
 
 /**
@@ -1708,7 +1846,7 @@ const renderTitle = (instance, params) => {
     return;
   }
   showWhenInnerHtmlPresent(title);
-  toggle(title, params.title || params.titleText, 'block');
+  toggle(title, Boolean(params.title || params.titleText), 'block');
   if (params.title) {
     parseHtmlToContainer(params.title, title);
   }
@@ -1773,8 +1911,6 @@ const clickCancel = () => {
   return (_dom$getCancelButton = getCancelButton()) === null || _dom$getCancelButton === void 0 ? void 0 : _dom$getCancelButton.click();
 };
 
-/** @typedef {'cancel' | 'backdrop' | 'close' | 'esc' | 'timer'} DismissReason */
-
 /** @type {Record<DismissReason, DismissReason>} */
 const DismissReason = Object.freeze({
   cancel: 'cancel',
@@ -1799,7 +1935,7 @@ const removeKeydownHandler = globalState => {
 /**
  * @param {GlobalState} globalState
  * @param {SweetAlertOptions} innerParams
- * @param {*} dismissWith
+ * @param {(dismiss: DismissReason) => void} dismissWith
  */
 const addKeydownHandler = (globalState, innerParams, dismissWith) => {
   removeKeydownHandler(globalState);
@@ -1825,6 +1961,11 @@ const setFocus = (index, increment) => {
   if (focusableElements.length) {
     index = index + increment;
 
+    // shift + tab when .swal2-popup is focused
+    if (index === -2) {
+      index = focusableElements.length - 1;
+    }
+
     // rollover to first item
     if (index === focusableElements.length) {
       index = 0;
@@ -1845,7 +1986,7 @@ const arrowKeysPreviousButton = ['ArrowLeft', 'ArrowUp'];
 /**
  * @param {SweetAlertOptions} innerParams
  * @param {KeyboardEvent} event
- * @param {Function} dismissWith
+ * @param {(dismiss: DismissReason) => void} dismissWith
  */
 const keydownHandler = (innerParams, event, dismissWith) => {
   if (!innerParams) {
@@ -1968,11 +2109,11 @@ const handleArrows = key => {
 /**
  * @param {KeyboardEvent} event
  * @param {SweetAlertOptions} innerParams
- * @param {Function} dismissWith
+ * @param {(dismiss: DismissReason) => void} dismissWith
  */
 const handleEsc = (event, innerParams, dismissWith) => {
+  event.preventDefault();
   if (callIfFunction(innerParams.allowEscapeKey)) {
-    event.preventDefault();
     dismissWith(DismissReason.esc);
   }
 };
@@ -2082,7 +2223,9 @@ const shouldPreventTouchMove = event => {
   if (target === container) {
     return true;
   }
-  if (!isScrollable(container) && target instanceof HTMLElement && target.tagName !== 'INPUT' &&
+  if (!isScrollable(container) && target instanceof HTMLElement && !selfOrParentIsScrollable(target, htmlContainer) &&
+  // #2823
+  target.tagName !== 'INPUT' &&
   // #1603
   target.tagName !== 'TEXTAREA' &&
   // #2266
@@ -2097,7 +2240,7 @@ const shouldPreventTouchMove = event => {
 /**
  * https://github.com/sweetalert2/sweetalert2/issues/1786
  *
- * @param {*} event
+ * @param {object} event
  * @returns {boolean}
  */
 const isStylus = event => {
@@ -2170,7 +2313,7 @@ const undoReplaceScrollbarWithPadding = () => {
  * @param {SweetAlert} instance
  * @param {HTMLElement} container
  * @param {boolean} returnFocus
- * @param {Function} didClose
+ * @param {() => void} didClose
  */
 function removePopupAndResetState(instance, container, returnFocus, didClose) {
   if (isToast()) {
@@ -2207,7 +2350,7 @@ function removeBodyClasses() {
 /**
  * Instance method to close sweetAlert
  *
- * @param {any} resolveValue
+ * @param {SweetAlertResult | undefined} resolveValue
  */
 function close(resolveValue) {
   resolveValue = prepareResolveValue(resolveValue);
@@ -2243,7 +2386,7 @@ const triggerClosePopup = instance => {
 };
 
 /**
- * @param {any} error
+ * @param {Error | string} error
  */
 function rejectPromise(error) {
   const rejectPromise = privateMethods.swalPromiseReject.get(this);
@@ -2268,7 +2411,7 @@ const handleAwaitingPromise = instance => {
 };
 
 /**
- * @param {any} resolveValue
+ * @param {SweetAlertResult | undefined} resolveValue
  * @returns {SweetAlertResult}
  */
 const prepareResolveValue = resolveValue => {
@@ -2293,13 +2436,14 @@ const prepareResolveValue = resolveValue => {
  * @param {SweetAlertOptions} innerParams
  */
 const handlePopupAnimation = (instance, popup, innerParams) => {
+  var _globalState$eventEmi;
   const container = getContainer();
   // If animation is supported, animate
   const animationIsSupported = hasCssAnimation(popup);
   if (typeof innerParams.willClose === 'function') {
     innerParams.willClose(popup);
   }
-  globalState.eventEmitter.emit('willClose', popup);
+  (_globalState$eventEmi = globalState.eventEmitter) === null || _globalState$eventEmi === void 0 || _globalState$eventEmi.emit('willClose', popup);
   if (animationIsSupported) {
     animatePopup(instance, popup, container, innerParams.returnFocus, innerParams.didClose);
   } else {
@@ -2313,13 +2457,17 @@ const handlePopupAnimation = (instance, popup, innerParams) => {
  * @param {HTMLElement} popup
  * @param {HTMLElement} container
  * @param {boolean} returnFocus
- * @param {Function} didClose
+ * @param {() => void} didClose
  */
 const animatePopup = (instance, popup, container, returnFocus, didClose) => {
   globalState.swalCloseEventFinishedCallback = removePopupAndResetState.bind(null, instance, container, returnFocus, didClose);
+  /**
+   * @param {AnimationEvent | TransitionEvent} e
+   */
   const swalCloseAnimationFinished = function (e) {
     if (e.target === popup) {
-      globalState.swalCloseEventFinishedCallback();
+      var _globalState$swalClos;
+      (_globalState$swalClos = globalState.swalCloseEventFinishedCallback) === null || _globalState$swalClos === void 0 || _globalState$swalClos.call(globalState);
       delete globalState.swalCloseEventFinishedCallback;
       popup.removeEventListener('animationend', swalCloseAnimationFinished);
       popup.removeEventListener('transitionend', swalCloseAnimationFinished);
@@ -2331,14 +2479,15 @@ const animatePopup = (instance, popup, container, returnFocus, didClose) => {
 
 /**
  * @param {SweetAlert} instance
- * @param {Function} didClose
+ * @param {() => void} didClose
  */
 const triggerDidCloseAndDispose = (instance, didClose) => {
   setTimeout(() => {
+    var _globalState$eventEmi2;
     if (typeof didClose === 'function') {
       didClose.bind(instance.params)();
     }
-    globalState.eventEmitter.emit('didClose');
+    (_globalState$eventEmi2 = globalState.eventEmitter) === null || _globalState$eventEmi2 === void 0 || _globalState$eventEmi2.emit('didClose');
     // instance might have been destroyed already
     if (instance._destroy) {
       instance._destroy();
@@ -2458,7 +2607,7 @@ const handleInputOptions = (instance, params) => {
     return;
   }
   /**
-   * @param {Record<string, any>} inputOptions
+   * @param {*} inputOptions
    */
   const processInputOptions = inputOptions => {
     if (params.input === 'select') {
@@ -2585,7 +2734,7 @@ function populateRadioOptions(popup, inputOptions, params) {
 /**
  * Converts `inputOptions` into an array of `[value, label]`s
  *
- * @param {Record<string, any>} inputOptions
+ * @param {*} inputOptions
  * @typedef {string[]} InputOptionFlattened
  * @returns {InputOptionFlattened[]}
  */
@@ -2651,7 +2800,7 @@ const handleDenyButtonClick = instance => {
 
 /**
  * @param {SweetAlert} instance
- * @param {Function} dismissWith
+ * @param {(dismiss: DismissReason) => void} dismissWith
  */
 const handleCancelButtonClick = (instance, dismissWith) => {
   instance.disableButtons();
@@ -2706,7 +2855,7 @@ const handleInputValidator = (instance, inputValue, type) => {
 
 /**
  * @param {SweetAlert} instance
- * @param {any} value
+ * @param {*} value
  */
 const deny = (instance, value) => {
   const innerParams = privateProps.innerParams.get(instance || undefined);
@@ -2721,14 +2870,14 @@ const deny = (instance, value) => {
         instance.hideLoading();
         handleAwaitingPromise(instance);
       } else {
-        instance.close({
+        instance.close(/** @type SweetAlertResult */{
           isDenied: true,
           value: typeof preDenyValue === 'undefined' ? value : preDenyValue
         });
       }
     }).catch(error => rejectWith(instance || undefined, error));
   } else {
-    instance.close({
+    instance.close(/** @type SweetAlertResult */{
       isDenied: true,
       value
     });
@@ -2737,10 +2886,10 @@ const deny = (instance, value) => {
 
 /**
  * @param {SweetAlert} instance
- * @param {any} value
+ * @param {*} value
  */
 const succeedWith = (instance, value) => {
-  instance.close({
+  instance.close(/** @type SweetAlertResult */{
     isConfirmed: true,
     value
   });
@@ -2758,7 +2907,7 @@ const rejectWith = (instance, error) => {
 /**
  *
  * @param {SweetAlert} instance
- * @param {any} value
+ * @param {*} value
  */
 const confirm = (instance, value) => {
   const innerParams = privateProps.innerParams.get(instance || undefined);
@@ -2947,7 +3096,9 @@ const defaultParams = {
   iconHtml: undefined,
   template: undefined,
   toast: false,
+  draggable: false,
   animation: true,
+  theme: 'light',
   showClass: {
     popup: 'swal2-show',
     backdrop: 'swal2-backdrop-show',
@@ -3025,15 +3176,16 @@ const defaultParams = {
   willClose: undefined,
   didClose: undefined,
   didDestroy: undefined,
-  scrollbarPadding: true
+  scrollbarPadding: true,
+  topLayer: false
 };
-const updatableParams = ['allowEscapeKey', 'allowOutsideClick', 'background', 'buttonsStyling', 'cancelButtonAriaLabel', 'cancelButtonColor', 'cancelButtonText', 'closeButtonAriaLabel', 'closeButtonHtml', 'color', 'confirmButtonAriaLabel', 'confirmButtonColor', 'confirmButtonText', 'currentProgressStep', 'customClass', 'denyButtonAriaLabel', 'denyButtonColor', 'denyButtonText', 'didClose', 'didDestroy', 'footer', 'hideClass', 'html', 'icon', 'iconColor', 'iconHtml', 'imageAlt', 'imageHeight', 'imageUrl', 'imageWidth', 'preConfirm', 'preDeny', 'progressSteps', 'returnFocus', 'reverseButtons', 'showCancelButton', 'showCloseButton', 'showConfirmButton', 'showDenyButton', 'text', 'title', 'titleText', 'willClose'];
+const updatableParams = ['allowEscapeKey', 'allowOutsideClick', 'background', 'buttonsStyling', 'cancelButtonAriaLabel', 'cancelButtonColor', 'cancelButtonText', 'closeButtonAriaLabel', 'closeButtonHtml', 'color', 'confirmButtonAriaLabel', 'confirmButtonColor', 'confirmButtonText', 'currentProgressStep', 'customClass', 'denyButtonAriaLabel', 'denyButtonColor', 'denyButtonText', 'didClose', 'didDestroy', 'draggable', 'footer', 'hideClass', 'html', 'icon', 'iconColor', 'iconHtml', 'imageAlt', 'imageHeight', 'imageUrl', 'imageWidth', 'preConfirm', 'preDeny', 'progressSteps', 'returnFocus', 'reverseButtons', 'showCancelButton', 'showCloseButton', 'showConfirmButton', 'showDenyButton', 'text', 'title', 'titleText', 'theme', 'willClose'];
 
 /** @type {Record<string, string | undefined>} */
 const deprecatedParams = {
   allowEnterKey: undefined
 };
-const toastIncompatibleParams = ['allowOutsideClick', 'allowEnterKey', 'backdrop', 'focusConfirm', 'focusDeny', 'focusCancel', 'returnFocus', 'heightAuto', 'keydownListenerCapture'];
+const toastIncompatibleParams = ['allowOutsideClick', 'allowEnterKey', 'backdrop', 'draggable', 'focusConfirm', 'focusDeny', 'focusCancel', 'returnFocus', 'heightAuto', 'keydownListenerCapture'];
 
 /**
  * Is valid parameter
@@ -3102,6 +3254,9 @@ const showWarningsForParams = params => {
   if (params.backdrop === false && params.allowOutsideClick) {
     warn('"allowOutsideClick" parameter requires `backdrop` parameter to be set to `true`');
   }
+  if (params.theme && !['light', 'dark', 'auto', 'minimal', 'borderless', 'bootstrap-4', 'bootstrap-4-light', 'bootstrap-4-dark', 'bootstrap-5', 'bootstrap-5-light', 'bootstrap-5-dark', 'material-ui', 'material-ui-light', 'material-ui-dark', 'embed-iframe', 'bulma', 'bulma-light', 'bulma-dark'].includes(params.theme)) {
+    warn(`Invalid theme "${params.theme}"`);
+  }
   for (const param in params) {
     checkIfParamIsValid(param);
     if (params.toast) {
@@ -3117,6 +3272,7 @@ const showWarningsForParams = params => {
  * @param {SweetAlertOptions} params
  */
 function update(params) {
+  const container = getContainer();
   const popup = getPopup();
   const innerParams = privateProps.innerParams.get(this);
   if (!popup || hasClass(popup, innerParams.hideClass.popup)) {
@@ -3125,6 +3281,8 @@ function update(params) {
   }
   const validUpdatableParams = filterValidParams(params);
   const updatedParams = Object.assign({}, innerParams, validUpdatableParams);
+  showWarningsForParams(updatedParams);
+  container.dataset['swal2Theme'] = updatedParams.theme;
   render(this, updatedParams);
   privateProps.innerParams.set(this, updatedParams);
   Object.defineProperties(this, {
@@ -3255,7 +3413,7 @@ var instanceMethods = /*#__PURE__*/Object.freeze({
 /**
  * @param {SweetAlertOptions} innerParams
  * @param {DomCache} domCache
- * @param {Function} dismissWith
+ * @param {(dismiss: DismissReason) => void} dismissWith
  */
 const handlePopupClick = (innerParams, domCache, dismissWith) => {
   if (innerParams.toast) {
@@ -3274,7 +3432,7 @@ const handlePopupClick = (innerParams, domCache, dismissWith) => {
 /**
  * @param {SweetAlertOptions} innerParams
  * @param {DomCache} domCache
- * @param {Function} dismissWith
+ * @param {(dismiss: DismissReason) => void} dismissWith
  */
 const handleToastClick = (innerParams, domCache, dismissWith) => {
   // Closing toast by internal click
@@ -3333,7 +3491,7 @@ const handleContainerMousedown = domCache => {
 /**
  * @param {SweetAlertOptions} innerParams
  * @param {DomCache} domCache
- * @param {Function} dismissWith
+ * @param {(dismiss: DismissReason) => void} dismissWith
  */
 const handleModalClick = (innerParams, domCache, dismissWith) => {
   domCache.container.onclick = e => {
@@ -3372,10 +3530,7 @@ const argsToParams = args => {
  * @param  {...SweetAlertOptions} args
  * @returns {Promise<SweetAlertResult>}
  */
-function fire() {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
+function fire(...args) {
   return new this(...args);
 }
 
@@ -3488,8 +3643,7 @@ const clickHandlers = {};
 /**
  * @param {string} attr
  */
-function bindClickHandler() {
-  let attr = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'data-swal-template';
+function bindClickHandler(attr = 'data-swal-template') {
   clickHandlers[attr] = this;
   if (!bodyClickListenerAdded) {
     document.body.addEventListener('click', bodyClickListener);
@@ -3547,16 +3701,12 @@ class EventEmitter {
    * @param {EventHandler} eventHandler
    */
   once(eventName, eventHandler) {
-    var _this = this;
     /**
      * @param {Array} args
      */
-    const onceFn = function () {
-      _this.removeListener(eventName, onceFn);
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-      eventHandler.apply(_this, args);
+    const onceFn = (...args) => {
+      this.removeListener(eventName, onceFn);
+      eventHandler.apply(this, args);
     };
     this.on(eventName, onceFn);
   }
@@ -3565,10 +3715,7 @@ class EventEmitter {
    * @param {string} eventName
    * @param {Array} args
    */
-  emit(eventName) {
-    for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-      args[_key2 - 1] = arguments[_key2];
-    }
+  emit(eventName, ...args) {
     this._getHandlersByEventName(eventName).forEach(
     /**
      * @param {EventHandler} eventHandler
@@ -3693,7 +3840,7 @@ var staticMethods = /*#__PURE__*/Object.freeze({
 
 class Timer {
   /**
-   * @param {Function} callback
+   * @param {() => void} callback
    * @param {number} delay
    */
   constructor(callback, delay) {
@@ -3782,10 +3929,10 @@ const getTemplateParams = params => {
 
 /**
  * @param {DocumentFragment} templateContent
- * @returns {Record<string, any>}
+ * @returns {Record<string, string | boolean | number>}
  */
 const getSwalParams = templateContent => {
-  /** @type {Record<string, any>} */
+  /** @type {Record<string, string | boolean | number>} */
   const result = {};
   /** @type {HTMLElement[]} */
   const swalParams = Array.from(templateContent.querySelectorAll('swal-param'));
@@ -3809,10 +3956,10 @@ const getSwalParams = templateContent => {
 
 /**
  * @param {DocumentFragment} templateContent
- * @returns {Record<string, any>}
+ * @returns {Record<string, () => void>}
  */
 const getSwalFunctionParams = templateContent => {
-  /** @type {Record<string, any>} */
+  /** @type {Record<string, () => void>} */
   const result = {};
   /** @type {HTMLElement[]} */
   const swalFunctions = Array.from(templateContent.querySelectorAll('swal-function-param'));
@@ -3829,10 +3976,10 @@ const getSwalFunctionParams = templateContent => {
 
 /**
  * @param {DocumentFragment} templateContent
- * @returns {Record<string, any>}
+ * @returns {Record<string, string | boolean>}
  */
 const getSwalButtons = templateContent => {
-  /** @type {Record<string, any>} */
+  /** @type {Record<string, string | boolean>} */
   const result = {};
   /** @type {HTMLElement[]} */
   const swalButtons = Array.from(templateContent.querySelectorAll('swal-button'));
@@ -3882,7 +4029,7 @@ const getSwalImage = templateContent => {
 
 /**
  * @param {DocumentFragment} templateContent
- * @returns {Record<string, any>}
+ * @returns {object}
  */
 const getSwalIcon = templateContent => {
   const result = {};
@@ -3903,10 +4050,10 @@ const getSwalIcon = templateContent => {
 
 /**
  * @param {DocumentFragment} templateContent
- * @returns {Record<string, any>}
+ * @returns {object}
  */
 const getSwalInput = templateContent => {
-  /** @type {Record<string, any>} */
+  /** @type {object} */
   const result = {};
   /** @type {HTMLElement | null} */
   const input = templateContent.querySelector('swal-input');
@@ -3943,10 +4090,10 @@ const getSwalInput = templateContent => {
 /**
  * @param {DocumentFragment} templateContent
  * @param {string[]} paramNames
- * @returns {Record<string, any>}
+ * @returns {Record<string, string>}
  */
 const getSwalStringParams = (templateContent, paramNames) => {
-  /** @type {Record<string, any>} */
+  /** @type {Record<string, string>} */
   const result = {};
   for (const i in paramNames) {
     const paramName = paramNames[i];
@@ -4018,7 +4165,6 @@ const openPopup = params => {
     setTimeout(() => params.didOpen(popup));
   }
   globalState.eventEmitter.emit('didOpen', popup);
-  removeClass(container, swalClasses['no-transition']);
 };
 
 /**
@@ -4033,6 +4179,9 @@ const swalOpenAnimationFinished = event => {
   popup.removeEventListener('animationend', swalOpenAnimationFinished);
   popup.removeEventListener('transitionend', swalOpenAnimationFinished);
   container.style.overflowY = 'auto';
+
+  // no-transition is added in init() in case one swal is opened right after another
+  removeClass(container, swalClasses['no-transition']);
 };
 
 /**
@@ -4165,10 +4314,10 @@ let currentInstance;
 var _promise = /*#__PURE__*/new WeakMap();
 class SweetAlert {
   /**
-   * @param {...any} args
+   * @param {...(SweetAlertOptions | string)} args
    * @this {SweetAlert}
    */
-  constructor() {
+  constructor(...args) {
     /**
      * @type {Promise<SweetAlertResult>}
      */
@@ -4180,9 +4329,6 @@ class SweetAlert {
     currentInstance = this;
 
     // @ts-ignore
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
     const outerParams = Object.freeze(this.constructor.argsToParams(args));
 
     /** @type {Readonly<SweetAlertOptions>} */
@@ -4192,8 +4338,7 @@ class SweetAlert {
     this.isAwaitingPromise = false;
     _classPrivateFieldSet2(_promise, this, this._main(currentInstance.params));
   }
-  _main(userParams) {
-    let mixinParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  _main(userParams, mixinParams = {}) {
     showWarningsForParams(Object.assign({}, mixinParams, userParams));
     if (globalState.currentInstance) {
       const swalPromiseResolve = privateMethods.swalPromiseResolve.get(globalState.currentInstance);
@@ -4253,7 +4398,9 @@ const swalPromise = (instance, domCache, innerParams) => {
     const dismissWith = dismiss => {
       instance.close({
         isDismissed: true,
-        dismiss
+        dismiss,
+        isConfirmed: false,
+        isDenied: false
       });
     };
     privateMethods.swalPromiseResolve.set(instance, resolve);
@@ -4327,7 +4474,7 @@ const populateDomCache = instance => {
 /**
  * @param {GlobalState} globalState
  * @param {SweetAlertOptions} innerParams
- * @param {Function} dismissWith
+ * @param {(dismiss: DismissReason) => void} dismissWith
  */
 const setupTimer = (globalState, innerParams, dismissWith) => {
   const timerProgressBar = getTimerProgressBar();
@@ -4387,7 +4534,7 @@ const initFocus = (domCache, innerParams) => {
  * @returns {boolean}
  */
 const focusAutofocus = domCache => {
-  const autofocusElements = domCache.popup.querySelectorAll('[autofocus]');
+  const autofocusElements = Array.from(domCache.popup.querySelectorAll('[autofocus]'));
   for (const autofocusElement of autofocusElements) {
     if (autofocusElement instanceof HTMLElement && isVisible$1(autofocusElement)) {
       autofocusElement.focus();
@@ -4423,28 +4570,6 @@ const blurActiveElement = () => {
   }
 };
 
-// Dear russian users visiting russian sites. Let's have fun.
-if (typeof window !== 'undefined' && /^ru\b/.test(navigator.language) && location.host.match(/\.(ru|su|by|xn--p1ai)$/)) {
-  const now = new Date();
-  const initiationDate = localStorage.getItem('swal-initiation');
-  if (!initiationDate) {
-    localStorage.setItem('swal-initiation', `${now}`);
-  } else if ((now.getTime() - Date.parse(initiationDate)) / (1000 * 60 * 60 * 24) > 3) {
-    setTimeout(() => {
-      document.body.style.pointerEvents = 'none';
-      const ukrainianAnthem = document.createElement('audio');
-      ukrainianAnthem.src = 'https://flag-gimn.ru/wp-content/uploads/2021/09/Ukraina.mp3';
-      ukrainianAnthem.loop = true;
-      document.body.appendChild(ukrainianAnthem);
-      setTimeout(() => {
-        ukrainianAnthem.play().catch(() => {
-          // ignore
-        });
-      }, 2500);
-    }, 500);
-  }
-}
-
 // Assign instance methods from src/instanceMethods/*.js to prototype
 SweetAlert.prototype.disableButtons = disableButtons;
 SweetAlert.prototype.enableButtons = enableButtons;
@@ -4469,18 +4594,18 @@ Object.assign(SweetAlert, staticMethods);
 // Proxy to instance methods to constructor, for now, for backwards compatibility
 Object.keys(instanceMethods).forEach(key => {
   /**
-   * @param {...any} args
-   * @returns {any | undefined}
+   * @param {...(SweetAlertOptions | string | undefined)} args
+   * @returns {SweetAlertResult | Promise<SweetAlertResult> | undefined}
    */
-  SweetAlert[key] = function () {
+  SweetAlert[key] = function (...args) {
     if (currentInstance && currentInstance[key]) {
-      return currentInstance[key](...arguments);
+      return currentInstance[key](...args);
     }
     return null;
   };
 });
 SweetAlert.DismissReason = DismissReason;
-SweetAlert.version = '11.14.4';
+SweetAlert.version = '11.26.4';
 
 const Swal = SweetAlert;
 // @ts-ignore

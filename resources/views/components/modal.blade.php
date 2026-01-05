@@ -111,7 +111,7 @@
         >
         <div 
             x-bind:class="{ 'modal-bounce': bounce }"
-            class="card mb-0 shadow-lg overflow-{{ $overflow }}" 
+            class="card mb-0 shadow-lg overflow-{{ $overflow }} modal-card-dark" 
             style="border-radius: 0.5rem; will-change: transform;"
             x-on:click.stop
         >
@@ -156,3 +156,5 @@
         </div>
     </div>
 </div>
+
+

@@ -194,12 +194,12 @@ $body-bg-image-3-dark:                                              url('../imag
     
     // Topbar - Dark
     &[data-topbar="dark"] {
-        --#{$prefix}header-bg:                                      #8c68cd;
-        --#{$prefix}header-border:                                  #8c68cd;
+        --#{$prefix}header-bg:                                      #1e3a5f;
+        --#{$prefix}header-border:                                  #1e3a5f;
         --#{$prefix}header-item-color:                              #{rgba($white, .85)};
-        --#{$prefix}header-item-bg:                                 #966de1;
-        --#{$prefix}header-item-sub-color:                          #e2c4ff;
-        --#{$prefix}topbar-user-bg:                                 #7958b5;
+        --#{$prefix}header-item-bg:                                 #2c4d75;
+        --#{$prefix}header-item-sub-color:                          #b8c5d6;
+        --#{$prefix}topbar-user-bg:                                 #1a2e4a;
         --#{$prefix}topbar-search-bg:                               #{rgba($white, .05)};
         --#{$prefix}topbar-search-color:                            #{$white};
     }
