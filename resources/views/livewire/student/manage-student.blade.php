@@ -515,11 +515,11 @@
                         </div>
 
                         {{-- Pagination --}}
-                        @if($this->studentInfos->hasPages())
-                            <div class="mt-4">
-                                <x-pagination :paginator="$this->studentInfos" :show-summary="true" />
-                            </div>
-                        @endif
+
+                        <div class="mt-4">
+                            <x-pagination :paginator="$this->studentInfos" :show-summary="true" />
+                        </div>
+
                     </div>
                     <!-- end card body -->
                 </div>
