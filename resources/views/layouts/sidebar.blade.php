@@ -3,21 +3,23 @@
     <!-- LOGO -->
     <div class="navbar-brand-box">
         <!-- Dark Logo-->
-        <a href="index" class="logo logo-dark">
+        <a href="dashboard" class="logo logo-dark">
             <span class="logo-sm">
                 <img src="{{ URL::asset('build/images/smart-logo-sm3.png') }}" alt="" height="22">
             </span>
             <span class="logo-lg">
-                <img src="{{ URL::asset('build/images/smart-logo-dark.png') }}" alt="" height="17">
+                <img src="{{ URL::asset('build/images/smart-logo-sm3.png') }}" alt="" height="30">
+                <span class="ms-2 fw-bold fs-5 text-dark">smart</span>
             </span>
         </a>
         <!-- Light Logo-->
-        <a href="index" class="logo logo-light">
+        <a href="dashboard" class="logo logo-light">
             <span class="logo-sm">
                 <img src="{{ URL::asset('build/images/smart-logo-sm3.png') }}" alt="" height="22">
             </span>
             <span class="logo-lg">
-                <img src="{{ URL::asset('build/images/smart-logo-light.png') }}" alt="" height="17">
+                <img src="{{ URL::asset('build/images/smart-logo-sm3.png') }}" alt="" height="30">
+                <span class="ms-2 fw-bold fs-5 text-white">smart</span>
             </span>
         </a>
         <button type="button" class="btn btn-sm p-0 fs-20 header-item float-end btn-vertical-sm-hover"
