@@ -25,8 +25,8 @@
                         <a class="navbar-brand" href="dashboard">
                             <img src="{{ URL::asset('build/images/smart-logo-dark.png') }}" class="card-logo card-logo-dark"
                                 alt="logo dark" height="17">
-                            <img src="{{ URL::asset('build/images/smart-logo-light.png') }}" class="card-logo card-logo-light"
-                                alt="logo light" height="17">
+                            <img src="{{ URL::asset('build/images/smart-logo-light.png') }}"
+                                class="card-logo card-logo-light" alt="logo light" height="17">
                         </a>
                         <button class="navbar-toggler py-0 fs-20 text-body" type="button" data-bs-toggle="collapse"
                             data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
@@ -1376,11 +1376,10 @@
                         <div class="row justify-content-center">
                             <div class="col-lg-8">
                                 <div class="text-center mb-5">
-                                    <h3 class="mb-3 fw-semibold">Our Work Process</h3>
-                                    <p class="text-muted mb-4 ff-secondary">In an ideal world this website wouldn’t exist,
-                                        a client would
-                                        acknowledge the importance of having web copy before the Proin vitae ipsum vel ex
-                                        finibus semper design starts.</p>
+                                    <h3 class="mb-3 fw-semibold">How Our System Works</h3>
+                                    <p class="text-muted mb-4 ff-secondary">
+                                        Our enrollment and information management system streamlines your educational journey from start to finish. Here’s a quick look at our simple, user-friendly process that ensures accuracy, transparency, and support at every stage.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -1399,9 +1398,10 @@
                                         </div>
                                     </div>
 
-                                    <h5>Tell us what you need</h5>
-                                    <p class="text-muted ff-secondary">The profession and the employer and your desire to
-                                        make your mark.</p>
+                                    <h5>Submit Your Information</h5>
+                                    <p class="text-muted ff-secondary">
+                                        Register and provide your personal and academic details through our secure portal. Our intuitive forms guide you to ensure your data is complete and accurate.
+                                    </p>
                                 </div>
                             </div>
                             <!-- end col -->
@@ -1417,9 +1417,10 @@
                                         </div>
                                     </div>
 
-                                    <h5>Get free quotes</h5>
-                                    <p class="text-muted ff-secondary">The most important aspect of beauty was, therefore,
-                                        an inherent part.</p>
+                                    <h5>Admin Review & Verification</h5>
+                                    <p class="text-muted ff-secondary">
+                                        Our administrators review your submission, verify the information, and assist if corrections are needed. Notifications keep you updated on the progress of your enrollment.
+                                    </p>
                                 </div>
                             </div>
                             <!-- end col -->
@@ -1431,9 +1432,10 @@
                                         </div>
                                     </div>
 
-                                    <h5>Deliver high quality product</h5>
-                                    <p class="text-muted ff-secondary">We quickly learn to fear and thus automatically
-                                        avoid potentially.</p>
+                                    <h5>Confirmation & Ongoing Access</h5>
+                                    <p class="text-muted ff-secondary">
+                                        Once approved, you’ll receive confirmation and can access your enrollment information anytime. Manage updates, receive important notifications, and track your academic journey seamlessly!
+                                    </p>
                                 </div>
                             </div>
                             <!-- end col -->
@@ -1446,14 +1448,14 @@
 
                 <!-- start team -->
                 <section class="section bg-light" id="team">
-                    <div class="container">
+                    <div class="container text-center">
                         <div class="row justify-content-center">
                             <div class="col-lg-8">
                                 <div class="text-center mb-5">
                                     <h3 class="mb-3 fw-semibold">Our <span class="text-danger">Team</span></h3>
-                                    <p class="text-muted mb-4 ff-secondary">To achieve this, it would be necessary to have
-                                        uniform grammar,
-                                        pronunciation and more common words. If several languages coalesce the grammar.</p>
+                                    <p class="text-muted mb-4 ff-secondary">
+                                        Our talented team combines expertise in education and technology to build a smart, efficient system that empowers users. We are dedicated to continuous innovation, ensuring our platform makes enrollment and information management seamless, reliable, and easy for everyone.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -1465,7 +1467,7 @@
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
                                             <img src="{{ URL::asset('build/images/users/avatar-2.jpg') }}" alt=""
                                                 class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
+                                            <a href="#"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
                                                     <i class="ri-mail-fill align-bottom"></i>
@@ -1473,7 +1475,7 @@
                                             </a>
                                         </div>
                                         <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Nancy Martino</a>
+                                        <h5 class="mb-1"><a href="#" class="text-body">Nancy Martino</a>
                                         </h5>
                                         <p class="text-muted mb-0 ff-secondary">Team Leader</p>
                                     </div>
@@ -1485,9 +1487,9 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-10.jpg') }}" alt=""
+                                            <img src="{{ URL::asset('build/images/users/mark.png') }}" alt=""
                                                 class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
+                                            <a href="#"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
                                                     <i class="ri-mail-fill align-bottom"></i>
@@ -1495,7 +1497,7 @@
                                             </a>
                                         </div>
                                         <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Henry Baird</a></h5>
+                                        <h5 class="mb-1"><a href="#" class="text-body">Mark Vincent Quiao</a></h5>
                                         <p class="text-muted mb-0 ff-secondary">Full Stack Developer</p>
                                     </div>
                                 </div>
@@ -1506,9 +1508,9 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-3.jpg') }}" alt=""
+                                            <img src="{{ URL::asset('build/images/users/kit.png') }}" alt=""
                                                 class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
+                                            <a href="#"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
                                                     <i class="ri-mail-fill align-bottom"></i>
@@ -1516,98 +1518,8 @@
                                             </a>
                                         </div>
                                         <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Frank Hook</a></h5>
+                                        <h5 class="mb-1"><a href="#" class="text-body">Kit Benedic Aguing</a></h5>
                                         <p class="text-muted mb-0 ff-secondary">Project Manager</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-8.jpg') }}" alt=""
-                                                class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Donald Palmer</a>
-                                        </h5>
-                                        <p class="text-muted mb-0 ff-secondary">UI/UX Designer</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                        <div class="row">
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-5.jpg') }}" alt=""
-                                                class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Erica Kernan</a>
-                                        </h5>
-                                        <p class="text-muted mb-0 ff-secondary">Web Designer</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-4.jpg') }}" alt=""
-                                                class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Alexis Clarke</a>
-                                        </h5>
-                                        <p class="text-muted mb-0 ff-secondary">Backend Developer</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-6.jpg') }}" alt=""
-                                                class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Marie Ward</a></h5>
-                                        <p class="text-muted mb-0 ff-secondary">Full Stack Developer</p>
                                     </div>
                                 </div>
                                 <!-- end card -->
@@ -1618,9 +1530,9 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-7.jpg') }}" alt=""
+                                            <img src="{{ URL::asset('build/images/users/avatar-3.jpg') }}" alt=""
                                                 class="img-fluid rounded-circle">
-                                            <a href="apps-mailbox"
+                                            <a href="#"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
                                                     <i class="ri-mail-fill align-bottom"></i>
@@ -1628,16 +1540,22 @@
                                             </a>
                                         </div>
                                         <!-- end card body -->
-                                        <h5 class="mb-1"><a href="pages-profile" class="text-body">Jack Gough</a></h5>
-                                        <p class="text-muted mb-0 ff-secondary">React Js Developer</p>
+                                        <h5 class="mb-1"><a href="#" class="text-body">Saturnino JR E Cuyag</a></h5>
+                                        <p class="text-muted mb-0 ff-secondary">System Analyst</p>
                                     </div>
                                 </div>
                                 <!-- end card -->
                             </div>
-                            <!-- end col -->
+                        
                         </div>
                         <!-- end row -->
-                       
+                    
+                         
+
+                        
+                        </div>
+                        <!-- end row -->
+
                         <!-- end row -->
                     </div>
                     <!-- end container -->
@@ -1666,11 +1584,11 @@
                                 <div>
                                     <div class="mt-4">
                                         <h5 class="fs-13 text-muted text-uppercase">Office Address 1:</h5>
-                                        <div class="ff-secondary fw-semibold">4461 Cedar Street Moro, <br />AR 72368</div>
+                                        <div class="ff-secondary fw-semibold">Kidapawan City, <br />North Cotabato</div>
                                     </div>
                                     <div class="mt-4">
                                         <h5 class="fs-13 text-muted text-uppercase">Office Address 2:</h5>
-                                        <div class="ff-secondary fw-semibold">2467 Swick Hill Street <br />New Orleans, LA
+                                        <div class="ff-secondary fw-semibold">Bansalan, <br />Davao del Sur
                                         </div>
                                     </div>
                                     <div class="mt-4">
