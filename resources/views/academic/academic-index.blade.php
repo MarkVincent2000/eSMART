@@ -773,7 +773,9 @@
 @endsection
 @section('script')
 
-    <script src="{{URL::asset('build/js/pages/academic-timeline.js')}}"></script>
+    <script>
+        {!! file_get_contents(resource_path('views/academic/js/academic-timeline.js')) !!}
+    </script>
 
     <!-- App js -->
     <script src="{{URL::asset('build/js/app.js')}}"></script>

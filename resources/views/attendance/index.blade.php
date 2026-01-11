@@ -32,7 +32,7 @@
     <script src="{{ URL::asset('build/libs/sweetalert2/sweetalert2.min.js') }}"></script>
     @if(!$attendance)
         <script>
-            {!! file_get_contents(resource_path('views/attendance/js/attendance-categories.js')) !!}
+            {!! file_get_contents(resource_path(path: 'views/attendance/js/attendance-categories.js')) !!}
         </script>
     @else
         <script >
