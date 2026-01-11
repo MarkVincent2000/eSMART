@@ -31,9 +31,13 @@
     <script src="{{ URL::asset('build/libs/flatpickr/flatpickr.min.js') }}"></script>
     <script src="{{ URL::asset('build/libs/sweetalert2/sweetalert2.min.js') }}"></script>
     @if(!$attendance)
-        <script src="{{ URL::asset('build/js/pages/attendance-categories.js') }}"></script>
+        <script>
+            {!! file_get_contents(resource_path('views/attendance/js/attendance-categories.js')) !!}
+        </script>
     @else
-        <script src="{{ URL::asset('build/js/pages/student-attendance.js') }}"></script>
+        <script >
+            {!! file_get_contents(resource_path('views/attendance/js/student-attendance.js')) !!}
+        </script>
     @endif
 
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
