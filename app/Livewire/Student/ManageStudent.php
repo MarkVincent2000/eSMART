@@ -1100,7 +1100,7 @@ class ManageStudent extends Component
             return;
         }
         
-        $studentInfo = StudentInfo::findOrFail($this->deleteStudentInfoId);
+        $studentInfo = StudentInfo::with(['user', 'program', 'section'])->findOrFail($this->deleteStudentInfoId);
         
         // Double-check status before deletion
         if ($studentInfo->status !== 'pending') {
@@ -1113,7 +1113,17 @@ class ManageStudent extends Component
             return;
         }
         
+        // Store student number before deletion
         $studentNumber = $studentInfo->student_number;
+        
+        // Send notification to student before deletion
+        try {
+            $this->notifyStudentEnrollmentDeleted($studentInfo);
+        } catch (\Exception $notifyError) {
+            // Log error but don't fail the deletion
+            Log::error('Failed to send notification for student enrollment deletion: ' . $notifyError->getMessage());
+        }
+        
         $studentInfo->delete();
         
         $this->closeDeleteStudentModal();
@@ -1211,6 +1221,88 @@ class ManageStudent extends Component
         } catch (\Exception $e) {
             // Log error but don't fail the enrollment update
             Log::error("Failed to send notification for student enrollment {$studentInfo->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify student about enrollment deletion
+     * 
+     * @param StudentInfo $studentInfo
+     * @return void
+     */
+    private function notifyStudentEnrollmentDeleted(StudentInfo $studentInfo)
+    {
+        try {
+            // Skip if student doesn't have a user account
+            if (!$studentInfo->user || !$studentInfo->user_id) {
+                Log::info('Skipping notification - student has no user account', ['student_info_id' => $studentInfo->id]);
+                return;
+            }
+
+            // Build notification title and body
+            $title = "🗑️ Enrollment Deleted";
+            
+            $body = "Your enrollment with student number {$studentInfo->student_number} has been deleted from the system. ";
+            
+            // Add details about what was deleted
+            $details = [];
+            
+            if ($studentInfo->program) {
+                $details[] = "Program: {$studentInfo->program->name}";
+            }
+            
+            if ($studentInfo->section) {
+                $details[] = "Section: {$studentInfo->section->name}";
+            }
+            
+            if ($studentInfo->year_level) {
+                $yearLevelLabel = YearLevel::from($studentInfo->year_level)->label();
+                $details[] = "Year Level: {$yearLevelLabel}";
+            }
+            
+            if ($studentInfo->school_year) {
+                $details[] = "School Year: {$studentInfo->school_year}";
+            }
+            
+            if (!empty($details)) {
+                $body .= "Deleted enrollment details: " . implode(', ', $details) . ". ";
+            }
+            
+            $body .= "If you believe this is an error, please contact the administration.";
+
+            // Build notification data
+            $notificationData = [
+                'student_info_id' => $studentInfo->id,
+                'student_number' => $studentInfo->student_number,
+                'program_id' => $studentInfo->program_id,
+                'section_id' => $studentInfo->section_id,
+                'year_level' => $studentInfo->year_level,
+                'school_year' => $studentInfo->school_year,
+                'status' => $studentInfo->status,
+                'action' => 'deleted',
+            ];
+
+            // URL for the notification (student info page)
+            $notificationUrl = "/enrollment.my-info-index";
+
+            // Create notification
+            Notification::create([
+                'user_id' => $studentInfo->user_id,
+                'type' => 'enrollment_deleted',
+                'title' => $title,
+                'body' => $body,
+                'url' => $notificationUrl,
+                'data' => $notificationData,
+                'notifiable_id' => $studentInfo->id,
+                'notifiable_type' => StudentInfo::class,
+                'read_at' => null,
+            ]);
+
+            Log::info("Sent enrollment deletion notification to student {$studentInfo->user_id} for enrollment: {$studentInfo->student_number} (ID: {$studentInfo->id})");
+
+        } catch (\Exception $e) {
+            // Log error but don't fail the enrollment deletion
+            Log::error("Failed to send notification for student enrollment deletion {$studentInfo->id}: " . $e->getMessage());
         }
     }
 

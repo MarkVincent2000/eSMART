@@ -1,5 +1,5 @@
-<x-modal id="delete-student-modal" wire:model="showDeleteStudentModal" title="Delete Student Enrollment" size="md" :centered="true"
-    :show-footer="true">
+<x-modal id="delete-student-modal" wire:model="showDeleteStudentModal" title="Delete Student Enrollment" size="md"
+    :centered="true" :show-footer="true">
 
     <div class="text-center">
         <div class="mb-4">
@@ -7,7 +7,8 @@
         </div>
         <h5 class="mb-3">Are you sure?</h5>
         <p class="text-muted">
-            You are about to delete the student enrollment with student number <strong>{{ $deleteStudentNumber ?? 'N/A' }}</strong>.
+            You are about to delete the student enrollment with student number
+            <strong>{{ $deleteStudentNumber ?? 'N/A' }}</strong>.
             This action cannot be undone.
         </p>
         <div class="alert alert-warning mt-3">
@@ -24,4 +25,3 @@
         </x-button>
     </x-slot:footer>
 </x-modal>
-
