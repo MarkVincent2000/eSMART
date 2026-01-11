@@ -5,6 +5,7 @@ namespace App\Livewire\User;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\UserPersonalDetails;
+use App\Models\Notification;
 use App\Enums\Sex;
 use App\Enums\Religion;
 use App\Enums\GuardianRelationship;
@@ -12,6 +13,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class UserManagement extends Component
 {
@@ -25,6 +28,7 @@ class UserManagement extends Component
     public $showInviteModal = false;
     public $showDeleteModal = false;
     public $showDeleteMultipleModal = false;
+    public $showUpdateRolesModal = false;
     
     // Edit mode
     public $userId = null;
@@ -43,6 +47,7 @@ class UserManagement extends Component
     public $password = '';
     public $active_status = true;
     public $selectedRoles = [];
+    public $bulkUpdateRoles = []; // Roles selected for bulk update
     
     // Personal Details fields
     public $sex = '';
@@ -64,6 +69,7 @@ class UserManagement extends Component
     public $dateFrom = null;
     public $dateTo = null;
     public $status = 'all'; // 'all', 'active', 'inactive'
+    public $roleFilter = 'all'; // 'all' or specific role name
 
 
     public function mount()
@@ -74,9 +80,19 @@ class UserManagement extends Component
     #[Computed]
     public function users()
     {
+        $currentUser = Auth::user();
+        $canAssignSuperAdmin = $currentUser && $currentUser->can('can-assign-super-admin-role');
+        
         $query = User::query()
             ->select('id', 'name', 'first_name', 'last_name', 'middle_name', 'name_extension', 'email', 'active_status', 'created_at', 'photo_path', 'avatar')
             ->with('roles'); // Eager load roles to avoid N+1 queries
+        
+        // Hide users with 'super-admin' role if current user doesn't have permission
+        if (!$canAssignSuperAdmin) {
+            $query->whereDoesntHave('roles', function($q) {
+                $q->where('name', 'super-admin');
+            });
+        }
         
         // Search filter - search in name fields and email
         if (!empty($this->search)) {
@@ -102,6 +118,13 @@ class UserManagement extends Component
             $query->whereDate('created_at', '<=', $this->dateTo);
         }
         
+        // Role filter
+        if ($this->roleFilter !== 'all') {
+            $query->whereHas('roles', function($q) {
+                $q->where('name', $this->roleFilter);
+            });
+        }
+        
         return $query->latest()->paginate(10);
     }
     
@@ -110,6 +133,7 @@ class UserManagement extends Component
     {
         return !empty($this->search) 
             || $this->status !== 'all' 
+            || $this->roleFilter !== 'all'
             || !is_null($this->dateFrom) 
             || !is_null($this->dateTo);
     }
@@ -117,19 +141,55 @@ class UserManagement extends Component
     #[Computed]
     public function totalUsers()
     {
-        return User::count();
+        $currentUser = Auth::user();
+        $canAssignSuperAdmin = $currentUser && $currentUser->can('can-assign-super-admin-role');
+        
+        $query = User::query();
+        
+        // Exclude super-admin users if current user doesn't have permission
+        if (!$canAssignSuperAdmin) {
+            $query->whereDoesntHave('roles', function($q) {
+                $q->where('name', 'super-admin');
+            });
+        }
+        
+        return $query->count();
     }
     
     #[Computed]
     public function totalActiveUsers()
     {
-        return User::where('active_status', true)->count();
+        $currentUser = Auth::user();
+        $canAssignSuperAdmin = $currentUser && $currentUser->can('can-assign-super-admin-role');
+        
+        $query = User::where('active_status', true);
+        
+        // Exclude super-admin users if current user doesn't have permission
+        if (!$canAssignSuperAdmin) {
+            $query->whereDoesntHave('roles', function($q) {
+                $q->where('name', 'super-admin');
+            });
+        }
+        
+        return $query->count();
     }
     
     #[Computed]
     public function totalInactiveUsers()
     {
-        return User::where('active_status', false)->count();
+        $currentUser = Auth::user();
+        $canAssignSuperAdmin = $currentUser && $currentUser->can('can-assign-super-admin-role');
+        
+        $query = User::where('active_status', false);
+        
+        // Exclude super-admin users if current user doesn't have permission
+        if (!$canAssignSuperAdmin) {
+            $query->whereDoesntHave('roles', function($q) {
+                $q->where('name', 'super-admin');
+            });
+        }
+        
+        return $query->count();
     }
     
     #[Computed]
@@ -164,6 +224,12 @@ class UserManagement extends Component
         $this->dateFrom = null;
         $this->dateTo = null;
         $this->status = 'all';
+        $this->roleFilter = 'all';
+        $this->resetPage();
+    }
+    
+    public function updatedRoleFilter()
+    {
         $this->resetPage();
     }
 
@@ -198,8 +264,18 @@ class UserManagement extends Component
         $this->selectAll = true;
         $this->selectPage = true;
         
+        $currentUser = Auth::user();
+        $canAssignSuperAdmin = $currentUser && $currentUser->can('can-assign-super-admin-role');
+        
         // Apply same filters as users() method
         $query = User::query();
+        
+        // Hide users with 'super-admin' role if current user doesn't have permission
+        if (!$canAssignSuperAdmin) {
+            $query->whereDoesntHave('roles', function($q) {
+                $q->where('name', 'super-admin');
+            });
+        }
         
         if (!empty($this->search)) {
             $query->where(function($q) {
@@ -220,6 +296,13 @@ class UserManagement extends Component
         }
         if ($this->dateTo) {
             $query->whereDate('created_at', '<=', $this->dateTo);
+        }
+        
+        // Role filter
+        if ($this->roleFilter !== 'all') {
+            $query->whereHas('roles', function($q) {
+                $q->where('name', $this->roleFilter);
+            });
         }
         
         $this->selected = $query->pluck('id')
@@ -386,6 +469,9 @@ class UserManagement extends Component
             $userData['password'] = bcrypt($this->password);
         }
 
+        // Initialize roles variable
+        $roles = collect();
+        
         if ($isEditing) {
             $user = User::findOrFail($this->userId);
             $user->update($userData);
@@ -409,6 +495,17 @@ class UserManagement extends Component
             $message = 'User invited successfully!';
             // Reset pagination to show the new user
             $this->resetPage();
+        }
+        
+        // Send notifications to users who have the assigned roles
+        if (!empty($this->selectedRoles)) {
+            try {
+                $this->notifyUsersWithRoles($user, $this->selectedRoles, $isEditing);
+            } catch (\Exception $e) {
+                // Log error but don't fail the user creation/update
+                Log::error('Failed to send role assignment notifications: ' . $e->getMessage());
+                Log::error('Stack trace: ' . $e->getTraceAsString());
+            }
         }
         
         // Save or update personal details
@@ -539,15 +636,170 @@ class UserManagement extends Component
         $this->showDeleteMultipleModal = false;
     }
 
+    public function openUpdateRolesModal()
+    {
+        if (empty($this->selected)) {
+            $this->dispatch('show-toast', [
+                'message' => 'Please select at least one user to update roles.',
+                'type' => 'warning'
+            ]);
+            return;
+        }
+        
+        $this->bulkUpdateRoles = [];
+        $this->showUpdateRolesModal = true;
+    }
+
+    public function closeUpdateRolesModal()
+    {
+        $this->showUpdateRolesModal = false;
+        $this->bulkUpdateRoles = [];
+    }
+
+    public function updateBulkRoles()
+    {
+        if (empty($this->selected)) {
+            $this->dispatch('show-toast', [
+                'message' => 'Please select at least one user to update roles.',
+                'type' => 'warning'
+            ]);
+            return;
+        }
+
+        // Validate that at least one role is selected
+        if (empty($this->bulkUpdateRoles)) {
+            $this->dispatch('show-toast', [
+                'message' => 'Please select at least one role to assign.',
+                'type' => 'warning'
+            ]);
+            return;
+        }
+
+        // Check if user is trying to assign super-admin role without permission
+        $currentUser = Auth::user();
+        $canAssignSuperAdmin = $currentUser && $currentUser->can('can-assign-super-admin-role');
+        
+        if (in_array('super-admin', $this->bulkUpdateRoles) && !$canAssignSuperAdmin) {
+            $this->dispatch('show-toast', [
+                'message' => 'You do not have permission to assign the super-admin role.',
+                'type' => 'error'
+            ]);
+            return;
+        }
+
+        // Validate roles exist
+        $validRoles = Role::whereIn('name', $this->bulkUpdateRoles)
+            ->where('guard_name', 'web')
+            ->get();
+
+        if ($validRoles->isEmpty()) {
+            $this->dispatch('show-toast', [
+                'message' => 'Invalid roles selected.',
+                'type' => 'error'
+            ]);
+            return;
+        }
+
+        // Get selected user IDs
+        $selectedUserIds = $this->selected;
+        $users = User::whereIn('id', $selectedUserIds)->get();
+
+        if ($users->isEmpty()) {
+            $this->dispatch('show-toast', [
+                'message' => 'No users found to update.',
+                'type' => 'error'
+            ]);
+            return;
+        }
+
+        $updatedCount = 0;
+        $roleNames = $this->bulkUpdateRoles;
+
+        // Update roles for each selected user
+        foreach ($users as $user) {
+            try {
+                // Sync roles (replace all existing roles with new ones)
+                $user->syncRoles($validRoles);
+                $updatedCount++;
+
+                // Send notifications for role assignment
+                try {
+                    $this->notifyUsersWithRoles($user, $roleNames, true); // true = isEditing
+                } catch (\Exception $e) {
+                    // Log but don't fail the update
+                    Log::error('Failed to send notifications for user ' . $user->id . ': ' . $e->getMessage());
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to update roles for user ' . $user->id . ': ' . $e->getMessage());
+            }
+        }
+
+        // Clear selection
+        $this->selected = [];
+        $this->selectPage = false;
+        $this->selectAll = false;
+        $this->bulkUpdateRoles = [];
+
+        $this->closeUpdateRolesModal();
+
+        // Dispatch success message
+        $this->dispatch('show-toast', [
+            'message' => "Successfully updated roles for {$updatedCount} " . ($updatedCount === 1 ? 'user' : 'users') . '!',
+            'type' => 'success'
+        ]);
+    }
+
     #[Computed]
     public function roleOptions()
     {
-        return $this->roles->map(function($role) {
-            return [
-                'value' => $role->name,
-                'label' => ucfirst(str_replace('-', ' ', $role->name))
-            ];
-        })->toArray();
+        $currentUser = Auth::user();
+        $canAssignSuperAdmin = $currentUser && $currentUser->can('can-assign-super-admin-role');
+        
+        return $this->roles
+            ->filter(function($role) use ($canAssignSuperAdmin) {
+                // If role is 'super-admin', only show it if user has permission
+                if ($role->name === 'super-admin') {
+                    return $canAssignSuperAdmin;
+                }
+                // Show all other roles
+                return true;
+            })
+            ->map(function($role) {
+                return [
+                    'value' => $role->name,
+                    'label' => ucfirst(str_replace('-', ' ', $role->name))
+                ];
+            })
+            ->values()
+            ->toArray();
+    }
+    
+    #[Computed]
+    public function roleFilterOptions()
+    {
+        $currentUser = Auth::user();
+        $canAssignSuperAdmin = $currentUser && $currentUser->can('can-assign-super-admin-role');
+        
+        $options = [['value' => 'all', 'label' => 'All Roles']];
+        
+        $roleOptions = $this->roles
+            ->filter(function($role) use ($canAssignSuperAdmin) {
+                // If role is 'super-admin', only show it if user has permission
+                if ($role->name === 'super-admin') {
+                    return $canAssignSuperAdmin;
+                }
+                // Show all other roles
+                return true;
+            })
+            ->map(function($role) {
+                return [
+                    'value' => $role->name,
+                    'label' => ucfirst(str_replace('-', ' ', $role->name))
+                ];
+            })
+            ->toArray();
+        
+        return array_merge($options, $roleOptions);
     }
     
     /**
@@ -574,12 +826,140 @@ class UserManagement extends Component
         return GuardianRelationship::cases();
     }
 
+    /**
+     * Notify users who have the roles that were assigned to the user
+     */
+    protected function notifyUsersWithRoles(User $assignedUser, array $assignedRoleNames, bool $isEditing = false)
+    {
+        try {
+            Log::info('Starting notification process for user: ' . $assignedUser->id . ' with roles: ' . implode(', ', $assignedRoleNames));
+            
+            // Get role IDs from role names
+            $roleIds = Role::whereIn('name', $assignedRoleNames)
+                ->where('guard_name', 'web')
+                ->pluck('id')
+                ->toArray();
+            
+            Log::info('Found role IDs: ' . implode(', ', $roleIds));
+            
+            if (empty($roleIds)) {
+                Log::warning('No role IDs found for role names: ' . implode(', ', $assignedRoleNames));
+                return;
+            }
+            
+            // Format role names for display
+            $roleLabels = array_map(function($roleName) {
+                return ucfirst(str_replace('-', ' ', $roleName));
+            }, $assignedRoleNames);
+            $rolesText = count($roleLabels) === 1 
+                ? $roleLabels[0] 
+                : implode(', ', array_slice($roleLabels, 0, -1)) . ' and ' . end($roleLabels);
+            
+            // Prepare notification data
+            $action = $isEditing ? 'updated' : 'assigned';
+            $notificationData = [
+                'assigned_user_id' => $assignedUser->id,
+                'assigned_user_name' => $assignedUser->name,
+                'assigned_user_email' => $assignedUser->email,
+                'roles' => $assignedRoleNames,
+                'action' => $action,
+            ];
+            
+            $notificationCount = 0;
+            
+            // 1. Notify the user who was assigned the roles (about their new roles)
+            if ($assignedUser->active_status) {
+                try {
+                    $userTitle = $isEditing 
+                        ? 'Your Roles Have Been Updated' 
+                        : 'You Have Been Assigned New Roles';
+                    
+                    $userBody = $isEditing
+                        ? "Your account has been updated with the following role(s): {$rolesText}"
+                        : "You have been assigned the following role(s): {$rolesText}";
+                    
+                    $notification = Notification::create([
+                        'user_id' => $assignedUser->id,
+                        'type' => 'role_assigned',
+                        'title' => $userTitle,
+                        'body' => $userBody,
+                        'url' => '#',
+                        'data' => $notificationData,
+                        'notifiable_id' => $assignedUser->id,
+                        'notifiable_type' => User::class,
+                        'read_at' => null,
+                    ]);
+                    $notificationCount++;
+                    Log::info("Created notification ID: {$notification->id} for assigned user: {$assignedUser->id} ({$assignedUser->name})");
+                } catch (\Exception $e) {
+                    Log::error("Failed to create notification for assigned user {$assignedUser->id}: " . $e->getMessage());
+                }
+            }
+            
+            // 2. Notify other users who have these roles (about the new member)
+            $otherUsersToNotify = collect();
+            
+            foreach ($assignedRoleNames as $roleName) {
+                $usersWithRole = User::role($roleName)
+                    ->where('id', '!=', $assignedUser->id)
+                    ->where('active_status', true)
+                    ->get();
+                $otherUsersToNotify = $otherUsersToNotify->merge($usersWithRole);
+            }
+            
+            // Remove duplicates by user ID
+            $otherUsersToNotify = $otherUsersToNotify->unique('id')->values();
+            
+            Log::info('Found ' . $otherUsersToNotify->count() . ' other users with the assigned roles to notify');
+            
+            if ($otherUsersToNotify->isNotEmpty()) {
+                $otherUsersTitle = $isEditing 
+                    ? 'User Roles Updated' 
+                    : 'New User Assigned Roles';
+                
+                $otherUsersBody = $isEditing
+                    ? "{$assignedUser->name} has been updated with the following role(s): {$rolesText}"
+                    : "{$assignedUser->name} has been assigned the following role(s): {$rolesText}";
+                
+                foreach ($otherUsersToNotify as $notifiedUser) {
+                    try {
+                        $notification = Notification::create([
+                            'user_id' => $notifiedUser->id,
+                            'type' => 'role_assigned',
+                            'title' => $otherUsersTitle,
+                            'body' => $otherUsersBody,
+                            'url' => '#',
+                            'data' => $notificationData,
+                            'notifiable_id' => $assignedUser->id,
+                            'notifiable_type' => User::class,
+                            'read_at' => null,
+                        ]);
+                        $notificationCount++;
+                        Log::info("Created notification ID: {$notification->id} for user: {$notifiedUser->id} ({$notifiedUser->name})");
+                    } catch (\Exception $e) {
+                        // Log error but continue with other users
+                        Log::error("Failed to create notification for user {$notifiedUser->id}: " . $e->getMessage());
+                        Log::error("Exception trace: " . $e->getTraceAsString());
+                    }
+                }
+            }
+            
+            // Log notification count for debugging
+            Log::info("Successfully created {$notificationCount} role assignment notifications for user: {$assignedUser->name} (ID: {$assignedUser->id})");
+            
+        } catch (\Exception $e) {
+            // Log error but don't fail the user creation/update
+            Log::error("Failed to send role assignment notifications: " . $e->getMessage());
+        }
+    }
+
     public function render()
     {
         return view('livewire.user.user-management', [
             'users' => $this->users,
             'roles' => $this->roles,
             'roleOptions' => $this->roleOptions,
+            'roleFilterOptions' => $this->roleFilterOptions,
         ]);
     }
 }

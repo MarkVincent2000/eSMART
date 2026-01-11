@@ -14,6 +14,7 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissionMatrix = [
+            'can-assign-super-admin-role' => ['super-admin'],
             'view-user-management' => ['super-admin','admin'],
             'view-role-management' => ['super-admin'],
             'view-permission-management' => ['super-admin'],

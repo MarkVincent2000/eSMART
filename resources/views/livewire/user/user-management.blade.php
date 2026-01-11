@@ -129,20 +129,24 @@
                 <div class="card-header border-0">
                     <div class="d-flex align-items-center">
                         <h5 class="card-title mb-0 flex-grow-1">Users</h5>
-                        <div class="flex-shrink-0">
-                            <div class="d-flex flex-wrap gap-2">
-                                <x-button color="primary" icon="ri-add-line" icon-position="left"
-                                    wire:click="openInviteModal" wire-target="openInviteModal">
-                                    Invite User
-                                </x-button>
-                                @if (!empty($selected))
-                                    <x-button color="danger" icon="ri-delete-bin-line" icon-position="left"
-                                        wire:click="deleteMultiple" wire-target="deleteMultiple">
-                                        Delete ({{ count($selected) }})
+                            <div class="flex-shrink-0">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <x-button color="primary" icon="ri-add-line" icon-position="left"
+                                        wire:click="openInviteModal" wire-target="openInviteModal">
+                                        Invite User
                                     </x-button>
-                                @endif
+                                    @if (!empty($selected))
+                                        <x-button color="info" icon="ri-user-settings-line" icon-position="left"
+                                            wire:click="openUpdateRolesModal" wire-target="openUpdateRolesModal">
+                                            Update Roles ({{ count($selected) }})
+                                        </x-button>
+                                        <x-button color="danger" icon="ri-delete-bin-line" icon-position="left"
+                                            wire:click="deleteMultiple" wire-target="deleteMultiple">
+                                            Delete ({{ count($selected) }})
+                                        </x-button>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
                     </div>
                 </div>
 
@@ -159,7 +163,7 @@
                             </div>
                             <!--end col-->
 
-                            <div class="col-xxl-3 ms-auto col-sm-4">
+                            <div class="col-xxl-2 ms-auto col-sm-3">
                                 <input type="text" class="form-control bg-light border-light" id="user-date-filter"
                                     placeholder="Select date range" x-data="{
                                         init() {
@@ -187,7 +191,18 @@
                             </div>
                             <!--end col-->
 
-                            <div class="col-xxl-2 col-sm-4">
+                            <div class="col-xxl-2 col-sm-3">
+                                <div class="input-light">
+                                    <select class="form-control" wire:model.live="roleFilter" id="userRoleFilter">
+                                        @foreach($roleFilterOptions as $option)
+                                            <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <!--end col-->
+
+                            <div class="col-xxl-2 col-sm-3">
                                 <div class="input-light">
                                     <select class="form-control" wire:model.live="status" id="userStatusFilter">
                                         <option value="all">All Status</option>
@@ -197,7 +212,7 @@
                                 </div>
                             </div>
                             <!--end col-->
-                            <div class="col-xxl-2 col-sm-4">
+                            <div class="col-xxl-2 col-sm-3">
                                 <x-button color="primary" icon="ri-equalizer-fill" icon-position="left"
                                     wire:click="resetFilters" wire-target="resetFilters">
                                     Reset
@@ -371,6 +386,9 @@
 
     <!-- Delete Multiple Users Modal -->
     @include('livewire.user.modals.delete-multiple')
+
+    <!-- Update Roles Modal -->
+    @include('livewire.user.modals.update-roles-modal')
 
     <!-- Toast Notification Component (Listens for 'show-toast' browser events) -->
 
