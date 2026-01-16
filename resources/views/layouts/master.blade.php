@@ -156,7 +156,7 @@
         /* Modal Bounce Animation */
         .card.modal-bounce {
             /* Ensure the animation is clean and not affected by x-cloak */
-            animation: modalBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+            animation: modalBounce 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
             animation-fill-mode: both !important;
             transform-origin: center center !important;
         }
@@ -164,28 +164,21 @@
         /* Ensure animation works even when element is visible */
         .custom-modal-overlay:not([x-cloak]) .card.modal-bounce,
         .custom-modal-overlay[x-show="true"] .card.modal-bounce {
-            animation: modalBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
+            animation: modalBounce 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
         }
 
         @keyframes modalBounce {
-
-            0%,
-            100% {
+            0% {
                 transform: scale(1);
             }
 
-            20% {
-                transform: scale(0.96);
-                /* Slightly smaller */
-            }
-
             50% {
-                transform: scale(1.03);
-                /* Slightly larger for the 'bounce' effect */
+                transform: scale(1.02);
+                /* Subtle scale for smooth effect */
             }
 
-            80% {
-                transform: scale(0.99);
+            100% {
+                transform: scale(1);
             }
         }
     </style>

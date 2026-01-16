@@ -9,7 +9,7 @@
     'showHeader' => true,
     'showFooter' => false,
     'showCloseButton' => true,
-    'closeOnBackdrop' => true,
+    'closeOnBackdrop' => false,
     'maxWidth' => null,
     'zIndex' => 1055,
     'overflow' => 'hidden',
@@ -60,16 +60,16 @@
         closeOnBackdrop: @js($closeOnBackdrop),
         bounce: false,
         triggerBounce() {
-            // Reset bounce to false first to allow re-triggering
-            this.bounce = false;
-            // Use $nextTick to ensure the DOM updates before setting bounce to true
-            this.$nextTick(() => {
-                this.bounce = true;
-                // Reset after animation completes (0.6s)
-                setTimeout(() => {
-                    this.bounce = false;
-                }, 600);
-            });
+            // Prevent re-triggering if already bouncing
+            if (this.bounce) return;
+            
+            // Set bounce to true
+            this.bounce = true;
+            
+            // Reset after animation completes (0.3s)
+            setTimeout(() => {
+                this.bounce = false;
+            }, 300);
         }
     }"
     x-on:close.stop="show = false"
