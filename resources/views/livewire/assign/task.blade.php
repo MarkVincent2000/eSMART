@@ -74,7 +74,7 @@
                                     </div>
                                 @else
                                     <div class="flex-shrink-0">
-                                        <a href="{{ url('/assingments?id=' . $classroom->id) }}"
+                                        <a href="{{ url('/assingments.index?id=' . $classroom->id) }}"
                                             class="btn btn-soft-primary btn-sm">
                                             <i class="ri-eye-fill align-middle me-1"></i> View
                                         </a>

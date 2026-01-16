@@ -92,12 +92,12 @@
         x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); cursor: pointer;"
+        style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); cursor: pointer; pointer-events: auto;"
         x-on:click="closeOnBackdrop ? (show = false) : triggerBounce()"
     ></div>
 
     <!-- Modal Dialog Container -->
-    <div style="position: relative; z-index: 1; display: flex; align-items: {{ $verticalAlign === 'top' ? 'flex-start' : 'center' }}; justify-content: center; min-height: 100vh; padding: 1rem; {{ $verticalAlign === 'top' ? 'padding-top: 2rem;' : '' }} overflow-y: auto;">
+    <div style="position: relative; z-index: 1; display: flex; align-items: {{ $verticalAlign === 'top' ? 'flex-start' : 'center' }}; justify-content: center; min-height: 100vh; padding: 1rem; {{ $verticalAlign === 'top' ? 'padding-top: 2rem;' : '' }} overflow-y: auto; pointer-events: none;">
         <div
             x-show="show"
             x-trap.noscroll="show"
@@ -107,17 +107,17 @@
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 transform -translate-y-12 scale-95"
-            style="width: 100%; {{ $normalizedSize === 'sm' ? 'max-width: 24rem;' : ($normalizedSize === 'lg' ? 'max-width: 32rem;' : ($normalizedSize === 'xl' ? 'max-width: 60rem;' : ($normalizedSize === 'fullscreen' ? 'max-width: 100%;' : 'max-width: 28rem;'))) }} margin: 0 auto; {{ $maxWidth ? 'max-width: ' . $maxWidth . ';' : '' }}"
+            style="width: 100%; {{ $normalizedSize === 'sm' ? 'max-width: 24rem;' : ($normalizedSize === 'lg' ? 'max-width: 32rem;' : ($normalizedSize === 'xl' ? 'max-width: 60rem;' : ($normalizedSize === 'fullscreen' ? 'max-width: 100%;' : 'max-width: 28rem;'))) }} margin: 0 auto; {{ $maxWidth ? 'max-width: ' . $maxWidth . ';' : '' }} pointer-events: auto;"
         >
         <div 
             x-bind:class="{ 'modal-bounce': bounce }"
             class="card mb-0 shadow-lg overflow-{{ $overflow }} modal-card-dark" 
-            style="border-radius: 0.5rem; will-change: transform;"
+            style="border-radius: 0.5rem; will-change: transform; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;"
             x-on:click.stop
         >
                     <!-- Modal Header -->
                 @if($showHeader)
-                <div class="card-header border-bottom d-flex align-items-center justify-content-between">
+                <div class="card-header border-bottom d-flex align-items-center justify-content-between" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
                     @if(isset($header))
                         {{ $header }}
                     @else
@@ -138,13 +138,13 @@
                 @endif
 
                 <!-- Modal Body -->
-                <div class="card-body overflow-{{ $overflow }}">
+                <div class="card-body overflow-{{ $overflow }}" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
                     {{ $slot }}
                 </div>
 
                 <!-- Modal Footer -->
                 @if($showFooter || isset($footer))
-                <div class="card-footer border-top d-flex justify-content-end gap-2">
+                <div class="card-footer border-top d-flex justify-content-end gap-2" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
                     @if(isset($footer))
                         {{ $footer }}
                     @else

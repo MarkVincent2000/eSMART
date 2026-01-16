@@ -14,6 +14,146 @@ use Carbon\Carbon;
 
 class Dashboard extends Component
 {
+    public $selectedPeriod = '1year'; // '1month', '6months', '1year'
+    public $selectedYear = null;
+
+    public function mount()
+    {
+        // Set default year to current year
+        $this->selectedYear = Carbon::now()->year;
+    }
+
+    public function setPeriod($period)
+    {
+        $this->selectedPeriod = $period;
+    }
+
+    public function updatedSelectedYear()
+    {
+        // Reset period when year changes
+    }
+
+    public function getAvailableYears()
+    {
+        $years = StudentInfo::whereNotNull('enrolled_at')
+            ->selectRaw('YEAR(enrolled_at) as year')
+            ->distinct()
+            ->orderByDesc('year')
+            ->pluck('year')
+            ->toArray();
+        
+        // If no years found, return current year
+        if (empty($years)) {
+            return [Carbon::now()->year];
+        }
+        
+        return $years;
+    }
+
+    public function getEnrollmentTrends()
+    {
+        $enrollmentTrends = [];
+        $yearToUse = $this->selectedYear ? (int) $this->selectedYear : Carbon::now()->year;
+        $currentYear = Carbon::now()->year;
+        $currentMonth = Carbon::now()->month;
+        
+        // Handle 1 year period - ALWAYS generate all 12 months
+        if ($this->selectedPeriod === '1year') {
+            for ($month = 1; $month <= 12; $month++) {
+                $monthStart = Carbon::create($yearToUse, $month, 1)->startOfMonth();
+                $monthEnd = Carbon::create($yearToUse, $month, 1)->endOfMonth();
+                
+                $enrolled = StudentInfo::whereBetween('enrolled_at', [$monthStart, $monthEnd])
+                    ->where('status', 'enrolled')->count();
+                $pending = StudentInfo::whereBetween('enrolled_at', [$monthStart, $monthEnd])
+                    ->where('status', 'pending')->count();
+                $inactive = StudentInfo::whereBetween('enrolled_at', [$monthStart, $monthEnd])
+                    ->where('status', 'inactive')->count();
+                
+                $enrollmentTrends[] = [
+                    'month' => Carbon::create($yearToUse, $month, 1)->format('M Y'),
+                    'enrolled' => $enrolled,
+                    'pending' => $pending,
+                    'inactive' => $inactive,
+                ];
+            }
+            return $enrollmentTrends;
+        }
+        
+        // Handle 1 month period
+        if ($this->selectedPeriod === '1month') {
+            if ($yearToUse == $currentYear) {
+                $startMonth = Carbon::create($yearToUse, $currentMonth, 1);
+            } else {
+                $startMonth = Carbon::create($yearToUse, 12, 1);
+            }
+            
+            $monthStart = $startMonth->copy()->startOfMonth();
+            $monthEnd = $startMonth->copy()->endOfMonth();
+            
+            $enrolled = StudentInfo::whereBetween('enrolled_at', [$monthStart, $monthEnd])
+                ->where('status', 'enrolled')->count();
+            $pending = StudentInfo::whereBetween('enrolled_at', [$monthStart, $monthEnd])
+                ->where('status', 'pending')->count();
+            $inactive = StudentInfo::whereBetween('enrolled_at', [$monthStart, $monthEnd])
+                ->where('status', 'inactive')->count();
+            
+            $enrollmentTrends[] = [
+                'month' => $startMonth->format('M Y'),
+                'enrolled' => $enrolled,
+                'pending' => $pending,
+                'inactive' => $inactive,
+            ];
+            
+            return $enrollmentTrends;
+        }
+        
+        // Handle 6 months period (default)
+        if ($yearToUse == $currentYear) {
+            $startMonth = Carbon::create($yearToUse, $currentMonth, 1)->subMonths(5);
+        } else {
+            $startMonth = Carbon::create($yearToUse, 7, 1);
+        }
+        
+        $current = $startMonth->copy()->startOfMonth();
+        for ($i = 0; $i < 6; $i++) {
+            $monthStart = $current->copy()->startOfMonth();
+            $monthEnd = $current->copy()->endOfMonth();
+            
+            $enrolled = StudentInfo::whereBetween('enrolled_at', [$monthStart, $monthEnd])
+                ->where('status', 'enrolled')->count();
+            $pending = StudentInfo::whereBetween('enrolled_at', [$monthStart, $monthEnd])
+                ->where('status', 'pending')->count();
+            $inactive = StudentInfo::whereBetween('enrolled_at', [$monthStart, $monthEnd])
+                ->where('status', 'inactive')->count();
+            
+            $enrollmentTrends[] = [
+                'month' => $current->format('M Y'),
+                'enrolled' => $enrolled,
+                'pending' => $pending,
+                'inactive' => $inactive,
+            ];
+            
+            $current->addMonth();
+        }
+        
+        return $enrollmentTrends;
+    }
+
+    public function getTotalEnrollmentForYear()
+    {
+        $yearToUse = $this->selectedYear ? (int) $this->selectedYear : Carbon::now()->year;
+        $yearStart = Carbon::create($yearToUse, 1, 1)->startOfYear();
+        $yearEnd = Carbon::create($yearToUse, 12, 31)->endOfYear();
+        
+        // Filter by status: enrolled, inactive, pending
+        $statusFilter = ['enrolled', 'inactive', 'pending'];
+        
+        return StudentInfo::whereBetween('enrolled_at', [$yearStart, $yearEnd])
+            ->whereIn('status', $statusFilter)
+            ->count();
+    }
+
     public function render()
     {
         // Get current active semester
@@ -72,21 +212,14 @@ class Dashboard extends Component
                 ];
             });
         
-        // Enrollment Trends (Last 6 months)
-        $enrollmentTrends = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $date = Carbon::now()->subMonths($i);
-            $startOfMonth = $date->copy()->startOfMonth();
-            $endOfMonth = $date->copy()->endOfMonth();
-            
-            $count = StudentInfo::whereBetween('enrolled_at', [$startOfMonth, $endOfMonth])
-                ->count();
-            
-            $enrollmentTrends[] = [
-                'month' => $date->format('M Y'),
-                'count' => $count
-            ];
-        }
+        // Enrollment Trends (based on selected period and year)
+        $enrollmentTrends = $this->getEnrollmentTrends();
+        
+        // Get available years for dropdown
+        $availableYears = $this->getAvailableYears();
+        
+        // Get total enrollment for selected year
+        $totalEnrollmentForYear = $this->getTotalEnrollmentForYear();
         
         // Chart Data for Programs (All programs, not just top 5)
         $programChartData = StudentInfo::select('program_id', DB::raw('count(*) as total'))
@@ -115,11 +248,8 @@ class Dashboard extends Component
             $studentsByStatus = collect([['label' => 'No Data', 'status' => 'unknown', 'total' => 0]]);
         }
         
-        if (empty($enrollmentTrends)) {
-            $enrollmentTrends = [
-                ['month' => 'No Data', 'count' => 0]
-            ];
-        }
+        // Don't override enrollment trends with "No Data" - always show the actual months
+        // The getEnrollmentTrends() method already ensures correct number of months
         
         // Attendance Statistics (if available)
         $todayAttendance = null;
@@ -163,6 +293,8 @@ class Dashboard extends Component
             'totalSections' => $totalSections,
             'totalPrograms' => $totalPrograms,
             'activeSemester' => $activeSemester,
+            'availableYears' => $availableYears,
+            'totalEnrollmentForYear' => $totalEnrollmentForYear,
         ]);
     }
 }

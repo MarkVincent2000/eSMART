@@ -94,7 +94,7 @@
                                                             class="text-danger">*</span></label>
                                                     <input type="text"
                                                         class="form-control @error('email') is-invalid @enderror"
-                                                        value="{{ old('email', 'admin@themesbrand.com') }}" id="username"
+                                                         id="username"
                                                         name="email" placeholder="Enter username">
                                                     @error('email')
                                                         <span class="invalid-feedback" role="alert">
@@ -114,7 +114,7 @@
                                                         <input type="password"
                                                             class="form-control password-input pe-5 @error('password') is-invalid @enderror"
                                                             name="password" placeholder="Enter password" id="password-input"
-                                                            value="12345678">
+                                                            >
                                                         <button
                                                             class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon material-shadow-none"
                                                             type="button" id="password-addon"><i

@@ -143,20 +143,76 @@
 
     <div class="row">
         <div class="col-xxl-12">
-            <div class="card card-height-100">
-                <div class="card-header align-items-center d-flex">
+            <div class="card">
+                <div class="card-header border-0 align-items-center d-flex">
                     <h4 class="card-title mb-0 flex-grow-1">Enrollment Trends</h4>
-                    <div class="flex-shrink-0">
-                        <span class="text-muted fs-12">Last 6 Months</span>
+                    <div class="d-flex gap-2 align-items-center">
+                        <select wire:model.live="selectedYear" class="form-select form-select-sm" style="width: auto;">
+                            @foreach($availableYears as $year)
+                                <option value="{{ $year }}">{{ $year }}</option>
+                            @endforeach
+                        </select>
+                        {{-- <div class="btn-group" role="group">
+                            <button type="button" wire:click="setPeriod('1month')" 
+                                class="btn btn-soft-{{ $selectedPeriod === '1month' ? 'primary' : 'secondary' }} material-shadow-none btn-sm">
+                                1M
+                            </button>
+                            <button type="button" wire:click="setPeriod('6months')" 
+                                class="btn btn-soft-{{ $selectedPeriod === '6months' ? 'primary' : 'secondary' }} material-shadow-none btn-sm">
+                                6M
+                            </button>
+                            <button type="button" wire:click="setPeriod('1year')" 
+                                class="btn btn-soft-{{ $selectedPeriod === '1year' ? 'primary' : 'secondary' }} material-shadow-none btn-sm">
+                                1Y
+                            </button>
+                        </div> --}}
                     </div>
                 </div><!-- end card header -->
-                <div class="card-body px-0">
-                    <div id="enrollment-trends-chart"
-                        data-categories='{{ json_encode(collect($enrollmentTrends)->pluck("month")->values()) }}'
-                        data-series='{{ json_encode([["name" => "Enrollments", "data" => collect($enrollmentTrends)->pluck("count")->values()]]) }}'
-                        data-colors='["--vz-primary"]' class="apex-charts" dir="ltr"></div>
-                </div>
-            </div><!-- end card -->
+
+                <div class="card-header p-0 border-0 bg-light-subtle">
+                    <div class="row g-0 text-center">
+                        <div class="col-6 col-sm-4">
+                            <div class="p-3 border border-dashed border-start-0">
+                                <h5 class="mb-1"><span class="counter-value" data-target="{{ $totalEnrollmentForYear }}">{{ $totalEnrollmentForYear }}</span></h5>
+                                <p class="text-muted mb-0">Total Enrollments {{ $selectedYear }}</p>
+                            </div>
+                        </div>
+                        <!--end col-->
+                        <div class="col-6 col-sm-4">
+                            <div class="p-3 border border-dashed border-start-0">
+                                <h5 class="mb-1"><span class="counter-value" data-target="{{ $activeStudents }}">{{ $activeStudents }}</span></h5>
+                                <p class="text-muted mb-0">Currently Enrolled</p>
+                            </div>
+                        </div>
+                        <!--end col-->
+                        <div class="col-6 col-sm-4">
+                            <div class="p-3 border border-dashed border-start-0 border-end-0">
+                                <h5 class="mb-1">
+                                    <span class="counter-value text-warning" data-target="{{ $pendingStudents }}">{{ $pendingStudents }}</span> / 
+                                    <span class="counter-value text-danger" data-target="{{ $inactiveStudents }}">{{ $inactiveStudents }}</span>
+                                </h5>
+                                <p class="text-muted mb-0">Pending / Inactive</p>
+                            </div>
+                        </div>
+                        <!--end col-->
+                    </div>
+                </div><!-- end card header -->
+
+                <div class="card-body p-0 pb-2">
+                    <div class="w-100">
+                        <div id="enrollment-trends-chart"
+                            data-categories='{{ json_encode(collect($enrollmentTrends)->pluck("month")->values()) }}'
+                            data-series='[
+                                {"name": "Enrolled", "type": "column", "data": {{ json_encode(collect($enrollmentTrends)->pluck("enrolled")->values()) }}},
+                                {"name": "Pending", "type": "area", "data": {{ json_encode(collect($enrollmentTrends)->pluck("pending")->values()) }}},
+                                {"name": "Inactive", "type": "line", "data": {{ json_encode(collect($enrollmentTrends)->pluck("inactive")->values()) }}}
+                            ]'
+                            data-colors='["--vz-success", "--vz-primary", "--vz-danger"]'
+                            class="apex-charts" dir="ltr" style="min-height: 400px;">
+                        </div>  
+                    </div>
+                </div><!-- end card body -->
+            </div>
         </div><!-- end col -->
     </div><!-- end row -->
 </div>
@@ -315,7 +371,7 @@
             chart.render();
         }
 
-        // Enrollment Trends Chart (Line)
+        // Enrollment Trends Chart (Bar + Line)
         var trendsChartColors = getChartColorsArray("enrollment-trends-chart");
         if (trendsChartColors && document.getElementById("enrollment-trends-chart")) {
             var trendsChartElement = document.getElementById("enrollment-trends-chart");
@@ -325,8 +381,9 @@
             var options = {
                 series: seriesData,
                 chart: {
-                    height: 350,
+                    height: 400,
                     type: 'line',
+                    stacked: false,
                     zoom: {
                         enabled: false
                     },
@@ -334,30 +391,126 @@
                         show: false,
                     }
                 },
+                plotOptions: {
+                    bar: {
+                        columnWidth: '50%',
+                    }
+                },
                 dataLabels: {
-                    enabled: true
+                    enabled: false
                 },
                 stroke: {
+                    width: [0, 2, 2],
                     curve: 'smooth',
-                    width: 3,
+                    dashArray: [0, 0, 5]
                 },
                 xaxis: {
                     categories: categories,
+                    labels: {
+                        show: true,
+                        rotate: -45,
+                        rotateAlways: false,
+                        hideOverlappingLabels: false,
+                        showDuplicates: true,
+                        trim: false,
+                        minHeight: undefined,
+                        maxHeight: 120,
+                        style: {
+                            colors: [],
+                            fontSize: '12px',
+                            fontFamily: 'Helvetica, Arial, sans-serif',
+                            fontWeight: 400,
+                            cssClass: 'apexcharts-xaxis-label',
+                        },
+                    },
+                    tickAmount: categories.length,
                 },
                 yaxis: {
                     title: {
                         text: 'Number of Enrollments'
-                    }
+                    },
+                    labels: {
+                        formatter: function (value) {
+                            return Math.floor(value);
+                        }
+                    },
+                    forceNiceScale: true,
+                    decimalsInFloat: 0
                 },
                 colors: trendsChartColors,
                 fill: {
-                    opacity: 0.06,
-                    colors: trendsChartColors,
-                    type: 'solid'
+                    opacity: [0.9, 0.1, 0.1],
+                    gradient: {
+                        inverseColors: false,
+                        shade: 'light',
+                        type: "vertical",
+                        opacityFrom: 0.85,
+                        opacityTo: 0.55,
+                        stops: [0, 100, 100, 100]
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    horizontalAlign: 'center',
+                },
+                markers: {
+                    size: 0,
+                    hover: {
+                        sizeOffset: 4
+                    }
+                },
+                tooltip: {
+                    y: {
+                        formatter: function (value) {
+                            return Math.floor(value);
+                        }
+                    }
                 }
             };
             var chart = new ApexCharts(document.querySelector("#enrollment-trends-chart"), options);
             chart.render();
+            
+            // Store chart instance globally for Livewire updates
+            window.enrollmentTrendsChart = chart;
+        }
+    }
+
+    // Function to update enrollment trends chart
+    function updateEnrollmentTrendsChart() {
+        var trendsChartElement = document.getElementById("enrollment-trends-chart");
+        if (trendsChartElement && window.enrollmentTrendsChart) {
+            var categories = JSON.parse(trendsChartElement.getAttribute("data-categories"));
+            var seriesData = JSON.parse(trendsChartElement.getAttribute("data-series"));
+            
+            window.enrollmentTrendsChart.updateOptions({
+                series: seriesData,
+                xaxis: {
+                    categories: categories,
+                    labels: {
+                        show: true,
+                        rotate: -45,
+                        rotateAlways: false,
+                        hideOverlappingLabels: false,
+                        showDuplicates: true,
+                        trim: false,
+                        minHeight: undefined,
+                        maxHeight: 120,
+                        style: {
+                            colors: [],
+                            fontSize: '12px',
+                            fontFamily: 'Helvetica, Arial, sans-serif',
+                            fontWeight: 400,
+                            cssClass: 'apexcharts-xaxis-label',
+                        },
+                    },
+                    tickAmount: categories.length,
+                },
+                stroke: {
+                    width: [0, 2, 2],
+                    curve: 'smooth',
+                    dashArray: [0, 0, 5]
+                }
+            });
         }
     }
 
@@ -380,7 +533,13 @@
         Livewire.hook('morph.updated', ({ el, component }) => {
             if (typeof ApexCharts !== 'undefined') {
                 setTimeout(function () {
-                    loadStudentDashboardCharts();
+                    // Try to update enrollment trends chart if it exists
+                    if (window.enrollmentTrendsChart) {
+                        updateEnrollmentTrendsChart();
+                    } else {
+                        // Otherwise re-initialize all charts
+                        loadStudentDashboardCharts();
+                    }
                 }, 100);
             }
         });
