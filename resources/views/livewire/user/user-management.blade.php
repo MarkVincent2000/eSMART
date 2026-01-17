@@ -129,24 +129,24 @@
                 <div class="card-header border-0">
                     <div class="d-flex align-items-center">
                         <h5 class="card-title mb-0 flex-grow-1">Users</h5>
-                            <div class="flex-shrink-0">
-                                <div class="d-flex flex-wrap gap-2">
-                                    <x-button color="primary" icon="ri-add-line" icon-position="left"
-                                        wire:click="openInviteModal" wire-target="openInviteModal">
-                                        Invite User
+                        <div class="flex-shrink-0">
+                            <div class="d-flex flex-wrap gap-2">
+                                <x-button color="primary" icon="ri-add-line" icon-position="left"
+                                    wire:click="openInviteModal" wire-target="openInviteModal">
+                                    Invite User
+                                </x-button>
+                                @if (!empty($selected))
+                                    <x-button color="info" icon="ri-user-settings-line" icon-position="left"
+                                        wire:click="openUpdateRolesModal" wire-target="openUpdateRolesModal">
+                                        Update Roles ({{ count($selected) }})
                                     </x-button>
-                                    @if (!empty($selected))
-                                        <x-button color="info" icon="ri-user-settings-line" icon-position="left"
-                                            wire:click="openUpdateRolesModal" wire-target="openUpdateRolesModal">
-                                            Update Roles ({{ count($selected) }})
-                                        </x-button>
-                                        <x-button color="danger" icon="ri-delete-bin-line" icon-position="left"
-                                            wire:click="deleteMultiple" wire-target="deleteMultiple">
-                                            Delete ({{ count($selected) }})
-                                        </x-button>
-                                    @endif
-                                </div>
+                                    <x-button color="danger" icon="ri-delete-bin-line" icon-position="left"
+                                        wire:click="deleteMultiple" wire-target="deleteMultiple">
+                                        Delete ({{ count($selected) }})
+                                    </x-button>
+                                @endif
                             </div>
+                        </div>
                     </div>
                 </div>
 

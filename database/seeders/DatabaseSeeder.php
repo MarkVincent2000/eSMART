@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             QuarterSeeder::class,
             AttendanceCategorySeeder::class,
             SubjectSeeder::class,
+            SystemSettingSeeder::class,
         ]);
     }
 }

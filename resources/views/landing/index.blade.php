@@ -23,9 +23,9 @@
                 <nav class="navbar navbar-expand-lg navbar-landing fixed-top" id="navbar">
                     <div class="container">
                         <a class="navbar-brand" href="dashboard">
-                            <img src="{{ URL::asset('build/images/smart-logo-dark.png') }}" class="card-logo card-logo-dark"
-                                alt="logo dark" height="17">
-                            <img src="{{ URL::asset('build/images/smart-logo-light.png') }}"
+                            <img src="{{ \App\Models\SystemSetting::getAsset('site.landing_logo_dark', URL::asset('build/images/smart-logo-dark.png')) }}"
+                                class="card-logo card-logo-dark" alt="logo dark" height="17">
+                            <img src="{{ \App\Models\SystemSetting::getAsset('site.landing_logo_light', URL::asset('build/images/smart-logo-light.png')) }}"
                                 class="card-logo card-logo-light" alt="logo light" height="17">
                         </a>
                         <button class="navbar-toggler py-0 fs-20 text-body" type="button" data-bs-toggle="collapse"
@@ -79,11 +79,14 @@
                         <div class="row justify-content-center">
                             <div class="col-lg-8 col-sm-10">
                                 <div class="text-center mt-lg-5 pt-5">
-                                    <h1 class="display-6 fw-semibold mb-3 lh-base">The better way to manage your campus
-                                        with <span class="text-success">eSMART Campus </span></h1>
-                                    <p class="lead text-muted lh-base">eSMART Campus is a comprehensive student management
-                                        system designed to streamline campus operations, student enrollment, attendance
-                                        tracking, and academic management.</p>
+                                    <h1 class="display-6 fw-semibold mb-3 lh-base">
+                                        {{ \App\Models\SystemSetting::getValue('site.tagline', 'The better way to manage your campus') }}
+                                        with <span
+                                            class="text-success">{{ \App\Models\SystemSetting::getValue('site.name', 'eSMART Campus') }}
+                                        </span></h1>
+                                    <p class="lead text-muted lh-base">
+                                        {{ \App\Models\SystemSetting::getValue('site.description', 'eSMART Campus is a comprehensive student management system designed to streamline campus operations, student enrollment, attendance tracking, and academic management.') }}
+                                    </p>
 
                                     <div class="d-flex gap-2 justify-content-center mt-4">
                                         <a href="{{ route('register') }}" class="btn btn-primary">Get Started <i
@@ -1696,14 +1699,15 @@
                         <div class="col-lg-4 mt-4">
                             <div>
                                 <div>
-                                    <img src="{{ URL::asset('build/images/smart-logo-light.png') }}" alt="logo light"
-                                        height="17">
+                                    <img src="{{ \App\Models\SystemSetting::getAsset('site.landing_logo_light', URL::asset('build/images/smart-logo-light.png')) }}"
+                                        alt="logo light" height="17">
                                 </div>
                                 <div class="mt-4 fs-13">
-                                    <p>eSMART Campus - Student Management System</p>
-                                    <p class="ff-secondary">A comprehensive platform for managing student enrollment,
-                                        attendance, grades, assignments, and all campus operations in one unified
-                                        system.</p>
+                                    <p>{{ \App\Models\SystemSetting::getValue('site.name', 'eSMART Campus') }} - Student
+                                        Management System</p>
+                                    <p class="ff-secondary">
+                                        {{ \App\Models\SystemSetting::getValue('site.description', 'A comprehensive platform for managing student enrollment, attendance, grades, assignments, and all campus operations in one unified system.') }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -1754,8 +1758,8 @@
                                 <p class="copy-rights mb-0">
                                     <script>
                                         document.write(new Date().getFullYear())
-                                    </script> © eSMART Campus. Crafted with <i
-                                        class="mdi mdi-heart text-danger"></i> by eSMART Campus Team
+                                    </script>
+                                    {{ \App\Models\SystemSetting::getValue('site.footer_text', '© eSMART Campus. Crafted with ❤️ by eSMART Campus Team') }}
                                 </p>
                             </div>
                         </div>

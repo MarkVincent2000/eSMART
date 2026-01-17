@@ -19,11 +19,12 @@
                                         <div class="position-relative h-100 d-flex flex-column">
                                             <div class="mb-1 text-center">
                                                 <a href="{{ url('/') }}" class="d-block text-decoration-none">
-                                                    <img src="{{ URL::asset('build/images/smart-logo-sm3.png') }}" alt=""
-                                                        height="100">
+                                                    <img src="{{ \App\Models\SystemSetting::getAsset('site.login_logo', URL::asset('build/images/smart-logo-sm3.png')) }}"
+                                                        alt="" height="100">
                                                     <h3 class="text-white mt-2 mb-0 fw-semibold"
                                                         style="text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
-                                                        Smart</h3>
+                                                        {{ \App\Models\SystemSetting::getValue('site.short_name', 'Smart') }}
+                                                    </h3>
                                                 </a>
                                             </div>
                                             <div class="mt-auto">
@@ -43,16 +44,19 @@
                                                     </div>
                                                     <div class="carousel-inner text-center text-white-50 pb-5">
                                                         <div class="carousel-item active">
-                                                            <p class="fs-15 fst-italic">" Sa Manongol High, Gaganda ang
-                                                                Buhay!"</p>
+                                                            <p class="fs-15 fst-italic">"
+                                                                {{ \App\Models\SystemSetting::getValue('landing.quote_1', 'Sa Manongol High, Gaganda ang Buhay!') }}"
+                                                            </p>
                                                         </div>
                                                         <div class="carousel-item">
-                                                            <p class="fs-15 fst-italic">" Manage your campus tasks in one
-                                                                unified place."</p>
+                                                            <p class="fs-15 fst-italic">"
+                                                                {{ \App\Models\SystemSetting::getValue('landing.quote_2', 'Manage your campus tasks in one unified place.') }}"
+                                                            </p>
                                                         </div>
                                                         <div class="carousel-item">
-                                                            <p class="fs-15 fst-italic">" SMART Campus keeps everyone
-                                                                connected and informed."</p>
+                                                            <p class="fs-15 fst-italic">"
+                                                                {{ \App\Models\SystemSetting::getValue('landing.quote_3', 'SMART Campus keeps everyone connected and informed.') }}"
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -63,8 +67,12 @@
                                 <div class="col-lg-6">
                                     <div class="p-lg-5 p-4">
                                         <div>
-                                            <h5 class="text-primary">Welcome Back !</h5>
-                                            <p class="text-muted">Sign in to continue to eSMART Campus.</p>
+                                            <h5 class="text-primary">
+                                                {{ \App\Models\SystemSetting::getValue('auth.welcome_message', 'Welcome Back !') }}
+                                            </h5>
+                                            <p class="text-muted">
+                                                {{ \App\Models\SystemSetting::getValue('auth.login_subtitle', 'Sign in to continue to eSMART Campus.') }}
+                                            </p>
                                         </div>
                                         <div class="mt-4">
                                             @if (session('status'))
@@ -94,8 +102,7 @@
                                                             class="text-danger">*</span></label>
                                                     <input type="text"
                                                         class="form-control @error('email') is-invalid @enderror"
-                                                         id="username"
-                                                        name="email" placeholder="Enter username">
+                                                        id="username" name="email" placeholder="Enter username">
                                                     @error('email')
                                                         <span class="invalid-feedback" role="alert">
                                                             <strong>{{ $message }}</strong>
@@ -113,8 +120,8 @@
                                                     <div class="position-relative auth-pass-inputgroup mb-3">
                                                         <input type="password"
                                                             class="form-control password-input pe-5 @error('password') is-invalid @enderror"
-                                                            name="password" placeholder="Enter password" id="password-input"
-                                                            >
+                                                            name="password" placeholder="Enter password"
+                                                            id="password-input">
                                                         <button
                                                             class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon material-shadow-none"
                                                             type="button" id="password-addon"><i
@@ -159,8 +166,8 @@
                     <div class="col-lg-12">
                         <div class="text-center">
                             <p class="mb-0 text-white-50">&copy;
-                                <script>document.write(new Date().getFullYear())</script> eSMART Campus. Crafted with <i
-                                    class="mdi mdi-heart text-danger"></i> by eSMART Campus Team
+                                <script>document.write(new Date().getFullYear())</script>
+                                {{ \App\Models\SystemSetting::getValue('site.footer_text', 'eSMART Campus. Crafted with ❤️ by eSMART Campus Team') }}
                             </p>
                         </div>
                     </div>

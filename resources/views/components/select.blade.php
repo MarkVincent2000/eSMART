@@ -96,12 +96,80 @@
             }
             return this.selected == value;
         },
+        isInsideModal() {
+            // Check if this select is inside a modal
+            let element = this.$el;
+            while (element && element !== document.body) {
+                if (element.classList && element.classList.contains('custom-modal-overlay')) {
+                    return true;
+                }
+                if (element.classList && element.classList.contains('modal-card-dark')) {
+                    return true;
+                }
+                element = element.parentElement;
+            }
+            return false;
+        },
+        isClickOnModalBackdrop(event) {
+            // Check if the click is on the modal backdrop (not inside modal-card-dark)
+            // Returns true if: clicking on backdrop OR clicking outside modal entirely
+            // Returns false if: clicking inside modal content (modal-card-dark)
+            let target = event.target;
+            let foundModalCard = false;
+            let foundModalOverlay = false;
+            
+            // Walk up the DOM tree to find modal elements
+            while (target && target !== document.body) {
+                // Check for modal card (content area) - if we find this, we're inside modal content
+                if (target.classList && target.classList.contains('modal-card-dark')) {
+                    foundModalCard = true;
+                    // Once we find the modal card, we know we're inside modal content
+                    // So this is NOT a backdrop click - don't close
+                    return false;
+                }
+                
+                // Check for modal overlay container
+                if (target.classList && target.classList.contains('custom-modal-overlay')) {
+                    foundModalOverlay = true;
+                    // If we clicked directly on the overlay itself (not a child), it's backdrop
+                    if (target === event.target) {
+                        return true; // Clicked directly on backdrop - close
+                    }
+                    // If we reached overlay without finding modal-card, we're on backdrop
+                    // Continue to check if we find modal-card further up
+                    target = target.parentElement;
+                    continue;
+                }
+                
+                target = target.parentElement;
+            }
+            
+            // If we found overlay but not modal card, it's a backdrop click - close
+            // If we didn't find overlay at all, it's outside modal entirely - also close
+            return !foundModalCard;
+        },
+        handleClickAway(event) {
+            // If multiple is true and inside modal, only close if clicking on modal backdrop
+            if (this.multiple && this.isInsideModal()) {
+                // Check if click is on modal backdrop
+                const isOnBackdrop = this.isClickOnModalBackdrop(event);
+                
+                // Only close if clicking on backdrop (or outside modal entirely)
+                if (isOnBackdrop) {
+                    this.close();
+                }
+                // Otherwise, don't close - allow user to interact with other modal elements
+            } else {
+                // Normal behavior for single select or select outside modal
+                this.close();
+            }
+        },
         close() {
             this.open = false;
             this.search = '';
         }
     }"
-    @click.away="close()"
+    @click.away="handleClickAway($event)"
     class="position-relative"
     {{ $attributes->except(['wire:model', 'wire:model.live']) }}
 >
@@ -112,7 +180,7 @@
     <div class="position-relative">
         <button 
             type="button" 
-            @click="toggle()"
+            @click.stop="toggle()"
             class="form-control text-start d-flex justify-content-between align-items-center {{ $disabled ? 'disabled' : '' }}"
             :class="{'active': open}"
             style="min-height: 38px; cursor: pointer;"
@@ -127,6 +195,7 @@
             x-transition
             class="card position-absolute w-100 shadow mt-1 z-3 select-dropdown-dark" 
             style="max-height: 300px; display: none;"
+            @click.stop
         >
             <div class="card-body p-0 d-flex flex-column" style="max-height: 300px;">
                 @if($searchable)
