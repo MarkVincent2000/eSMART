@@ -69,6 +69,46 @@
                     @endif
                 </ul>
             </div>
+
+            <div class="mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="printSortAlphabetically"
+                                wire:model.live="printSortAlphabetically">
+                            <label class="form-check-label" for="printSortAlphabetically">
+                                <strong>Sort Alphabetically by Name</strong>
+                                <small class="text-muted d-block">Enable to sort students alphabetically by their names in
+                                    the PDF</small>
+                            </label>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-2">
+                            <label class="form-label fw-bold">PDF Orientation:</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="printOrientation"
+                                id="printOrientationPortrait" value="portrait" wire:model.live="printOrientation">
+                            <label class="form-check-label" for="printOrientationPortrait">
+                                <strong>Portrait</strong>
+                                <small class="text-muted d-block">Standard vertical orientation (recommended for most
+                                    cases)</small>
+                            </label>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="radio" name="printOrientation"
+                                id="printOrientationLandscape" value="landscape" wire:model.live="printOrientation">
+                            <label class="form-check-label" for="printOrientationLandscape">
+                                <strong>Landscape</strong>
+                                <small class="text-muted d-block">Horizontal orientation (better for wide tables with many
+                                    columns)</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     @endif
 

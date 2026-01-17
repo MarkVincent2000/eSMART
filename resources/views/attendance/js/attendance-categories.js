@@ -85,7 +85,7 @@
                 if (response.ok && result.success) {
                     // Show success message
                     showToast('Success', result.message || 'Category created successfully', 'success');
-                    
+
                     // Close modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('createCategoryModal'));
                     modal.hide();
@@ -160,7 +160,7 @@
                 if (response.ok && result.success) {
                     // Show success message
                     showToast('Success', result.message || 'Category updated successfully', 'success');
-                    
+
                     // Close modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editCategoryModal'));
                     modal.hide();
@@ -311,7 +311,7 @@
         });
 
         console.log('✓ Categories loaded successfully:', categories.length);
-        
+
         // Show success toast on first load
         if (!window.categoriesLoadedOnce) {
             window.categoriesLoadedOnce = true;
@@ -402,26 +402,26 @@
         // - To avoid this off‑by‑one issue, parse the string manually instead of
         //   constructing a Date object.
         // Replace the existing date logic with this:
-           // Locate this section inside renderAttendanceCard
-           let date = 'N/A';
-           if (attendance.date) {
-               // Extract strictly the first 10 characters (YYYY-MM-DD)
-               const rawDateStr = String(attendance.date).substring(0, 10);
-               const dateParts = rawDateStr.split('-');
-               
-               if (dateParts.length === 3) {
-                   const year = dateParts[0];
-                   // Subtract 1 from month because array is 0-indexed
-                   const monthIndex = parseInt(dateParts[1], 10) - 1;
-                   const day = parseInt(dateParts[2], 10);
-                   
-                   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                   const monthLabel = monthNames[monthIndex] ?? dateParts[1];
-                   
-                   // Build the string manually to avoid JS Date object shifting
-                   date = `${monthLabel} ${day}, ${year}`;
-               }
-           }
+        // Locate this section inside renderAttendanceCard
+        let date = 'N/A';
+        if (attendance.date) {
+            // Extract strictly the first 10 characters (YYYY-MM-DD)
+            const rawDateStr = String(attendance.date).substring(0, 10);
+            const dateParts = rawDateStr.split('-');
+
+            if (dateParts.length === 3) {
+                const year = dateParts[0];
+                // Subtract 1 from month because array is 0-indexed
+                const monthIndex = parseInt(dateParts[1], 10) - 1;
+                const day = parseInt(dateParts[2], 10);
+
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const monthLabel = monthNames[monthIndex] ?? dateParts[1];
+
+                // Build the string manually to avoid JS Date object shifting
+                date = `${monthLabel} ${day}, ${year}`;
+            }
+        }
 
         // Format time range - parse ISO 8601 UTC strings and convert to Manila timezone
         // Helper function to format time from ISO 8601 UTC string to Manila local time
@@ -446,7 +446,7 @@
                 return null;
             }
         };
-        
+
         let timeRange = '';
         if (attendance.start_time && attendance.end_time) {
             const startTime = formatTimeFromString(attendance.start_time);
@@ -467,17 +467,17 @@
             : 'No sections';
 
         // Get semester info
-        const semesterInfo = attendance.semester 
+        const semesterInfo = attendance.semester
             ? escapeHtml(attendance.semester.name || 'N/A')
             : 'N/A';
 
         // Status badge
-        const statusBadge = attendance.is_active 
+        const statusBadge = attendance.is_active
             ? '<span class="badge bg-success-subtle text-success">Active</span>'
             : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
 
         // Type badge
-        const typeBadge = attendance.attendance_type 
+        const typeBadge = attendance.attendance_type
             ? `<span class="badge bg-info-subtle text-info">${escapeHtml(attendance.attendance_type.charAt(0).toUpperCase() + attendance.attendance_type.slice(1))}</span>`
             : '';
 
@@ -572,20 +572,20 @@
     let currentAttendanceId = null;
 
     // Add attendance function - opens modal
-    window.addAttendance = function(categoryId) {
+    window.addAttendance = function (categoryId) {
         console.log('Add attendance for category:', categoryId);
         selectedCategoryId = categoryId;
         currentAttendanceId = null; // Reset edit mode
-        
+
         // Reset form
         resetAttendanceForm();
-        
+
         // Load form data before showing modal
         loadAttendanceFormData();
-        
+
         // Update modal title and button
         updateModalForCreate();
-        
+
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('createAttendanceModal'));
         modal.show();
@@ -593,6 +593,10 @@
         // Initialize flatpickr after modal is shown
         setTimeout(() => {
             initializeFlatpickr();
+            // Load students preview if semester and sections are already selected
+            setTimeout(() => {
+                loadStudentsPreview();
+            }, 200);
         }, 100);
     };
 
@@ -601,7 +605,7 @@
         const modalLabel = document.getElementById('createAttendanceModalLabel');
         const submitBtn = document.getElementById('submitAttendanceBtn');
         const buttonText = submitBtn.querySelector('.button-text');
-        
+
         if (modalLabel) modalLabel.textContent = 'Create Attendance Session';
         if (buttonText) buttonText.textContent = 'Create Attendance';
     }
@@ -611,7 +615,7 @@
         const modalLabel = document.getElementById('createAttendanceModalLabel');
         const submitBtn = document.getElementById('submitAttendanceBtn');
         const buttonText = submitBtn.querySelector('.button-text');
-        
+
         if (modalLabel) modalLabel.textContent = 'Edit Attendance Session';
         if (buttonText) buttonText.textContent = 'Update Attendance';
     }
@@ -625,13 +629,13 @@
         document.getElementById('attendanceId').value = '';
         clearFlatpickrValues();
         clearFormErrors();
-        
+
         // Reset "Add All Sections" toggle
         const addAllSectionsToggle = document.getElementById('addAllSections');
         if (addAllSectionsToggle) {
             addAllSectionsToggle.checked = false;
         }
-        
+
         // Clear section select
         const vanillaSectionSelect = window['vanillaSelect_attendanceSection'];
         if (vanillaSectionSelect) {
@@ -657,48 +661,52 @@
             }
 
             const result = await response.json();
-            
+
             if (result.success && result.data && result.data.attendance) {
                 const attendance = result.data.attendance;
-                
+
                 // Set attendance ID
                 currentAttendanceId = attendance.id;
                 document.getElementById('attendanceId').value = attendance.id;
-                
+
                 // Set category ID
                 selectedCategoryId = attendance.category_id;
-                
+
                 // Populate form fields
                 document.getElementById('attendanceTitle').value = attendance.title || '';
                 document.getElementById('attendanceDescription').value = attendance.description || '';
-                
+
                 // Set attendance type
                 const typeSelect = document.getElementById('attendanceType');
                 if (typeSelect && attendance.attendance_type) {
                     typeSelect.value = attendance.attendance_type;
                 }
-                
+
                 // Set semester
                 const semesterSelect = document.getElementById('attendanceSemester');
                 if (semesterSelect && attendance.semester_id) {
                     semesterSelect.value = attendance.semester_id;
                 }
-                
+
                 // Set sections
                 const vanillaSectionSelect = window['vanillaSelect_attendanceSection'];
                 if (vanillaSectionSelect && attendance.sections && attendance.sections.length > 0) {
                     const sectionIds = attendance.sections.map(s => s.id);
                     vanillaSectionSelect.setValue(sectionIds);
+                    // Load students preview after sections are set
+                    setTimeout(() => {
+                        loadStudentsPreview();
+                    }, 100);
                 }
-                
+
                 // Set date in Flatpickr from backend value without timezone shifts.
                 // attendance.date is typically "YYYY-MM-DD" (cast as date in Laravel).
-               // Inside loadAttendanceForEdit function
-                   // Inside loadAttendanceForEdit
+                // Inside loadAttendanceForEdit function
+                // Inside loadAttendanceForEdit
                 if (attendance.date) {
                     // Get the YYYY-MM-DD string directly from the database
-                    const rawDateStr = String(attendance.date).substring(0, 10); 
-                    
+                    const rawDateStr = String(attendance.date).substring(0, 10);
+
                     if (flatpickrDateInstance) {
                         // Set date using the literal string and specific format
                         // This prevents Flatpickr from converting it to a local Date object
@@ -712,7 +720,7 @@
                         }
                     }
                 }
-                
+
                 // Set start time - parse ISO 8601 string and display in local time
                 if (attendance.start_time) {
                     try {
@@ -724,7 +732,7 @@
                                 minute: '2-digit',
                                 hour12: true,
                             });
-                            
+
                             if (flatpickrStartTimeInstance) {
                                 flatpickrStartTimeInstance.setDate(formattedTime, false);
                             } else {
@@ -735,7 +743,7 @@
                         console.error('Error parsing start_time:', error);
                     }
                 }
-                
+
                 // Set end time - parse ISO 8601 string and display in local time
                 if (attendance.end_time) {
                     try {
@@ -747,7 +755,7 @@
                                 minute: '2-digit',
                                 hour12: true,
                             });
-                            
+
                             if (flatpickrEndTimeInstance) {
                                 flatpickrEndTimeInstance.setDate(formattedTime, false);
                             } else {
@@ -758,13 +766,13 @@
                         console.error('Error parsing end_time:', error);
                     }
                 }
-                
+
                 // Set location
                 document.getElementById('attendanceLocation').value = attendance.location || '';
-                
+
                 // Set is_active
                 document.getElementById('attendanceIsActive').checked = attendance.is_active !== false;
-                
+
                 return true;
             } else {
                 throw new Error('Invalid attendance data');
@@ -875,9 +883,12 @@
                     if (data.sections && data.sections.length > 0) {
                         vanillaSectionSelect.setOptions(data.sections);
                         console.log('✓ Sections populated:', data.sections.length);
-                        
+
                         // Store sections globally for "Add All" functionality
                         window.attendanceSections = data.sections;
+
+                        // Setup change listener for vanilla select if not already done
+                        setupVanillaSelectChangeListener(vanillaSectionSelect);
                     } else {
                         vanillaSectionSelect.setOptions([{ value: '', label: 'No active sections available' }]);
                         console.warn('⚠ No sections found');
@@ -893,6 +904,7 @@
                                 retrySelect.setOptions(data.sections);
                                 console.log('✓ Sections populated (retry):', data.sections.length);
                                 window.attendanceSections = data.sections;
+                                setupVanillaSelectChangeListener(retrySelect);
                             } else {
                                 retrySelect.setOptions([{ value: '', label: 'No active sections available' }]);
                                 window.attendanceSections = [];
@@ -914,26 +926,26 @@
     function displayFormErrors(errors) {
         // Clear all previous errors first
         clearFormErrors();
-        
+
         // Iterate through errors and display them
         Object.keys(errors).forEach(field => {
             const errorElement = document.getElementById(`error-${field}`);
             const inputElement = document.querySelector(`[name="${field}"]`);
-            
+
             if (errorElement) {
                 // Set error message
                 const errorMessages = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
                 errorElement.textContent = errorMessages[0]; // Show first error message
                 errorElement.style.display = 'block';
-                
+
                 // Add invalid class to input
                 if (inputElement) {
                     inputElement.classList.add('is-invalid');
-                    
+
                     // For vanilla select component, we need to handle it differently
                     if (field === 'section_ids' && window['vanillaSelect_attendanceSection']) {
-                        const vanillaSelectContainer = document.querySelector('#attendanceSection').closest('.vanilla-select-wrapper') || 
-                                                       document.querySelector('#attendanceSection').parentElement;
+                        const vanillaSelectContainer = document.querySelector('#attendanceSection').closest('.vanilla-select-wrapper') ||
+                            document.querySelector('#attendanceSection').parentElement;
                         if (vanillaSelectContainer) {
                             vanillaSelectContainer.classList.add('is-invalid');
                         }
@@ -950,7 +962,7 @@
             errorEl.textContent = '';
             errorEl.style.display = 'none';
         });
-        
+
         // Remove invalid class from all inputs in the form
         const form = document.getElementById('createAttendanceForm');
         if (form) {
@@ -958,10 +970,10 @@
                 inputEl.classList.remove('is-invalid');
             });
         }
-        
+
         // Clear vanilla select error state
-        const vanillaSelectContainer = document.querySelector('#attendanceSection')?.closest('.vanilla-select-wrapper') || 
-                                       document.querySelector('#attendanceSection')?.parentElement;
+        const vanillaSelectContainer = document.querySelector('#attendanceSection')?.closest('.vanilla-select-wrapper') ||
+            document.querySelector('#attendanceSection')?.parentElement;
         if (vanillaSelectContainer) {
             vanillaSelectContainer.classList.remove('is-invalid');
         }
@@ -970,7 +982,7 @@
     // Handle attendance form submission
     const createAttendanceForm = document.getElementById('createAttendanceForm');
     if (createAttendanceForm) {
-        createAttendanceForm.addEventListener('submit', async function(e) {
+        createAttendanceForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const submitBtn = document.getElementById('submitAttendanceBtn');
@@ -989,12 +1001,12 @@
                 }
 
                 const formData = new FormData(this);
-                
+
                 // Get date and time values from inputs (flatpickr sets these)
                 const dateValue = document.getElementById('attendanceDate').value;
                 const startTimeValue = document.getElementById('attendanceStartTime').value;
                 const endTimeValue = document.getElementById('attendanceEndTime').value;
-                
+
                 // Convert date from m/d/Y to Y-m-d format for API
                 let apiDateValue = '';
                 if (dateValue) {
@@ -1004,38 +1016,38 @@
                         const day = dateParts[1].padStart(2, '0');
                         const year = dateParts[2];
                         // Create a literal Y-m-d string
-                        apiDateValue = `${year}-${month}-${day}`; 
+                        apiDateValue = `${year}-${month}-${day}`;
                     }
                 }
 
-                
-                
+
+
                 // Convert 12-hour time format to 24-hour format for API
                 function convertTo24Hour(time12h) {
                     if (!time12h) return null;
-                    
+
                     // Parse format: "h:mm AM" or "h:mm PM"
                     const timeParts = time12h.split(' ');
                     if (timeParts.length !== 2) return time12h; // Return as-is if format is unexpected
-                    
+
                     const time = timeParts[0];
                     const ampm = timeParts[1].toUpperCase();
                     const [hours, minutes] = time.split(':');
-                    
+
                     let hour24 = parseInt(hours, 10);
                     if (ampm === 'PM' && hour24 !== 12) {
                         hour24 += 12;
                     } else if (ampm === 'AM' && hour24 === 12) {
                         hour24 = 0;
                     }
-                    
+
                     return `${hour24.toString().padStart(2, '0')}:${minutes}`;
                 }
-                
+
                 // Ensure the start/end times use the same literal date string
                 const startTime24h = convertTo24Hour(document.getElementById('attendanceStartTime').value);
                 const endTime24h = convertTo24Hour(document.getElementById('attendanceEndTime').value);
-                
+
                 // Get section_ids from vanilla select component (supports multiple)
                 let sectionIds = [];
                 const vanillaSectionSelect = window['vanillaSelect_attendanceSection'];
@@ -1048,21 +1060,21 @@
                         .map(id => parseInt(id, 10))
                         .filter(id => !isNaN(id) && id > 0);
                 }
-                
+
                 // Check if "Add All Sections" is enabled
                 const addAllSectionsCheckbox = document.getElementById('addAllSections');
                 const addAllSections = addAllSectionsCheckbox ? addAllSectionsCheckbox.checked : false;
-                
+
                 console.log('Section IDs before submission:', sectionIds);
                 console.log('Add All Sections:', addAllSections);
-                
+
                 // Validate sections before submission
                 if (!addAllSections && sectionIds.length === 0) {
                     showToast('Validation Error', 'Please select at least one section or enable "Add All Sections"', 'error');
                     setButtonLoading(submitBtn, buttonText, buttonSpinner, false);
                     return;
                 }
-                
+
                 // Validate that at least one of start_time, end_time, or location is provided
                 const locationValue = formData.get('location')?.trim() || '';
                 if (!startTime24h && !endTime24h && !locationValue) {
@@ -1075,7 +1087,7 @@
                     setButtonLoading(submitBtn, buttonText, buttonSpinner, false);
                     return;
                 }
-                
+
                 // Prepare data object
                 const data = {
                     title: formData.get('title'),
@@ -1095,7 +1107,7 @@
                 // Determine if we're creating or updating
                 const isEditMode = currentAttendanceId !== null;
                 const url = isEditMode ? `/attendance/${currentAttendanceId}` : '/attendance';
-                
+
                 // Laravel requires _method override for PUT/PATCH requests
                 if (isEditMode) {
                     data._method = 'PUT';
@@ -1125,7 +1137,7 @@
 
                 if (response.ok && result.success) {
                     const attendanceId = result.data?.id || currentAttendanceId;
-                    
+
                     // After creating attendance (not updating), create student attendances
                     if (!isEditMode && attendanceId) {
                         try {
@@ -1140,10 +1152,10 @@
                             // Check if response is JSON
                             const contentType = studentResponse.headers.get('content-type');
                             let studentResult;
-                            
+
                             if (contentType && contentType.includes('application/json')) {
                                 studentResult = await studentResponse.json();
-                                
+
                                 if (studentResponse.ok && studentResult.success) {
                                     showToast('Success', result.message + ' ' + studentResult.message, 'success');
                                 } else {
@@ -1172,7 +1184,7 @@
                     } else {
                         showToast('Success', result.message || (isEditMode ? 'Attendance updated successfully' : 'Attendance created successfully'), 'success');
                     }
-                    
+
                     // Close modal
                     const modalElement = document.getElementById('createAttendanceModal');
                     const modal = bootstrap.Modal.getInstance(modalElement);
@@ -1212,17 +1224,17 @@
     // Handle "Add All Sections" toggle
     const addAllSectionsToggle = document.getElementById('addAllSections');
     if (addAllSectionsToggle) {
-        addAllSectionsToggle.addEventListener('change', function() {
+        addAllSectionsToggle.addEventListener('change', function () {
             const vanillaSectionSelect = window['vanillaSelect_attendanceSection'];
             const isChecked = this.checked;
-            
+
             if (vanillaSectionSelect && window.attendanceSections) {
                 if (isChecked) {
                     // Select all sections
                     const allSectionIds = window.attendanceSections
                         .filter(section => section.value !== '')
                         .map(section => section.value);
-                    
+
                     if (allSectionIds.length > 0) {
                         vanillaSectionSelect.setValue(allSectionIds);
                         vanillaSectionSelect.disable();
@@ -1234,7 +1246,188 @@
                     vanillaSectionSelect.enable();
                 }
             }
+            // Load students preview when toggle changes
+            loadStudentsPreview();
         });
+    }
+
+    /**
+     * Load and display students preview based on selected semester and sections
+     */
+    async function loadStudentsPreview() {
+        const studentsPreview = document.getElementById('studentsPreview');
+        const studentsCount = document.getElementById('studentsCount');
+
+        if (!studentsPreview) return;
+
+        // Get semester ID
+        const semesterSelect = document.getElementById('attendanceSemester');
+        const semesterId = semesterSelect ? semesterSelect.value : null;
+
+        // Get section IDs from vanilla select
+        const vanillaSectionSelect = window['vanillaSelect_attendanceSection'];
+        let sectionIds = [];
+        if (vanillaSectionSelect) {
+            const selectedValues = vanillaSectionSelect.getValue();
+            sectionIds = Array.isArray(selectedValues) ? selectedValues : (selectedValues ? [selectedValues] : []);
+            sectionIds = sectionIds.filter(id => id && id !== '' && id !== null).map(id => parseInt(id, 10));
+        }
+
+        // Get "Add All Sections" checkbox state
+        const addAllSectionsCheckbox = document.getElementById('addAllSections');
+        const addAllSections = addAllSectionsCheckbox ? addAllSectionsCheckbox.checked : false;
+
+        // Show loading state if we have both semester and sections
+        if (semesterId && (sectionIds.length > 0 || addAllSections)) {
+            studentsPreview.innerHTML = `
+                <div class="text-muted w-100 text-center py-2">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <small>Loading students...</small>
+                </div>
+            `;
+            if (studentsCount) studentsCount.textContent = '';
+        } else {
+            // Reset to default message if no semester or sections selected
+            studentsPreview.innerHTML = `
+                <div class="text-muted w-100 text-center py-2">
+                    <small>Select semester and section(s) to view students</small>
+                </div>
+            `;
+            if (studentsCount) studentsCount.textContent = '';
+            return;
+        }
+
+        try {
+            // Build query parameters
+            const params = new URLSearchParams({
+                semester_id: semesterId,
+                add_all_sections: addAllSections ? '1' : '0'
+            });
+
+            // Add section IDs if not using "Add All Sections"
+            if (!addAllSections && sectionIds.length > 0) {
+                sectionIds.forEach(id => {
+                    params.append('section_ids[]', id);
+                });
+            }
+
+            const response = await fetch(`/attendance/form-data/students?${params.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.data && result.data.students) {
+                const students = result.data.students;
+
+                if (students.length === 0) {
+                    studentsPreview.innerHTML = `
+                        <div class="text-muted w-100 text-center py-2">
+                            <small>No students found for the selected semester and sections</small>
+                        </div>
+                    `;
+                    if (studentsCount) studentsCount.textContent = '0 students';
+                } else {
+                    // Display students as badges
+                    let html = '';
+                    students.forEach(student => {
+                        const studentName = escapeHtml(student.name || 'Unknown');
+                        const studentId = escapeHtml(student.student_id || student.id || 'N/A');
+                        html += `
+                            <span class="badge bg-primary-subtle text-primary p-2" title="${studentName} (${studentId})">
+                                ${studentName}
+                            </span>
+                        `;
+                    });
+                    studentsPreview.innerHTML = html;
+                    if (studentsCount) {
+                        studentsCount.textContent = `${students.length} student${students.length !== 1 ? 's' : ''} found`;
+                    }
+                }
+            } else {
+                throw new Error(result.message || 'Invalid response format');
+            }
+        } catch (error) {
+            console.error('Error loading students preview:', error);
+            studentsPreview.innerHTML = `
+                <div class="text-danger w-100 text-center py-2">
+                    <small>Failed to load students: ${escapeHtml(error.message)}</small>
+                </div>
+            `;
+            if (studentsCount) studentsCount.textContent = '';
+        }
+    }
+
+    /**
+     * Setup change listener for vanilla select component
+     */
+    function setupVanillaSelectChangeListener(vanillaSelect) {
+        if (!vanillaSelect) return;
+
+        // Remove existing listener if any
+        if (vanillaSelect._studentsPreviewListener) {
+            vanillaSelect.off('change', vanillaSelect._studentsPreviewListener);
+        }
+
+        // Create new listener
+        vanillaSelect._studentsPreviewListener = function () {
+            loadStudentsPreview();
+        };
+
+        // Attach listener using vanilla select's event system
+        if (typeof vanillaSelect.on === 'function') {
+            vanillaSelect.on('change', vanillaSelect._studentsPreviewListener);
+        }
+
+        // Also listen to the underlying select element's change event as fallback
+        const sectionSelectElement = document.getElementById('attendanceSection');
+        if (sectionSelectElement && !sectionSelectElement._studentsPreviewListener) {
+            sectionSelectElement._studentsPreviewListener = function () {
+                // Debounce to avoid multiple calls
+                clearTimeout(sectionSelectElement._studentsPreviewTimeout);
+                sectionSelectElement._studentsPreviewTimeout = setTimeout(function () {
+                    loadStudentsPreview();
+                }, 300);
+            };
+            sectionSelectElement.addEventListener('change', sectionSelectElement._studentsPreviewListener);
+        }
+    }
+
+    // Initialize students preview loading on semester/section changes
+    function initializeStudentsPreview() {
+        // Listen for semester changes
+        const semesterSelect = document.getElementById('attendanceSemester');
+        if (semesterSelect) {
+            semesterSelect.addEventListener('change', function () {
+                loadStudentsPreview();
+            });
+        }
+
+        // Listen for section changes (vanilla select component)
+        // We need to check periodically if the vanilla select is initialized
+        // and attach event listeners when it's ready
+        const checkVanillaSelect = setInterval(function () {
+            const vanillaSectionSelect = window['vanillaSelect_attendanceSection'];
+            if (vanillaSectionSelect) {
+                clearInterval(checkVanillaSelect);
+                setupVanillaSelectChangeListener(vanillaSectionSelect);
+            }
+        }, 100);
+
+        // Stop checking after 5 seconds
+        setTimeout(function () {
+            clearInterval(checkVanillaSelect);
+        }, 5000);
     }
 
     // Handle modal close event to clear form and flatpickr
@@ -1264,7 +1457,7 @@
         const buttonText = confirmDeleteBtn.querySelector('.button-text');
         const buttonSpinner = confirmDeleteBtn.querySelector('.button-spinner');
 
-        confirmDeleteBtn.addEventListener('click', async function() {
+        confirmDeleteBtn.addEventListener('click', async function () {
             if (!categoryToDelete) return;
 
             // Show loading state
@@ -1296,7 +1489,7 @@
                     } catch (parseError) {
                         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
                     }
-                    
+
                     showToast('Error', errorMessage, 'error');
                     setButtonLoading(confirmDeleteBtn, buttonText, buttonSpinner, false);
                     return;
@@ -1432,6 +1625,9 @@
             console.log('ℹ️ Not on attendance page, skipping category load');
         }
 
+        // Initialize students preview loading
+        initializeStudentsPreview();
+
         // Reset form when modal is closed
         const createModal = document.getElementById('createCategoryModal');
         if (createModal) {
@@ -1468,10 +1664,10 @@
         // Handle update remarks button
         const updateRemarksBtn = document.getElementById('updateRemarksBtn');
         if (updateRemarksBtn) {
-            updateRemarksBtn.addEventListener('click', async function() {
+            updateRemarksBtn.addEventListener('click', async function () {
                 const studentAttendanceId = document.getElementById('remarksStudentAttendanceId').value;
                 const remarksTextarea = document.getElementById('remarksTextarea');
-                
+
                 if (!studentAttendanceId) {
                     showToast('Error', 'Student attendance ID not found', 'error');
                     return;
@@ -1519,7 +1715,7 @@
 
                     if (response.ok && responseData.success) {
                         showToast('Success', responseData.message || 'Remarks updated successfully', 'success');
-                        
+
                         // Close modal
                         const modalElement = document.getElementById('editRemarksModal');
                         const modal = bootstrap.Modal.getInstance(modalElement);
@@ -1566,10 +1762,10 @@
         // Clear form when edit remarks modal is closed
         const editRemarksModal = document.getElementById('editRemarksModal');
         if (editRemarksModal) {
-            editRemarksModal.addEventListener('hidden.bs.modal', function() {
+            editRemarksModal.addEventListener('hidden.bs.modal', function () {
                 const remarksTextarea = document.getElementById('remarksTextarea');
                 const remarksForm = document.getElementById('editRemarksForm');
-                
+
                 if (remarksForm) {
                     remarksForm.reset();
                 }
@@ -1589,7 +1785,7 @@
     // Add event listeners to clear errors when user starts typing/selecting
     if (createAttendanceForm) {
         // Clear errors when user interacts with form fields
-        createAttendanceForm.addEventListener('input', function(e) {
+        createAttendanceForm.addEventListener('input', function (e) {
             const fieldName = e.target.name;
             if (fieldName) {
                 const errorElement = document.getElementById(`error-${fieldName}`);
@@ -1600,8 +1796,8 @@
                 }
             }
         });
-        
-        createAttendanceForm.addEventListener('change', function(e) {
+
+        createAttendanceForm.addEventListener('change', function (e) {
             const fieldName = e.target.name;
             if (fieldName) {
                 const errorElement = document.getElementById(`error-${fieldName}`);
@@ -1617,7 +1813,7 @@
     // Expose loadCategories for manual refresh
     window.reloadAttendanceCategories = loadCategories;
     // Attendance action functions
-    window.viewAttendance = function(attendanceId) {
+    window.viewAttendance = function (attendanceId) {
         // Navigate to the student attendance page (using query parameter for folder-only route)
         if (attendanceId) {
             const baseUrl = window.studentAttendanceRoute || 'attendance';
@@ -1630,22 +1826,22 @@
     // Store all students data for search functionality
     let allStudentsData = [];
     let allStudentsStats = {};
-    
+
     // Store selected student attendance IDs
     let selectedStudentAttendances = new Set();
-    
+
     // Pagination state
     let currentStudentsPage = 1;
     const studentsPerPage = 10;
     let currentStudentsData = []; // Currently displayed students (after search/filter)
 
     // View students for an attendance session
-    window.viewStudents = async function(attendanceId) {
+    window.viewStudents = async function (attendanceId) {
         console.log('View students for attendance:', attendanceId);
-        
+
         // Store current attendance ID for reloading after approve/disapprove
         window.currentViewingAttendanceId = attendanceId;
-        
+
         // Show modal
         const viewStudentsModal = document.getElementById('viewStudentsModal');
         if (!viewStudentsModal) {
@@ -1654,14 +1850,14 @@
         }
         const modal = new bootstrap.Modal(viewStudentsModal);
         modal.show();
-        
+
         // Reset states with null checks
         const studentsLoading = document.getElementById('studentsLoading');
         const studentsContent = document.getElementById('studentsContent');
         const studentsError = document.getElementById('studentsError');
         const studentsTableBody = document.getElementById('studentsTableBody');
         const studentsStats = document.getElementById('studentsStats');
-        
+
         if (studentsLoading) studentsLoading.classList.remove('d-none');
         if (studentsContent) studentsContent.classList.add('d-none');
         if (studentsError) studentsError.classList.add('d-none');
@@ -1673,22 +1869,22 @@
         const noSearchResults = document.getElementById('studentsNoSearchResults');
         const selectAllCheckbox = document.getElementById('selectAllStudents');
         const bulkActionsContainer = document.getElementById('bulkActionsContainer');
-        
+
         if (searchInput) searchInput.value = '';
         if (clearSearchBtn) clearSearchBtn.style.display = 'none';
         if (searchResults) searchResults.textContent = '';
         if (noSearchResults) noSearchResults.classList.add('d-none');
-        
+
         // Reset bulk actions
         selectedStudentAttendances.clear();
         if (selectAllCheckbox) selectAllCheckbox.checked = false;
         if (bulkActionsContainer) bulkActionsContainer.style.display = 'none';
         updateBulkActionButtons();
-        
+
         // Reset pagination
         currentStudentsPage = 1;
         currentStudentsData = [];
-        
+
         try {
             const token = getCsrfToken();
             const response = await fetch(`/attendance/${attendanceId}`, {
@@ -1704,20 +1900,20 @@
             }
 
             const result = await response.json();
-            
+
             if (result.success && result.data && result.data.attendance) {
                 const attendance = result.data.attendance;
                 // Handle both snake_case and camelCase
                 const students = attendance.student_attendances || attendance.studentAttendances || [];
                 const stats = result.data.stats || {};
-                
+
                 // Store students data globally for search
                 allStudentsData = students;
                 allStudentsStats = stats;
-                
+
                 // Hide loading
                 document.getElementById('studentsLoading').classList.add('d-none');
-                
+
                 if (students.length === 0) {
                     // Show empty state
                     document.getElementById('studentsEmpty').classList.remove('d-none');
@@ -1725,23 +1921,23 @@
                 } else {
                     // Hide empty state
                     document.getElementById('studentsEmpty').classList.add('d-none');
-                    
+
                     // Render stats
                     renderStudentsStats(stats, students.length);
-                    
+
                     // Set current students data and reset pagination
                     currentStudentsData = students;
                     currentStudentsPage = 1;
-                    
+
                     // Render students table with pagination
                     renderStudentsTableWithPagination();
-                    
+
                     // Show content
                     document.getElementById('studentsContent').classList.remove('d-none');
-                    
+
                     // Initialize search functionality
                     initializeStudentsSearch();
-                    
+
                     // Initialize bulk actions
                     initializeBulkActions();
                 }
@@ -1750,10 +1946,10 @@
             }
         } catch (error) {
             console.error('Error loading students:', error);
-            
+
             // Hide loading
             document.getElementById('studentsLoading').classList.add('d-none');
-            
+
             // Show error
             document.getElementById('studentsError').classList.remove('d-none');
             document.getElementById('studentsErrorMessage').textContent = 'Failed to load students: ' + error.message;
@@ -1765,13 +1961,13 @@
         const searchInput = document.getElementById('studentsSearchInput');
         const clearBtn = document.getElementById('clearStudentsSearch');
         const searchResults = document.getElementById('studentsSearchResults');
-        
+
         if (!searchInput) return;
-        
+
         // Search on input
-        searchInput.addEventListener('input', function(e) {
+        searchInput.addEventListener('input', function (e) {
             const query = e.target.value.trim().toLowerCase();
-            
+
             if (query.length > 0) {
                 clearBtn.style.display = 'block';
                 filterStudents(query);
@@ -1783,14 +1979,14 @@
                 renderStudentsTableWithPagination();
                 searchResults.textContent = '';
                 document.getElementById('studentsNoSearchResults').classList.add('d-none');
-                
+
                 // Update select all checkbox
                 updateSelectAllCheckbox();
             }
         });
-        
+
         // Clear search
-        clearBtn.addEventListener('click', function() {
+        clearBtn.addEventListener('click', function () {
             searchInput.value = '';
             clearBtn.style.display = 'none';
             const tableContainer = document.querySelector('#studentsContent .table-responsive');
@@ -1810,32 +2006,32 @@
         const filtered = allStudentsData.filter(studentAttendance => {
             const student = studentAttendance.user || {};
             const studentInfo = student.student_info || student.studentInfo || {};
-            const studentName = student.name || 
-                               `${(student.first_name || student.firstName || '')} ${(student.last_name || student.lastName || '')}`.trim() || 
-                               '';
-            const studentId = studentInfo.student_id || 
-                             studentInfo.studentId || 
-                             studentInfo.id_number || 
-                             studentInfo.idNumber ||
-                             studentInfo.student_number ||
-                             studentInfo.studentNumber ||
-                             student.id ||
-                             '';
+            const studentName = student.name ||
+                `${(student.first_name || student.firstName || '')} ${(student.last_name || student.lastName || '')}`.trim() ||
+                '';
+            const studentId = studentInfo.student_id ||
+                studentInfo.studentId ||
+                studentInfo.id_number ||
+                studentInfo.idNumber ||
+                studentInfo.student_number ||
+                studentInfo.studentNumber ||
+                student.id ||
+                '';
             const status = (studentAttendance.status || '').toLowerCase();
             const remarks = (studentAttendance.remarks || studentAttendance.notes || '').toLowerCase();
-            
+
             // Search in name, ID, status, and remarks
             return studentName.toLowerCase().includes(query) ||
-                   studentId.toLowerCase().includes(query) ||
-                   status.includes(query) ||
-                   remarks.includes(query);
+                studentId.toLowerCase().includes(query) ||
+                status.includes(query) ||
+                remarks.includes(query);
         });
-        
+
         // Update search results count
         const searchResults = document.getElementById('studentsSearchResults');
         const tableContainer = document.querySelector('#studentsContent .table-responsive');
         const noSearchResults = document.getElementById('studentsNoSearchResults');
-        
+
         if (filtered.length === 0) {
             searchResults.textContent = 'No results found';
             searchResults.className = 'text-danger';
@@ -1855,14 +2051,14 @@
                 noSearchResults.classList.add('d-none');
             }
         }
-        
+
         // Update current students data and reset to page 1
         currentStudentsData = filtered;
         currentStudentsPage = 1;
-        
+
         // Render filtered results with pagination
         renderStudentsTableWithPagination();
-        
+
         // Update select all checkbox after filtering
         updateSelectAllCheckbox();
     }
@@ -1871,7 +2067,7 @@
     /**
      * Refresh students table (called by refresh button)
      */
-    window.refreshStudentsTable = async function() {
+    window.refreshStudentsTable = async function () {
         const attendanceId = window.currentViewingAttendanceId;
         if (!attendanceId) {
             showToast('Error', 'No attendance session selected', 'error');
@@ -1881,7 +2077,7 @@
         // Get refresh button and show loading state
         const refreshBtn = document.getElementById('refreshStudentsTableBtn');
         const originalContent = refreshBtn ? refreshBtn.innerHTML : '';
-        
+
         if (refreshBtn) {
             refreshBtn.disabled = true;
             refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Refreshing...';
@@ -1912,7 +2108,7 @@
             // Preserve current search query
             const searchInput = document.getElementById('studentsSearchInput');
             const currentSearchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
-            
+
             const token = getCsrfToken();
             const response = await fetch(`/attendance/${attendanceId}`, {
                 method: 'GET',
@@ -1927,17 +2123,17 @@
             }
 
             const result = await response.json();
-            
+
             if (result.success && result.data && result.data.attendance) {
                 const attendance = result.data.attendance;
                 // Handle both snake_case and camelCase
                 const students = attendance.student_attendances || attendance.studentAttendances || [];
                 const stats = result.data.stats || {};
-                
+
                 // Store students data globally for search
                 allStudentsData = students;
                 allStudentsStats = stats;
-                
+
                 if (students.length === 0) {
                     // Show empty state
                     const studentsEmpty = document.getElementById('studentsEmpty');
@@ -1948,10 +2144,10 @@
                     // Hide empty state
                     const studentsEmpty = document.getElementById('studentsEmpty');
                     if (studentsEmpty) studentsEmpty.classList.add('d-none');
-                    
+
                     // Render stats
                     renderStudentsStats(stats, students.length);
-                    
+
                     // Re-apply search filter if there's an active search query
                     if (currentSearchQuery) {
                         filterStudents(currentSearchQuery);
@@ -1960,10 +2156,10 @@
                         currentStudentsData = students;
                         currentStudentsPage = 1;
                     }
-                    
+
                     // Render students table with pagination
                     renderStudentsTableWithPagination();
-                    
+
                     // Update select all checkbox state
                     updateSelectAllCheckbox();
                 }
@@ -2053,7 +2249,7 @@
                 </div>
             </div>
         `;
-        
+
         document.getElementById('studentsStats').innerHTML = statsHtml;
     }
 
@@ -2084,32 +2280,32 @@
         const tbody = document.getElementById('studentsTableBody');
         if (!tbody) return;
         tbody.innerHTML = '';
-        
+
         students.forEach((studentAttendance, index) => {
             const rowIndex = startIndex + index + 1;
             // Get student attendance ID
             const studentAttendanceId = studentAttendance.id;
-            
+
             const student = studentAttendance.user || {};
             // Handle both snake_case and camelCase
             const studentInfo = student.student_info || student.studentInfo || {};
-            const studentName = student.name || 
-                               `${(student.first_name || student.firstName || '')} ${(student.last_name || student.lastName || '')}`.trim() || 
-                               'N/A';
+            const studentName = student.name ||
+                `${(student.first_name || student.firstName || '')} ${(student.last_name || student.lastName || '')}`.trim() ||
+                'N/A';
             // Try multiple possible field names for student ID
-            const studentId = studentInfo.student_id || 
-                             studentInfo.studentId || 
-                             studentInfo.id_number || 
-                             studentInfo.idNumber ||
-                             studentInfo.student_number ||
-                             studentInfo.studentNumber ||
-                             student.id ||
-                             'N/A';
-            
+            const studentId = studentInfo.student_id ||
+                studentInfo.studentId ||
+                studentInfo.id_number ||
+                studentInfo.idNumber ||
+                studentInfo.student_number ||
+                studentInfo.studentNumber ||
+                student.id ||
+                'N/A';
+
             // Format status badge
             const studentStatus = studentAttendance.status || 'absent';
             let statusBadge = '';
-            switch(studentStatus.toLowerCase()) {
+            switch (studentStatus.toLowerCase()) {
                 case 'present':
                     statusBadge = '<span class="badge bg-success">Present</span>';
                     break;
@@ -2131,7 +2327,7 @@
                 default:
                     statusBadge = `<span class="badge bg-secondary">${escapeHtml(studentStatus)}</span>`;
             }
-            
+
             // Format check in time
             let checkInTime = '-';
             if (studentAttendance.check_in_time) {
@@ -2145,7 +2341,7 @@
                     hour12: true
                 });
             }
-            
+
             // Format check out time
             let checkOutTime = '-';
             if (studentAttendance.check_out_time) {
@@ -2159,7 +2355,7 @@
                     hour12: true
                 });
             }
-            
+
             // Format duration
             let duration = '-';
             if (studentAttendance.duration_minutes) {
@@ -2171,10 +2367,10 @@
                     duration = `${minutes}m`;
                 }
             }
-            
+
             // Format remarks
             const remarks = studentAttendance.remarks || studentAttendance.notes || '-';
-            
+
             // Get user image
             const photoPath = student.photo_path || student.avatar || '';
             let userImageUrl = '';
@@ -2190,7 +2386,7 @@
                 // Use default image
                 userImageUrl = '/build/images/users/user-dummy-img.jpg';
             }
-            
+
             // Create avatar HTML - use image if available, otherwise use initial
             let avatarHtml = '';
             if (photoPath) {
@@ -2200,14 +2396,14 @@
                     ${(studentName.charAt(0) || '?').toUpperCase()}
                 </div>`;
             }
-            
+
             // Check if this row should be selectable (pending and has check-in)
             // Allow selection if status is pending, regardless of approved_at value
             const hasCheckIn = studentAttendance.check_in_time ? true : false;
             const attendanceStatus = (studentAttendance.status || '').toLowerCase();
             const isPending = attendanceStatus === 'pending';
             const isSelectable = isPending && hasCheckIn;
-            
+
             const row = `
                 <tr data-student-attendance-id="${studentAttendanceId}">
                     <td>
@@ -2245,7 +2441,7 @@
                     </td>
                 </tr>
             `;
-            
+
             tbody.innerHTML += row;
         });
     }
@@ -2255,31 +2451,31 @@
         const paginationContainer = document.getElementById('studentsPaginationContainer');
         const paginationInfo = document.getElementById('studentsPaginationInfo');
         const pagination = document.getElementById('studentsPagination');
-        
+
         if (!paginationContainer || !pagination || !paginationInfo) return;
-        
+
         if (totalItems === 0 || totalPages === 0) {
             paginationContainer.style.display = 'none';
             paginationInfo.textContent = '0-0 of 0';
             pagination.innerHTML = '';
             return;
         }
-        
+
         paginationContainer.style.display = 'flex';
-        
+
         // Calculate display range
         const startIndex = (currentStudentsPage - 1) * studentsPerPage + 1;
         const endIndex = Math.min(currentStudentsPage * studentsPerPage, totalItems);
         paginationInfo.textContent = `${startIndex}-${endIndex} of ${totalItems}`;
-        
+
         // Clear existing pagination
         pagination.innerHTML = '';
-        
+
         if (totalPages <= 1) {
             // Show pagination info but no page controls if only one page
             return;
         }
-        
+
         // Previous button
         const prevDisabled = currentStudentsPage === 1 ? 'disabled' : '';
         pagination.innerHTML += `
@@ -2289,21 +2485,21 @@
                 </a>
             </li>
         `;
-        
+
         // Page numbers
         let startPage = Math.max(1, currentStudentsPage - 2);
         let endPage = Math.min(totalPages, currentStudentsPage + 2);
-        
+
         // Adjust if we're near the start
         if (currentStudentsPage <= 3) {
             endPage = Math.min(5, totalPages);
         }
-        
+
         // Adjust if we're near the end
         if (currentStudentsPage >= totalPages - 2) {
             startPage = Math.max(1, totalPages - 4);
         }
-        
+
         // First page
         if (startPage > 1) {
             pagination.innerHTML += `
@@ -2319,7 +2515,7 @@
                 `;
             }
         }
-        
+
         // Page number buttons
         for (let i = startPage; i <= endPage; i++) {
             const active = i === currentStudentsPage ? 'active' : '';
@@ -2329,7 +2525,7 @@
                 </li>
             `;
         }
-        
+
         // Last page
         if (endPage < totalPages) {
             if (endPage < totalPages - 1) {
@@ -2345,7 +2541,7 @@
                 </li>
             `;
         }
-        
+
         // Next button
         const nextDisabled = currentStudentsPage === totalPages ? 'disabled' : '';
         pagination.innerHTML += `
@@ -2358,19 +2554,19 @@
     }
 
     // Change students page
-    window.changeStudentsPage = function(page) {
+    window.changeStudentsPage = function (page) {
         const totalPages = Math.ceil(currentStudentsData.length / studentsPerPage);
-        
+
         if (page < 1 || page > totalPages) {
             return;
         }
-        
+
         currentStudentsPage = page;
         renderStudentsTableWithPagination();
-        
+
         // Update select all checkbox
         updateSelectAllCheckbox();
-        
+
         // Scroll to top of table
         const tableContainer = document.querySelector('#studentsContent .table-responsive');
         if (tableContainer) {
@@ -2385,19 +2581,19 @@
         const actionStatus = (studentAttendance.status || '').toLowerCase();
         const isPending = actionStatus === 'pending';
         const isApproved = !isPending && studentAttendance.approved_at; // Only show approved badge if status is not pending
-        
+
         let buttons = '';
-        
+
         // Always show edit button
         buttons += `<button class="btn btn-sm btn-primary" onclick="editStudentAttendanceStatus(${studentAttendanceId})" title="Edit Status">
             <i class="ri-edit-line"></i>
         </button>`;
-        
+
         // Always show remarks button
         buttons += `<button class="btn btn-sm btn-info" onclick="editStudentAttendanceRemarks(${studentAttendanceId})" title="Edit Remarks">
             <i class="ri-message-3-line"></i>
         </button>`;
-        
+
         // Show approve/disapprove buttons if: status is "pending" AND has check-in time
         // Allow approval even if approved_at has a value, as long as status is pending
         if (isPending && hasCheckIn) {
@@ -2410,7 +2606,7 @@
                 </button>
             `;
         }
-        
+
         // Show disapprove button if approved (status is not pending and has approved_at)
         if (isApproved) {
             buttons += `
@@ -2419,12 +2615,12 @@
                 </button>
             `;
         }
-        
+
         return buttons ? `<div class="d-flex gap-1 align-items-center">${buttons}</div>` : '<span class="text-muted">-</span>';
     }
 
     // Approve student attendance
-    window.approveStudentAttendance = function(studentAttendanceId) {
+    window.approveStudentAttendance = function (studentAttendanceId) {
         Swal.fire({
             title: 'Approve Attendance?',
             text: 'Are you sure you want to approve this student attendance?',
@@ -2451,7 +2647,7 @@
                     if (response.ok && result.success) {
                         // Show success toast
                         showToast('Success', result.message || 'Student attendance approved successfully', 'success');
-                        
+
                         // Refresh students data without reinitializing modal
                         const currentAttendanceId = window.currentViewingAttendanceId;
                         if (currentAttendanceId) {
@@ -2468,7 +2664,7 @@
     };
 
     // Edit student attendance status
-    window.editStudentAttendanceStatus = function(studentAttendanceId) {
+    window.editStudentAttendanceStatus = function (studentAttendanceId) {
         // Find the student attendance data
         const studentAttendance = allStudentsData.find(sa => sa.id === studentAttendanceId);
         if (!studentAttendance) {
@@ -2477,7 +2673,7 @@
         }
 
         const currentStatus = studentAttendance.status || 'pending';
-        
+
         // Status options with labels
         const statusOptions = [
             { value: 'present', label: 'Present' },
@@ -2524,23 +2720,23 @@
             preConfirm: async () => {
                 const select = document.getElementById('statusSelect');
                 const selectedStatus = select ? select.value : null;
-                
+
                 if (!selectedStatus) {
                     Swal.showValidationMessage('Please select a status');
                     return false;
                 }
-                
+
                 if (selectedStatus === currentStatus) {
                     Swal.showValidationMessage('Status is already set to this value');
                     return false;
                 }
-                
+
                 return selectedStatus;
             }
         }).then(async (result) => {
             if (result.isConfirmed && result.value) {
                 const newStatus = result.value;
-                
+
                 try {
                     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
                     if (!token) {
@@ -2582,7 +2778,7 @@
                             timer: 2000,
                             timerProgressBar: true
                         });
-                        
+
                         // Refresh students data without reinitializing modal
                         const currentAttendanceId = window.currentViewingAttendanceId;
                         if (currentAttendanceId) {
@@ -2610,7 +2806,7 @@
     };
 
     // Edit student attendance remarks
-    window.editStudentAttendanceRemarks = function(studentAttendanceId) {
+    window.editStudentAttendanceRemarks = function (studentAttendanceId) {
         // Find the student attendance data
         const studentAttendance = allStudentsData.find(sa => sa.id === studentAttendanceId);
         if (!studentAttendance) {
@@ -2619,19 +2815,19 @@
         }
 
         const currentRemarks = studentAttendance.remarks || studentAttendance.notes || '';
-        
+
         // Set the student attendance ID
         const remarksIdInput = document.getElementById('remarksStudentAttendanceId');
         if (remarksIdInput) {
             remarksIdInput.value = studentAttendanceId;
         }
-        
+
         // Set the current remarks in the textarea
         const remarksTextarea = document.getElementById('remarksTextarea');
         if (remarksTextarea) {
             remarksTextarea.value = currentRemarks || '';
             remarksTextarea.classList.remove('is-invalid');
-            
+
             // Clear any error messages
             const errorElement = document.getElementById('error-remarks');
             if (errorElement) {
@@ -2639,13 +2835,13 @@
                 errorElement.style.display = 'none';
             }
         }
-        
+
         // Show the modal
         const modalElement = document.getElementById('editRemarksModal');
         if (modalElement) {
             const modal = new bootstrap.Modal(modalElement);
             modal.show();
-            
+
             // Focus on textarea after modal is shown
             modalElement.addEventListener('shown.bs.modal', function onModalShown() {
                 if (remarksTextarea) {
@@ -2660,7 +2856,7 @@
     };
 
     // Disapprove student attendance
-    window.disapproveStudentAttendance = function(studentAttendanceId) {
+    window.disapproveStudentAttendance = function (studentAttendanceId) {
         Swal.fire({
             title: 'Disapprove Attendance?',
             text: 'Are you sure you want to disapprove this student attendance?',
@@ -2687,7 +2883,7 @@
                     if (response.ok && result.success) {
                         // Show success toast
                         showToast('Success', result.message || 'Student attendance disapproved successfully', 'success');
-                        
+
                         // Refresh students data without reinitializing modal
                         const currentAttendanceId = window.currentViewingAttendanceId;
                         if (currentAttendanceId) {
@@ -2708,10 +2904,10 @@
         // Select all checkbox - only selects items on current page
         const selectAllCheckbox = document.getElementById('selectAllStudents');
         if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', function() {
+            selectAllCheckbox.addEventListener('change', function () {
                 const isChecked = this.checked;
                 const checkboxes = document.querySelectorAll('.student-checkbox');
-                
+
                 checkboxes.forEach(checkbox => {
                     checkbox.checked = isChecked;
                     const studentId = parseInt(checkbox.value, 10);
@@ -2721,7 +2917,7 @@
                         selectedStudentAttendances.delete(studentId);
                     }
                 });
-                
+
                 updateBulkActionButtons();
                 updateSelectAllCheckbox();
             });
@@ -2729,15 +2925,15 @@
     }
 
     // Handle individual checkbox change
-    window.handleStudentCheckboxChange = function(studentAttendanceId) {
+    window.handleStudentCheckboxChange = function (studentAttendanceId) {
         const checkbox = document.getElementById(`studentCheckbox_${studentAttendanceId}`);
-        
+
         if (checkbox && checkbox.checked) {
             selectedStudentAttendances.add(studentAttendanceId);
         } else {
             selectedStudentAttendances.delete(studentAttendanceId);
         }
-        
+
         // Update select all checkbox state
         updateSelectAllCheckbox();
         updateBulkActionButtons();
@@ -2748,7 +2944,7 @@
         const selectAllCheckbox = document.getElementById('selectAllStudents');
         const checkboxes = document.querySelectorAll('.student-checkbox:not(:disabled)');
         const checkedCount = document.querySelectorAll('.student-checkbox:checked').length;
-        
+
         if (selectAllCheckbox && checkboxes.length > 0) {
             // Check if all visible checkboxes are checked
             const allVisibleChecked = Array.from(checkboxes).every(cb => cb.checked);
@@ -2767,11 +2963,11 @@
         const selectedCountSpan = document.getElementById('selectedCount');
         const bulkApproveBtn = document.getElementById('bulkApproveBtn');
         const bulkDisapproveBtn = document.getElementById('bulkDisapproveBtn');
-        
+
         if (selectedCountSpan) {
             selectedCountSpan.textContent = `${selectedCount} selected`;
         }
-        
+
         if (bulkActionsContainer) {
             if (selectedCount > 0) {
                 bulkActionsContainer.style.display = 'flex';
@@ -2779,15 +2975,15 @@
                 bulkActionsContainer.style.display = 'none';
             }
         }
-        
+
         // Check if selected items are eligible for approve/disapprove
         const eligibleForApprove = getEligibleForApprove();
         const eligibleForDisapprove = getEligibleForDisapprove();
-        
+
         if (bulkApproveBtn) {
             bulkApproveBtn.disabled = eligibleForApprove.length === 0;
         }
-        
+
         if (bulkDisapproveBtn) {
             bulkDisapproveBtn.disabled = eligibleForDisapprove.length === 0;
         }
@@ -2802,7 +2998,7 @@
                 const hasCheckIn = studentAttendance.check_in_time ? true : false;
                 const status = (studentAttendance.status || '').toLowerCase();
                 const isPending = status === 'pending';
-                
+
                 // Allow approval if status is pending, regardless of approved_at value
                 if (isPending && hasCheckIn) {
                     eligible.push(id);
@@ -2825,9 +3021,9 @@
     }
 
     // Bulk approve students
-    window.bulkApproveStudents = function() {
+    window.bulkApproveStudents = function () {
         const eligibleIds = getEligibleForApprove();
-        
+
         if (eligibleIds.length === 0) {
             Swal.fire({
                 title: 'No Eligible Items',
@@ -2837,7 +3033,7 @@
             });
             return;
         }
-        
+
         Swal.fire({
             title: 'Approve Selected Attendances?',
             text: `Are you sure you want to approve ${eligibleIds.length} student attendance(s)?`,
@@ -2870,11 +3066,11 @@
                     if (response.ok && responseData.success) {
                         // Show success toast
                         showToast('Success', responseData.message || `Successfully approved ${eligibleIds.length} attendance(s)`, 'success');
-                        
+
                         // Clear selection
                         selectedStudentAttendances.clear();
                         document.getElementById('selectAllStudents').checked = false;
-                        
+
                         // Refresh students data without reinitializing modal
                         const currentAttendanceId = window.currentViewingAttendanceId;
                         if (currentAttendanceId) {
@@ -2891,9 +3087,9 @@
     };
 
     // Bulk disapprove students
-    window.bulkDisapproveStudents = function() {
+    window.bulkDisapproveStudents = function () {
         const eligibleIds = getEligibleForDisapprove();
-        
+
         if (eligibleIds.length === 0) {
             Swal.fire({
                 title: 'No Eligible Items',
@@ -2903,7 +3099,7 @@
             });
             return;
         }
-        
+
         Swal.fire({
             title: 'Disapprove Selected Attendances?',
             text: `Are you sure you want to disapprove ${eligibleIds.length} student attendance(s)?`,
@@ -2934,11 +3130,11 @@
                     if (response.ok && responseData.success) {
                         // Show success toast
                         showToast('Success', responseData.message || `Successfully disapproved ${eligibleIds.length} attendance(s)`, 'success');
-                        
+
                         // Clear selection
                         selectedStudentAttendances.clear();
                         document.getElementById('selectAllStudents').checked = false;
-                        
+
                         // Refresh students data without reinitializing modal
                         const currentAttendanceId = window.currentViewingAttendanceId;
                         if (currentAttendanceId) {
@@ -2954,24 +3150,24 @@
         });
     };
 
-    window.editAttendance = async function(attendanceId) {
+    window.editAttendance = async function (attendanceId) {
         console.log('Edit attendance:', attendanceId);
         currentAttendanceId = attendanceId;
-        
+
         // Load form data first
         await loadAttendanceFormData();
-        
+
         // Update modal for edit mode
         updateModalForEdit();
-        
+
         // Show modal first
         const modal = new bootstrap.Modal(document.getElementById('createAttendanceModal'));
         modal.show();
-        
+
         // Initialize flatpickr after modal is shown
         setTimeout(() => {
             initializeFlatpickr();
-            
+
             // Load attendance data for editing after flatpickr is initialized
             setTimeout(() => {
                 loadAttendanceForEdit(attendanceId);
@@ -2982,48 +3178,48 @@
     // Store attendance ID for deletion
     let attendanceToDelete = null;
 
-    window.deleteAttendance = function(attendanceId) {
+    window.deleteAttendance = function (attendanceId) {
         attendanceToDelete = attendanceId;
         const modal = new bootstrap.Modal(document.getElementById('deleteAttendanceModal'));
         modal.show();
     };
 
     // Print attendance
-    window.printAttendance = function(attendanceId) {
+    window.printAttendance = function (attendanceId) {
         // Store current attendance ID for print modal
         window.currentPrintAttendanceId = attendanceId;
-        
+
         // Get modal elements
         const modalElement = document.getElementById('printAttendanceModal');
         const iframe = document.getElementById('printAttendanceIframe');
         const loading = document.getElementById('printAttendanceLoading');
-        
+
         // Show loading state
         if (loading) loading.style.display = 'block';
         if (iframe) {
             iframe.style.display = 'none';
             iframe.src = ''; // Clear previous src
         }
-        
+
         // Show print modal
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
-        
+
         // Set iframe source after modal is shown
         modalElement.addEventListener('shown.bs.modal', function onModalShown() {
             if (iframe && attendanceId) {
                 // Build PDF URL
                 const pdfUrl = `/attendance/${attendanceId}/print`;
                 iframe.src = pdfUrl;
-                
+
                 // Hide loading and show iframe when loaded
-                iframe.onload = function() {
+                iframe.onload = function () {
                     if (loading) loading.style.display = 'none';
                     iframe.style.display = 'block';
                 };
-                
+
                 // Handle iframe load errors
-                iframe.onerror = function() {
+                iframe.onerror = function () {
                     if (loading) {
                         loading.innerHTML = `
                             <div class="text-danger">
@@ -3037,14 +3233,14 @@
                     }
                 };
             }
-            
+
             // Remove event listener after first use
             modalElement.removeEventListener('shown.bs.modal', onModalShown);
         }, { once: true });
     };
-    
+
     // Open attendance report in new tab
-    window.openAttendanceInNewTab = function() {
+    window.openAttendanceInNewTab = function () {
         const attendanceId = window.currentPrintAttendanceId;
         if (attendanceId) {
             const pdfUrl = `/attendance/${attendanceId}/print`;
@@ -3060,7 +3256,7 @@
         const buttonText = confirmDeleteAttendanceBtn.querySelector('.button-text');
         const buttonSpinner = confirmDeleteAttendanceBtn.querySelector('.button-spinner');
 
-        confirmDeleteAttendanceBtn.addEventListener('click', async function() {
+        confirmDeleteAttendanceBtn.addEventListener('click', async function () {
             if (!attendanceToDelete) return;
 
             // Show loading state
@@ -3086,14 +3282,14 @@
 
                 if (result.success) {
                     showToast('Success', result.message || 'Attendance deleted successfully', 'success');
-                    
+
                     // Close modal
                     const modalElement = document.getElementById('deleteAttendanceModal');
                     const modal = bootstrap.Modal.getInstance(modalElement);
                     if (modal) {
                         modal.hide();
                     }
-                    
+
                     loadCategories(); // Reload to update the display
                 } else {
                     showToast('Error', result.message || 'Failed to delete attendance', 'error');
@@ -3127,7 +3323,7 @@
             const modalElement = document.getElementById(modalId);
             if (modalElement) {
                 // Handle show event - remove focus from layout wrapper before modal opens
-                modalElement.addEventListener('show.bs.modal', function() {
+                modalElement.addEventListener('show.bs.modal', function () {
                     // Remove focus from any focused elements in the layout wrapper
                     const layoutWrapper = document.getElementById('layout-wrapper');
                     if (layoutWrapper) {
@@ -3136,17 +3332,17 @@
                             focusedElement.blur();
                         }
                     }
-                    
+
                     // Remove aria-hidden from modal
                     this.removeAttribute('aria-hidden');
                     this.setAttribute('aria-modal', 'true');
                 });
 
                 // Ensure aria-hidden is properly set when modal is shown
-                modalElement.addEventListener('shown.bs.modal', function() {
+                modalElement.addEventListener('shown.bs.modal', function () {
                     this.setAttribute('aria-hidden', 'false');
                     this.setAttribute('aria-modal', 'true');
-                    
+
                     // Focus on first focusable element in modal
                     const firstFocusable = this.querySelector('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
                     if (firstFocusable) {
@@ -3157,7 +3353,7 @@
                 });
 
                 // Ensure aria-hidden is properly set when modal is hidden
-                modalElement.addEventListener('hide.bs.modal', function() {
+                modalElement.addEventListener('hide.bs.modal', function () {
                     // Remove focus from any focused elements in the modal before hiding
                     const focusedElement = this.querySelector(':focus');
                     if (focusedElement) {
@@ -3166,7 +3362,7 @@
                 });
 
                 // Clean up after modal is hidden
-                modalElement.addEventListener('hidden.bs.modal', function() {
+                modalElement.addEventListener('hidden.bs.modal', function () {
                     this.setAttribute('aria-hidden', 'true');
                     this.removeAttribute('aria-modal');
                 });
@@ -3188,7 +3384,7 @@
 
         // Debounce function to limit search frequency
         let searchTimeout;
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 performSearch(this.value.trim());
@@ -3196,7 +3392,7 @@
         });
 
         // Clear search on Escape key
-        searchInput.addEventListener('keydown', function(e) {
+        searchInput.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 this.value = '';
                 performSearch('');
@@ -3205,7 +3401,7 @@
     }
 
     // Perform search on categories and attendances (exposed globally for clear button)
-    window.performSearch = function(query) {
+    window.performSearch = function (query) {
         if (!allCategoriesData || allCategoriesData.length === 0) {
             return; // No data to search
         }
@@ -3221,7 +3417,7 @@
         // Filter categories and attendances
         const filteredCategories = allCategoriesData.map(category => {
             // Check if category matches
-            const categoryMatches = 
+            const categoryMatches =
                 category.name.toLowerCase().includes(searchQuery) ||
                 (category.description && category.description.toLowerCase().includes(searchQuery));
 
@@ -3248,16 +3444,16 @@
                     ? formattedDateForSearch.includes(searchQuery)
                     : false;
 
-                const locationMatch = attendance.location ? 
+                const locationMatch = attendance.location ?
                     attendance.location.toLowerCase().includes(searchQuery) : false;
 
-                const typeMatch = attendance.type ? 
+                const typeMatch = attendance.type ?
                     attendance.type.toLowerCase().includes(searchQuery) : false;
 
-                const remarksMatch = attendance.remarks ? 
+                const remarksMatch = attendance.remarks ?
                     attendance.remarks.toLowerCase().includes(searchQuery) : false;
 
-                const notesMatch = attendance.notes ? 
+                const notesMatch = attendance.notes ?
                     attendance.notes.toLowerCase().includes(searchQuery) : false;
 
                 // Format time for search
@@ -3265,8 +3461,8 @@
                 if (attendance.start_time) {
                     const startDate = new Date(attendance.start_time);
                     if (!isNaN(startDate.getTime())) {
-                        const startTime = startDate.toLocaleTimeString('en-US', { 
-                            hour: 'numeric', 
+                        const startTime = startDate.toLocaleTimeString('en-US', {
+                            hour: 'numeric',
                             minute: '2-digit',
                             hour12: true,
                         }).toLowerCase();
@@ -3276,8 +3472,8 @@
                 if (!timeMatch && attendance.end_time) {
                     const endDate = new Date(attendance.end_time);
                     if (!isNaN(endDate.getTime())) {
-                        const endTime = endDate.toLocaleTimeString('en-US', { 
-                            hour: 'numeric', 
+                        const endTime = endDate.toLocaleTimeString('en-US', {
+                            hour: 'numeric',
                             minute: '2-digit',
                             hour12: true,
                         }).toLowerCase();
@@ -3336,4 +3532,4 @@
         initializeSearch();
     }
 
-    })();
+})();

@@ -73,8 +73,16 @@ class StudentController extends Controller
                 });
             }
             
-            // Get students ordered by name
-            $students = $query->orderBy('created_at', 'desc')->get();
+            // Get students with appropriate ordering
+            if ($request->has('sort') && $request->sort === 'alphabetical') {
+                // Sort alphabetically by student name
+                $students = $query->get()->sortBy(function($student) {
+                    return $student->user ? strtolower($student->user->name) : '';
+                })->values();
+            } else {
+                // Default: order by created_at descending
+                $students = $query->orderBy('created_at', 'desc')->get();
+            }
             
             // Get filter details for display
             $filters = [];
@@ -101,12 +109,23 @@ class StudentController extends Controller
                     $filters['Programs'] = $programs->map(fn($p) => $p->code . ' - ' . $p->name)->join(', ');
                 }
             }
+            if ($request->has('sort') && $request->sort === 'alphabetical') {
+                $filters['Sort'] = 'Alphabetically by Name';
+            }
+            
+            // Get orientation (default to portrait)
+            $orientation = $request->has('orientation') && $request->orientation === 'landscape' ? 'landscape' : 'portrait';
+            if ($orientation === 'landscape') {
+                $filters['Orientation'] = 'Landscape';
+            } else {
+                $filters['Orientation'] = 'Portrait';
+            }
             
             // Generate PDF
             $pdf = Pdf::loadView('livewire.student.print.students', compact('students', 'filters'));
             
             // Set PDF options
-            $pdf->setPaper('a4', 'portrait');
+            $pdf->setPaper('a4', $orientation);
             $pdf->setOption('enable-local-file-access', true);
             $pdf->setOption('isHtml5ParserEnabled', true);
             $pdf->setOption('isRemoteEnabled', false);

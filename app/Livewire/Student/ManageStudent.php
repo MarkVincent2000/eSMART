@@ -85,6 +85,8 @@ class ManageStudent extends Component
     public $showPrintModal = false;
     public $printStep = 1; // 1 = filters, 2 = preview
     public $printUrl = '';
+    public $printSortAlphabetically = false; // Sort students alphabetically by name
+    public $printOrientation = 'portrait'; // PDF orientation: 'portrait' or 'landscape'
     
     // Edit enrollment form fields
     public $editStudentNumber = '';
@@ -1310,6 +1312,8 @@ class ManageStudent extends Component
     {
         $this->printStep = 1;
         $this->printUrl = '';
+        $this->printSortAlphabetically = false;
+        $this->printOrientation = 'portrait';
         $this->resetErrorBag();
         $this->showPrintModal = true;
     }
@@ -1319,6 +1323,8 @@ class ManageStudent extends Component
         $this->showPrintModal = false;
         $this->printStep = 1;
         $this->printUrl = '';
+        $this->printSortAlphabetically = false;
+        $this->printOrientation = 'portrait';
         $this->resetErrorBag();
     }
 
@@ -1345,6 +1351,14 @@ class ManageStudent extends Component
         
         if ($this->studentSearch) {
             $params['search'] = $this->studentSearch;
+        }
+        
+        if ($this->printSortAlphabetically) {
+            $params['sort'] = 'alphabetical';
+        }
+        
+        if ($this->printOrientation !== 'portrait') {
+            $params['orientation'] = $this->printOrientation;
         }
         
         // Build URL with query parameters
@@ -1397,6 +1411,18 @@ class ManageStudent extends Component
         // Search
         if ($this->studentSearch) {
             $filters['Search'] = $this->studentSearch;
+        }
+        
+        // Sort
+        if ($this->printSortAlphabetically) {
+            $filters['Sort'] = 'Alphabetically by Name';
+        }
+        
+        // Orientation
+        if ($this->printOrientation === 'landscape') {
+            $filters['Orientation'] = 'Landscape';
+        } else {
+            $filters['Orientation'] = 'Portrait';
         }
         
         return $filters;

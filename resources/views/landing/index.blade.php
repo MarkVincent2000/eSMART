@@ -1378,7 +1378,9 @@
                                 <div class="text-center mb-5">
                                     <h3 class="mb-3 fw-semibold">How Our System Works</h3>
                                     <p class="text-muted mb-4 ff-secondary">
-                                        Our enrollment and information management system streamlines your educational journey from start to finish. Here’s a quick look at our simple, user-friendly process that ensures accuracy, transparency, and support at every stage.
+                                        Our enrollment and information management system streamlines your educational
+                                        journey from start to finish. Here’s a quick look at our simple, user-friendly
+                                        process that ensures accuracy, transparency, and support at every stage.
                                     </p>
                                 </div>
                             </div>
@@ -1400,7 +1402,8 @@
 
                                     <h5>Submit Your Information</h5>
                                     <p class="text-muted ff-secondary">
-                                        Register and provide your personal and academic details through our secure portal. Our intuitive forms guide you to ensure your data is complete and accurate.
+                                        Register and provide your personal and academic details through our secure portal.
+                                        Our intuitive forms guide you to ensure your data is complete and accurate.
                                     </p>
                                 </div>
                             </div>
@@ -1419,7 +1422,9 @@
 
                                     <h5>Admin Review & Verification</h5>
                                     <p class="text-muted ff-secondary">
-                                        Our administrators review your submission, verify the information, and assist if corrections are needed. Notifications keep you updated on the progress of your enrollment.
+                                        Our administrators review your submission, verify the information, and assist if
+                                        corrections are needed. Notifications keep you updated on the progress of your
+                                        enrollment.
                                     </p>
                                 </div>
                             </div>
@@ -1434,7 +1439,9 @@
 
                                     <h5>Confirmation & Ongoing Access</h5>
                                     <p class="text-muted ff-secondary">
-                                        Once approved, you’ll receive confirmation and can access your enrollment information anytime. Manage updates, receive important notifications, and track your academic journey seamlessly!
+                                        Once approved, you’ll receive confirmation and can access your enrollment
+                                        information anytime. Manage updates, receive important notifications, and track your
+                                        academic journey seamlessly!
                                     </p>
                                 </div>
                             </div>
@@ -1454,7 +1461,10 @@
                                 <div class="text-center mb-5">
                                     <h3 class="mb-3 fw-semibold">Our <span class="text-danger">Team</span></h3>
                                     <p class="text-muted mb-4 ff-secondary">
-                                        Our talented team combines expertise in education and technology to build a smart, efficient system that empowers users. We are dedicated to continuous innovation, ensuring our platform makes enrollment and information management seamless, reliable, and easy for everyone.
+                                        Our talented team combines expertise in education and technology to build a smart,
+                                        efficient system that empowers users. We are dedicated to continuous innovation,
+                                        ensuring our platform makes enrollment and information management seamless,
+                                        reliable, and easy for everyone.
                                     </p>
                                 </div>
                             </div>
@@ -1530,7 +1540,7 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ URL::asset('build/images/users/avatar-3.jpg') }}" alt=""
+                                            <img src="{{ URL::asset('build/images/users/cuyag.png') }}" alt=""
                                                 class="img-fluid rounded-circle">
                                             <a href="#"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
@@ -1546,261 +1556,260 @@
                                 </div>
                                 <!-- end card -->
                             </div>
-                        
-                        </div>
-                        <!-- end row -->
-                    
-                         
 
-                        
                         </div>
                         <!-- end row -->
 
-                        <!-- end row -->
+
+
+
                     </div>
-                    <!-- end container -->
-                </section>
-                <!-- end team -->
+                    <!-- end row -->
 
-                <!-- start contact -->
-                <section class="section" id="contact">
-                    <div class="container">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-8">
-                                <div class="text-center mb-5">
-                                    <h3 class="mb-3 fw-semibold">Get In Touch</h3>
-                                    <p class="text-muted mb-4 ff-secondary">We thrive when coming up with innovative ideas
-                                        but also
-                                        understand that a smart concept should be supported with faucibus sapien odio
-                                        measurable
-                                        results.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
+                    <!-- end row -->
+            </div>
+            <!-- end container -->
+            </section>
+            <!-- end team -->
 
-                        <div class="row gy-4">
-                            <div class="col-lg-4">
-                                <div>
-                                    <div class="mt-4">
-                                        <h5 class="fs-13 text-muted text-uppercase">Office Address 1:</h5>
-                                        <div class="ff-secondary fw-semibold">Kidapawan City, <br />North Cotabato</div>
-                                    </div>
-                                    <div class="mt-4">
-                                        <h5 class="fs-13 text-muted text-uppercase">Office Address 2:</h5>
-                                        <div class="ff-secondary fw-semibold">Bansalan, <br />Davao del Sur
-                                        </div>
-                                    </div>
-                                    <div class="mt-4">
-                                        <h5 class="fs-13 text-muted text-uppercase">Working Hours:</h5>
-                                        <div class="ff-secondary fw-semibold">9:00am to 6:00pm</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-8">
-                                <div>
-                                    <form>
-                                        <div class="row">
-                                            <div class="col-lg-6">
-                                                <div class="mb-4">
-                                                    <label for="name" class="form-label fs-13">Name</label>
-                                                    <input name="name" id="name" type="text"
-                                                        class="form-control bg-light border-light" placeholder="Your name*">
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div class="mb-4">
-                                                    <label for="email" class="form-label fs-13">Email</label>
-                                                    <input name="email" id="email" type="email"
-                                                        class="form-control bg-light border-light"
-                                                        placeholder="Your email*">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-lg-12">
-                                                <div class="mb-4">
-                                                    <label for="subject" class="form-label fs-13">Subject</label>
-                                                    <input type="text" class="form-control bg-light border-light"
-                                                        id="subject" name="subject" placeholder="Your Subject.." />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-lg-12">
-                                                <div class="mb-3">
-                                                    <label for="comments" class="form-label fs-13">Message</label>
-                                                    <textarea name="comments" id="comments" rows="3"
-                                                        class="form-control bg-light border-light"
-                                                        placeholder="Your message..."></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-lg-12 text-end">
-                                                <input type="submit" id="submit" name="send"
-                                                    class="submitBnt btn btn-primary" value="Send Message">
-                                            </div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end contact -->
-
-                <!-- start cta -->
-                <section class="py-5 bg-primary position-relative">
-                    <div class="bg-overlay bg-overlay-pattern opacity-50"></div>
-                    <div class="container">
-                        <div class="row align-items-center gy-4">
-                            <div class="col-sm">
-                                <div>
-                                    <h4 class="text-white mb-0 fw-semibold">Build your campus management system with eSMART
-                                        Campus
-                                    </h4>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                            <div class="col-sm-auto">
-                                <div>
-                                    <a href="{{ route('register') }}" class="btn bg-gradient btn-danger"><i
-                                            class="ri-user-add-line align-middle me-1"></i> Get Started</a>
-                                </div>
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
-                    <!-- end container -->
-                </section>
-                <!-- end cta -->
-
-                <!-- Start footer -->
-                <footer class="custom-footer bg-dark py-5 position-relative">
-                    <div class="container">
-                        <div class="row">
-                            <div class="col-lg-4 mt-4">
-                                <div>
-                                    <div>
-                                        <img src="{{ URL::asset('build/images/smart-logo-light.png') }}" alt="logo light"
-                                            height="17">
-                                    </div>
-                                    <div class="mt-4 fs-13">
-                                        <p>eSMART Campus - Student Management System</p>
-                                        <p class="ff-secondary">A comprehensive platform for managing student enrollment,
-                                            attendance, grades, assignments, and all campus operations in one unified
-                                            system.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- <div class="col-lg-7 ms-lg-auto">
-                                <div class="row">
-                                    <div class="col-sm-4 mt-4">
-                                        <h5 class="text-white mb-0">Company</h5>
-                                        <div class="text-muted mt-3">
-                                            <ul class="list-unstyled ff-secondary footer-list">
-                                                <li><a href="pages-profile">About Us</a></li>
-                                                <li><a href="pages-gallery">Gallery</a></li>
-                                                <li><a href="apps-projects-overview">Projects</a></li>
-                                                <li><a href="pages-timeline">Timeline</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-4 mt-4">
-                                        <h5 class="text-white mb-0">Apps Pages</h5>
-                                        <div class="text-muted mt-3">
-                                            <ul class="list-unstyled ff-secondary footer-list">
-                                                <li><a href="pages-pricing">Calendar</a></li>
-                                                <li><a href="apps-mailbox">Mailbox</a></li>
-                                                <li><a href="apps-chat">Chat</a></li>
-                                                <li><a href="apps-crm-deals">Deals</a></li>
-                                                <li><a href="apps-tasks-kanban">Kanban Board</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-4 mt-4">
-                                        <h5 class="text-white mb-0">Support</h5>
-                                        <div class="text-muted mt-3">
-                                            <ul class="list-unstyled ff-secondary footer-list">
-                                                <li><a href="pages-faqs">FAQ</a></li>
-                                                <li><a href="pages-faqs">Contact</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> --}}
-
-                        </div>
-
-                        <div class="row text-center text-sm-start align-items-center mt-5">
-                            <div class="col-sm-6">
-
-                                <div>
-                                    <p class="copy-rights mb-0">
-                                        <script>
-                                            document.write(new Date().getFullYear())
-                                        </script> © eSMART Campus. Crafted with <i
-                                            class="mdi mdi-heart text-danger"></i> by eSMART Campus Team
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="text-sm-end mt-3 mt-sm-0">
-                                    <ul class="list-inline mb-0 footer-social-link">
-                                        <li class="list-inline-item">
-                                            <a href="javascript: void(0);" class="avatar-xs d-block">
-                                                <div class="avatar-title rounded-circle">
-                                                    <i class="ri-facebook-fill"></i>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <a href="javascript: void(0);" class="avatar-xs d-block">
-                                                <div class="avatar-title rounded-circle">
-                                                    <i class="ri-github-fill"></i>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <a href="javascript: void(0);" class="avatar-xs d-block">
-                                                <div class="avatar-title rounded-circle">
-                                                    <i class="ri-linkedin-fill"></i>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <a href="javascript: void(0);" class="avatar-xs d-block">
-                                                <div class="avatar-title rounded-circle">
-                                                    <i class="ri-google-fill"></i>
-                                                </div>
-                                            </a>
-                                        </li>
-                                        <li class="list-inline-item">
-                                            <a href="javascript: void(0);" class="avatar-xs d-block">
-                                                <div class="avatar-title rounded-circle">
-                                                    <i class="ri-dribbble-line"></i>
-                                                </div>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
+            <!-- start contact -->
+            <section class="section" id="contact">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-8">
+                            <div class="text-center mb-5">
+                                <h3 class="mb-3 fw-semibold">Get In Touch</h3>
+                                <p class="text-muted mb-4 ff-secondary">We thrive when coming up with innovative ideas
+                                    but also
+                                    understand that a smart concept should be supported with faucibus sapien odio
+                                    measurable
+                                    results.</p>
                             </div>
                         </div>
                     </div>
-                </footer>
-                <!-- end footer -->
+                    <!-- end row -->
 
-                <!--start back-to-top-->
-                <button onclick="topFunction()" class="btn btn-danger btn-icon landing-back-top" id="back-to-top">
-                    <i class="ri-arrow-up-line"></i>
-                </button>
-                <!--end back-to-top-->
+                    <div class="row gy-4">
+                        <div class="col-lg-4">
+                            <div>
+                                <div class="mt-4">
+                                    <h5 class="fs-13 text-muted text-uppercase">Office Address 1:</h5>
+                                    <div class="ff-secondary fw-semibold">Kidapawan City, <br />North Cotabato</div>
+                                </div>
+                                <div class="mt-4">
+                                    <h5 class="fs-13 text-muted text-uppercase">Office Address 2:</h5>
+                                    <div class="ff-secondary fw-semibold">Bansalan, <br />Davao del Sur
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <h5 class="fs-13 text-muted text-uppercase">Working Hours:</h5>
+                                    <div class="ff-secondary fw-semibold">9:00am to 6:00pm</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end col -->
+                        <div class="col-lg-8">
+                            <div>
+                                <form>
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="mb-4">
+                                                <label for="name" class="form-label fs-13">Name</label>
+                                                <input name="name" id="name" type="text"
+                                                    class="form-control bg-light border-light" placeholder="Your name*">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="mb-4">
+                                                <label for="email" class="form-label fs-13">Email</label>
+                                                <input name="email" id="email" type="email"
+                                                    class="form-control bg-light border-light" placeholder="Your email*">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="mb-4">
+                                                <label for="subject" class="form-label fs-13">Subject</label>
+                                                <input type="text" class="form-control bg-light border-light" id="subject"
+                                                    name="subject" placeholder="Your Subject.." />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <div class="mb-3">
+                                                <label for="comments" class="form-label fs-13">Message</label>
+                                                <textarea name="comments" id="comments" rows="3"
+                                                    class="form-control bg-light border-light"
+                                                    placeholder="Your message..."></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-12 text-end">
+                                            <input type="submit" id="submit" name="send" class="submitBnt btn btn-primary"
+                                                value="Send Message">
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end row -->
+                </div>
+                <!-- end container -->
+            </section>
+            <!-- end contact -->
+
+            <!-- start cta -->
+            <section class="py-5 bg-primary position-relative">
+                <div class="bg-overlay bg-overlay-pattern opacity-50"></div>
+                <div class="container">
+                    <div class="row align-items-center gy-4">
+                        <div class="col-sm">
+                            <div>
+                                <h4 class="text-white mb-0 fw-semibold">Build your campus management system with eSMART
+                                    Campus
+                                </h4>
+                            </div>
+                        </div>
+                        <!-- end col -->
+                        <div class="col-sm-auto">
+                            <div>
+                                <a href="{{ route('register') }}" class="btn bg-gradient btn-danger"><i
+                                        class="ri-user-add-line align-middle me-1"></i> Get Started</a>
+                            </div>
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+                </div>
+                <!-- end container -->
+            </section>
+            <!-- end cta -->
+
+            <!-- Start footer -->
+            <footer class="custom-footer bg-dark py-5 position-relative">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-lg-4 mt-4">
+                            <div>
+                                <div>
+                                    <img src="{{ URL::asset('build/images/smart-logo-light.png') }}" alt="logo light"
+                                        height="17">
+                                </div>
+                                <div class="mt-4 fs-13">
+                                    <p>eSMART Campus - Student Management System</p>
+                                    <p class="ff-secondary">A comprehensive platform for managing student enrollment,
+                                        attendance, grades, assignments, and all campus operations in one unified
+                                        system.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- <div class="col-lg-7 ms-lg-auto">
+                            <div class="row">
+                                <div class="col-sm-4 mt-4">
+                                    <h5 class="text-white mb-0">Company</h5>
+                                    <div class="text-muted mt-3">
+                                        <ul class="list-unstyled ff-secondary footer-list">
+                                            <li><a href="pages-profile">About Us</a></li>
+                                            <li><a href="pages-gallery">Gallery</a></li>
+                                            <li><a href="apps-projects-overview">Projects</a></li>
+                                            <li><a href="pages-timeline">Timeline</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 mt-4">
+                                    <h5 class="text-white mb-0">Apps Pages</h5>
+                                    <div class="text-muted mt-3">
+                                        <ul class="list-unstyled ff-secondary footer-list">
+                                            <li><a href="pages-pricing">Calendar</a></li>
+                                            <li><a href="apps-mailbox">Mailbox</a></li>
+                                            <li><a href="apps-chat">Chat</a></li>
+                                            <li><a href="apps-crm-deals">Deals</a></li>
+                                            <li><a href="apps-tasks-kanban">Kanban Board</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 mt-4">
+                                    <h5 class="text-white mb-0">Support</h5>
+                                    <div class="text-muted mt-3">
+                                        <ul class="list-unstyled ff-secondary footer-list">
+                                            <li><a href="pages-faqs">FAQ</a></li>
+                                            <li><a href="pages-faqs">Contact</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> --}}
+
+                    </div>
+
+                    <div class="row text-center text-sm-start align-items-center mt-5">
+                        <div class="col-sm-6">
+
+                            <div>
+                                <p class="copy-rights mb-0">
+                                    <script>
+                                        document.write(new Date().getFullYear())
+                                    </script> © eSMART Campus. Crafted with <i
+                                        class="mdi mdi-heart text-danger"></i> by eSMART Campus Team
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-sm-end mt-3 mt-sm-0">
+                                <ul class="list-inline mb-0 footer-social-link">
+                                    <li class="list-inline-item">
+                                        <a href="javascript: void(0);" class="avatar-xs d-block">
+                                            <div class="avatar-title rounded-circle">
+                                                <i class="ri-facebook-fill"></i>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li class="list-inline-item">
+                                        <a href="javascript: void(0);" class="avatar-xs d-block">
+                                            <div class="avatar-title rounded-circle">
+                                                <i class="ri-github-fill"></i>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li class="list-inline-item">
+                                        <a href="javascript: void(0);" class="avatar-xs d-block">
+                                            <div class="avatar-title rounded-circle">
+                                                <i class="ri-linkedin-fill"></i>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li class="list-inline-item">
+                                        <a href="javascript: void(0);" class="avatar-xs d-block">
+                                            <div class="avatar-title rounded-circle">
+                                                <i class="ri-google-fill"></i>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li class="list-inline-item">
+                                        <a href="javascript: void(0);" class="avatar-xs d-block">
+                                            <div class="avatar-title rounded-circle">
+                                                <i class="ri-dribbble-line"></i>
+                                            </div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+            <!-- end footer -->
+
+            <!--start back-to-top-->
+            <button onclick="topFunction()" class="btn btn-danger btn-icon landing-back-top" id="back-to-top">
+                <i class="ri-arrow-up-line"></i>
+            </button>
+            <!--end back-to-top-->
 
             </div>
             <!-- end layout wrapper -->

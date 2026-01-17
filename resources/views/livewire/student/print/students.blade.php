@@ -162,9 +162,6 @@
     <!-- Header -->
     <div class="header">
         <h1>Students List</h1>
-        <div class="subtitle">
-            Generated on {{ now()->format('F d, Y') }} at {{ now()->format('h:i A') }}
-        </div>
     </div>
 
     <!-- Filter Information -->

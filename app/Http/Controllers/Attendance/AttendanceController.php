@@ -302,7 +302,7 @@ class AttendanceController extends Controller
                 return [
                     'id' => $student->id,
                     'name' => $studentName,
-                    'student_id' => $student->student_id ?? null,
+                    'student_id' => $student->student_number ?? null,
                 ];
             })->sortBy('name')->values();
 

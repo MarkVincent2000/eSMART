@@ -35,7 +35,7 @@
             {!! file_get_contents(resource_path(path: 'views/attendance/js/attendance-categories.js')) !!}
         </script>
     @else
-        <script >
+        <script>
             {!! file_get_contents(resource_path('views/attendance/js/student-attendance.js')) !!}
         </script>
     @endif

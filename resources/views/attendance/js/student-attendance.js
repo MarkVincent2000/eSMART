@@ -18,7 +18,7 @@
         TIME_IN: '/attendance/students/time-in',
         TIME_OUT: '/attendance/students/time-out',
     };
-    
+
     // Get attendance ID from URL query parameter or window variable
     function getAttendanceId() {
         // First try to get from window variable (set by blade template)
@@ -29,7 +29,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get('id');
     }
-    
+
     // Get student attendance ID from page data (if available)
     function getStudentAttendanceId() {
         // This will be set from the blade template
@@ -53,17 +53,17 @@
      */
     function formatTimeToManila(utcTimeString, options = {}) {
         if (!utcTimeString) return null;
-        
+
         try {
             // Parse the UTC time string (JavaScript Date parses ISO 8601 UTC strings correctly)
             const utcDate = new Date(utcTimeString);
-            
+
             // Check if date is valid
             if (isNaN(utcDate.getTime())) {
                 console.error('Invalid date:', utcTimeString);
                 return null;
             }
-            
+
             // Format directly using toLocaleTimeString with timeZone option
             // This automatically converts UTC to Manila timezone
             const defaultOptions = {
@@ -73,7 +73,7 @@
                 timeZone: 'Asia/Manila',
                 ...options
             };
-            
+
             return utcDate.toLocaleTimeString('en-US', defaultOptions);
         } catch (error) {
             console.error('Error formatting time to Manila:', error, utcTimeString);
@@ -88,18 +88,18 @@
      */
     function formatDateToManila(utcTimeString) {
         if (!utcTimeString) return null;
-        
+
         try {
             const utcDate = new Date(utcTimeString);
             if (isNaN(utcDate.getTime())) {
                 return null;
             }
-            
+
             // Format directly using toLocaleDateString with timeZone option
             // This automatically converts UTC to Manila timezone
-            return utcDate.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
+            return utcDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
                 year: 'numeric',
                 timeZone: 'Asia/Manila'
             });
@@ -128,32 +128,32 @@
 
     function initialize() {
         console.log('Student Attendance page initialized');
-        
+
         // Initialize digital clock
         initializeDigitalClock();
-        
+
         // Initialize time tracking display
         initializeTimeTracking();
-        
+
         // Initialize time tracking buttons
         initializeTimeTrackingButtons();
-        
+
         // Load and display students
         loadStudentsList();
-        
+
         // Load time entries
         loadTimeEntries();
-        
+
         // Initialize search for time entries
         initializeTimeEntriesSearch();
-        
+
         // Initialize Flatpickr if needed
         initializeFlatpickr();
-        
+
         // Update time entries tab label on load
         updateTimeEntriesTabLabelOnLoad();
     }
-    
+
     /**
      * Initialize and start the digital clock
      */
@@ -161,18 +161,18 @@
         const clockTimeElement = document.getElementById('clockTime');
         const clockAmPmElement = document.getElementById('clockAmPm');
         const clockDateElement = document.getElementById('clockDate');
-        
+
         if (!clockTimeElement || !clockAmPmElement || !clockDateElement) {
             return;
         }
-        
+
         // Update clock immediately
         updateDigitalClock();
-        
+
         // Update clock every second
         digitalClockInterval = setInterval(updateDigitalClock, 1000);
     }
-    
+
     /**
      * Update the digital clock display
      */
@@ -180,41 +180,41 @@
         const clockTimeElement = document.getElementById('clockTime');
         const clockAmPmElement = document.getElementById('clockAmPm');
         const clockDateElement = document.getElementById('clockDate');
-        
+
         if (!clockTimeElement || !clockAmPmElement || !clockDateElement) {
             return;
         }
-        
+
         const now = new Date();
-        
+
         // Format time (HH:mm:ss)
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const seconds = String(now.getSeconds()).padStart(2, '0');
-        
+
         // Format 12-hour time for display
         const hours12 = now.getHours() % 12 || 12;
         const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
         const timeDisplay = `${String(hours12).padStart(2, '0')}:${minutes}:${seconds}`;
-        
+
         // Format date
         const dateOptions = { month: 'short', day: 'numeric', year: 'numeric' };
         const dateDisplay = now.toLocaleDateString('en-US', dateOptions);
-        
+
         // Update display
         clockTimeElement.textContent = timeDisplay;
         clockAmPmElement.textContent = ampm;
         clockDateElement.textContent = dateDisplay;
-        
+
         // Store current time for time in/out (UTC ISO format)
         currentClockTime = now.toISOString();
-        
+
         // Also store local time components
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
         const localTimeString = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-        
+
         // Store in window for access
         window.currentClockTime = {
             utc: currentClockTime,
@@ -222,7 +222,7 @@
             timezoneOffset: -now.getTimezoneOffset()
         };
     }
-    
+
     /**
      * Get current clock time for time in/out
      * This captures the exact time from the digital clock at the moment it's called
@@ -232,10 +232,10 @@
         // Capture the time at this exact moment (when user confirms)
         // This ensures we get the most accurate time from the digital clock
         const now = new Date();
-        
+
         // Get UTC time in ISO format (this is what the digital clock displays)
         const utcTime = now.toISOString();
-        
+
         // Get local time components (matching what's displayed on the clock)
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -244,7 +244,7 @@
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const seconds = String(now.getSeconds()).padStart(2, '0');
         const localTimeString = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-        
+
         // Return the time that matches what's displayed on the digital clock
         return {
             utc: utcTime, // UTC time in ISO 8601 format (for server)
@@ -252,7 +252,7 @@
             timezoneOffset: -now.getTimezoneOffset() // Timezone offset in minutes
         };
     }
-    
+
     /**
      * Update Time Entries tab label on page load
      */
@@ -277,7 +277,7 @@
             document.getElementById('noAttendanceMessage').style.display = 'block';
             return;
         }
-        
+
         const attendance = window.attendanceData;
         const studentAttendance = window.studentAttendanceData; // Must exist to show buttons
         const alertContainer = document.getElementById('timeTrackingAlertContainer');
@@ -288,10 +288,10 @@
         const durationElement = document.getElementById('timeDuration');
         const attendanceTitleElement = document.getElementById('attendanceTitle');
         const noAttendanceMessage = document.getElementById('noAttendanceMessage');
-        
+
         // Clear any existing alerts
         alertContainer.innerHTML = '';
-        
+
         // Check if user has a student attendance record - required to show buttons
         if (!studentAttendance) {
             // No student attendance record, show no attendance message
@@ -309,25 +309,25 @@
             }
             return;
         }
-        
+
         // Hide no attendance message if student attendance exists
         if (noAttendanceMessage) {
             noAttendanceMessage.style.display = 'none';
         }
-        
+
         // Format and display times
         let startTime = 'N/A';
         let endTime = 'N/A';
         let duration = 'N/A';
-        
+
         if (attendance.start_time) {
             startTime = formatTimeToManila(attendance.start_time) || 'N/A';
         }
-        
+
         if (attendance.end_time) {
             endTime = formatTimeToManila(attendance.end_time) || 'N/A';
         }
-        
+
         // Calculate duration from attendance start/end times
         if (attendance.start_time && attendance.end_time) {
             const start = new Date(attendance.start_time);
@@ -337,25 +337,27 @@
             const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
             duration = hours > 0 ? `${hours} hrs ${minutes} min` : `${minutes} min`;
         }
-        
+
         // Update display elements
         if (startTimeElement) startTimeElement.textContent = startTime;
         if (endTimeElement) endTimeElement.textContent = endTime;
         if (durationElement) durationElement.textContent = duration;
         if (attendanceTitleElement) attendanceTitleElement.textContent = attendance.category_name;
-        
-        // Check if attendance date has passed
+
+        // Check attendance date relative to today
         const attendanceDate = new Date(attendance.date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         attendanceDate.setHours(0, 0, 0, 0);
         const isDatePassed = attendanceDate < today;
-        
+        const isDateFuture = attendanceDate > today;
+        const isDateToday = attendanceDate.getTime() === today.getTime();
+
         // Check if already time in/out (only if student attendance record exists)
         const hasCheckedIn = studentAttendance && studentAttendance.check_in_time !== null && studentAttendance.check_in_time !== '';
         const hasCheckedOut = studentAttendance && studentAttendance.check_out_time !== null && studentAttendance.check_out_time !== '';
         const status = studentAttendance ? (studentAttendance.status || '') : '';
-        
+
         // Check if user is late
         let isLate = false;
         let lateDuration = '';
@@ -395,9 +397,34 @@
                 }
             }
         }
-        
+
         // Show alerts and handle button states
-        if (isDatePassed) {
+        if (isDateFuture) {
+            // Date is in the future - disable time in/out
+            // Format the future date for display
+            const futureDateStr = attendanceDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+            alertContainer.innerHTML = `
+                <div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
+                    <i class="ri-calendar-line align-bottom me-2"></i>
+                    <strong>Future Attendance Date</strong>
+                    <span class="d-block mt-1">Time tracking is only available on the attendance date. Please wait until ${futureDateStr} to time in or out.</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            // Disable both buttons
+            if (timeInBtn) {
+                timeInBtn.style.display = 'none';
+                timeInBtn.disabled = true;
+            }
+            if (timeOutBtn) {
+                timeOutBtn.style.display = 'none';
+                timeOutBtn.disabled = true;
+            }
+        } else if (isDatePassed) {
             // Date has passed - show appropriate alert
             if (status === 'absent' || (!hasCheckedIn && !hasCheckedOut)) {
                 // Show absent alert
@@ -429,7 +456,7 @@
                 timeOutBtn.style.display = 'none';
                 timeOutBtn.disabled = true;
             }
-        } else {
+        } else if (isDateToday) {
             // Date hasn't passed - show late alert if applicable
             if (isLate && lateDuration) {
                 alertContainer.innerHTML = `
@@ -441,7 +468,7 @@
                     </div>
                 `;
             }
-            
+
             // Handle button states based on check-in/out status
             if (hasCheckedIn && !hasCheckedOut) {
                 // Already checked in, can only check out
@@ -483,6 +510,25 @@
                     timeOutBtn.disabled = true;
                 }
             }
+        } else {
+            // Date is neither today, past, nor future (shouldn't happen, but handle gracefully)
+            alertContainer.innerHTML = `
+                <div class="alert alert-secondary alert-dismissible fade show mb-3" role="alert">
+                    <i class="ri-information-line align-bottom me-2"></i>
+                    <strong>Invalid Attendance Date</strong>
+                    <span class="d-block mt-1">Unable to determine attendance date status.</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            // Disable both buttons
+            if (timeInBtn) {
+                timeInBtn.style.display = 'none';
+                timeInBtn.disabled = true;
+            }
+            if (timeOutBtn) {
+                timeOutBtn.style.display = 'none';
+                timeOutBtn.disabled = true;
+            }
         }
     }
 
@@ -492,11 +538,11 @@
     function initializeTimeTrackingButtons() {
         const timeInBtn = document.getElementById('timeInBtn');
         const timeOutBtn = document.getElementById('timeOutBtn');
-        
+
         if (timeInBtn) {
             timeInBtn.addEventListener('click', handleTimeIn);
         }
-        
+
         if (timeOutBtn) {
             timeOutBtn.addEventListener('click', handleTimeOut);
         }
@@ -508,32 +554,49 @@
     function handleTimeIn() {
         const attendanceId = getAttendanceId();
         const studentAttendanceId = getStudentAttendanceId();
-        
+
         if (!attendanceId) {
             showToast('Error', 'Missing attendance information', 'error');
             return;
         }
-        
+
         if (!studentAttendanceId) {
             showToast('Error', 'You are not enrolled in this attendance session', 'error');
             return;
         }
-        
+
+        // Check if attendance date is today
+        if (window.attendanceData && window.attendanceData.date) {
+            const attendanceDate = new Date(window.attendanceData.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            attendanceDate.setHours(0, 0, 0, 0);
+
+            if (attendanceDate.getTime() !== today.getTime()) {
+                if (attendanceDate > today) {
+                    showToast('Error', 'Time tracking is only available on the attendance date. Please wait until the attendance date to time in.', 'error');
+                } else {
+                    showToast('Error', 'The attendance date has passed. Time tracking is no longer available.', 'error');
+                }
+                return;
+            }
+        }
+
         // Show the Time In confirmation modal
         const timeInModal = new bootstrap.Modal(document.getElementById('timeInModal'));
         timeInModal.show();
-        
+
         // Set up confirm button handler
         const confirmBtn = document.getElementById('confirmTimeInBtn');
         if (confirmBtn) {
             // Remove any existing event listeners by cloning the button
             const newConfirmBtn = confirmBtn.cloneNode(true);
             confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-            
-            newConfirmBtn.addEventListener('click', function() {
+
+            newConfirmBtn.addEventListener('click', function () {
                 // Get time from digital clock (what user sees on screen)
                 const clockTime = getCurrentClockTime();
-                
+
                 console.log('Time In - Clock Time UTC:', clockTime.utc, 'Clock Time Local:', clockTime.local, 'Timezone Offset:', clockTime.timezoneOffset);
                 timeInModal.hide();
                 performTimeIn(attendanceId, studentAttendanceId, clockTime.utc, clockTime.local, clockTime.timezoneOffset);
@@ -547,32 +610,49 @@
     function handleTimeOut() {
         const attendanceId = getAttendanceId();
         const studentAttendanceId = getStudentAttendanceId();
-        
+
         if (!attendanceId) {
             showToast('Error', 'Missing attendance information', 'error');
             return;
         }
-        
+
         if (!studentAttendanceId) {
             showToast('Error', 'Please time in first before timing out', 'error');
             return;
         }
-        
+
+        // Check if attendance date is today
+        if (window.attendanceData && window.attendanceData.date) {
+            const attendanceDate = new Date(window.attendanceData.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            attendanceDate.setHours(0, 0, 0, 0);
+
+            if (attendanceDate.getTime() !== today.getTime()) {
+                if (attendanceDate > today) {
+                    showToast('Error', 'Time tracking is only available on the attendance date. Please wait until the attendance date to time out.', 'error');
+                } else {
+                    showToast('Error', 'The attendance date has passed. Time tracking is no longer available.', 'error');
+                }
+                return;
+            }
+        }
+
         // Show the Time Out confirmation modal
         const timeOutModal = new bootstrap.Modal(document.getElementById('timeOutModal'));
         timeOutModal.show();
-        
+
         // Set up confirm button handler
         const confirmBtn = document.getElementById('confirmTimeOutBtn');
         if (confirmBtn) {
             // Remove any existing event listeners by cloning the button
             const newConfirmBtn = confirmBtn.cloneNode(true);
             confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-            
-            newConfirmBtn.addEventListener('click', function() {
+
+            newConfirmBtn.addEventListener('click', function () {
                 // Get time from digital clock (what user sees on screen)
                 const clockTime = getCurrentClockTime();
-                
+
                 console.log('Time Out - Clock Time UTC:', clockTime.utc, 'Clock Time Local:', clockTime.local, 'Timezone Offset:', clockTime.timezoneOffset);
                 timeOutModal.hide();
                 performTimeOut(attendanceId, studentAttendanceId, clockTime.utc, clockTime.local, clockTime.timezoneOffset);
@@ -594,7 +674,7 @@
             timeInBtn.disabled = true;
             timeInBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
         }
-        
+
         // Use the UTC time passed from the confirmation handler
         // If not provided, get current UTC time as fallback
         if (!clientTime) {
@@ -609,9 +689,9 @@
             localTimeString = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
             timezoneOffset = -now.getTimezoneOffset();
         }
-        
+
         console.log('Time In - UTC Time (ISO):', clientTime, 'Local Time:', localTimeString, 'Offset:', timezoneOffset);
-        
+
         // Build request body - student_attendance_id is required
         const requestBody = {
             attendance_id: attendanceId,
@@ -620,7 +700,7 @@
             local_time: localTimeString, // Local time for reference
             timezone_offset: timezoneOffset
         };
-        
+
         fetch(API.TIME_IN, {
             method: 'POST',
             headers: {
@@ -630,30 +710,30 @@
             },
             body: JSON.stringify(requestBody)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update window variables with new student attendance data
-                if (data.data && data.data.student_attendance_id) {
-                    window.currentStudentAttendanceId = data.data.student_attendance_id;
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update window variables with new student attendance data
+                    if (data.data && data.data.student_attendance_id) {
+                        window.currentStudentAttendanceId = data.data.student_attendance_id;
+                    }
+                    showToast('Success', data.message || 'Time in recorded successfully', 'success');
+                    // Reload page to update the display
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    throw new Error(data.message || 'Failed to record time in');
                 }
-                showToast('Success', data.message || 'Time in recorded successfully', 'success');
-                // Reload page to update the display
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                throw new Error(data.message || 'Failed to record time in');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error', error.message || 'Failed to record time in', 'error');
-            if (timeInBtn) {
-                timeInBtn.disabled = false;
-                timeInBtn.innerHTML = '<i class="ri-login-circle-line align-bottom me-1"></i>Time In';
-            }
-        });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error', error.message || 'Failed to record time in', 'error');
+                if (timeInBtn) {
+                    timeInBtn.disabled = false;
+                    timeInBtn.innerHTML = '<i class="ri-login-circle-line align-bottom me-1"></i>Time In';
+                }
+            });
     }
 
     /**
@@ -670,7 +750,7 @@
             timeOutBtn.disabled = true;
             timeOutBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
         }
-        
+
         // Use the UTC time passed from the confirmation handler
         // If not provided, get current UTC time as fallback
         if (!clientTime) {
@@ -685,9 +765,9 @@
             localTimeString = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
             timezoneOffset = -now.getTimezoneOffset();
         }
-        
+
         console.log('Time Out - UTC Time (ISO):', clientTime, 'Local Time:', localTimeString, 'Offset:', timezoneOffset);
-        
+
         // Build request body - student_attendance_id is required for time out
         const requestBody = {
             attendance_id: attendanceId,
@@ -695,12 +775,12 @@
             local_time: localTimeString, // Local time for reference
             timezone_offset: timezoneOffset
         };
-        
+
         // Include student_attendance_id if available
         if (studentAttendanceId) {
             requestBody.student_attendance_id = studentAttendanceId;
         }
-        
+
         fetch(API.TIME_OUT, {
             method: 'POST',
             headers: {
@@ -710,26 +790,26 @@
             },
             body: JSON.stringify(requestBody)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Success', data.message || 'Time out recorded successfully', 'success');
-                // Reload page to update the display
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                throw new Error(data.message || 'Failed to record time out');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error', error.message || 'Failed to record time out', 'error');
-            if (timeOutBtn) {
-                timeOutBtn.disabled = false;
-                timeOutBtn.innerHTML = '<i class="ri-logout-circle-line align-bottom me-1"></i>Time Out';
-            }
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Success', data.message || 'Time out recorded successfully', 'success');
+                    // Reload page to update the display
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    throw new Error(data.message || 'Failed to record time out');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Error', error.message || 'Failed to record time out', 'error');
+                if (timeOutBtn) {
+                    timeOutBtn.disabled = false;
+                    timeOutBtn.innerHTML = '<i class="ri-logout-circle-line align-bottom me-1"></i>Time Out';
+                }
+            });
     }
 
     /**
@@ -738,22 +818,22 @@
     function loadStudentsList() {
         const attendanceId = getAttendanceId();
         const container = document.getElementById('studentsListContainer');
-        
+
         if (!attendanceId) {
             if (container) {
                 container.innerHTML = '<div class="text-center py-3"><p class="text-muted mb-0">No attendance session selected.</p></div>';
             }
             return;
         }
-        
+
         if (!container) {
             console.error('studentsListContainer element not found');
             return;
         }
-        
+
         const apiUrl = API.GET_STUDENT_ATTENDANCES(attendanceId);
         console.log('Loading students from:', apiUrl);
-        
+
         fetch(apiUrl, {
             method: 'GET',
             headers: {
@@ -761,32 +841,32 @@
                 'X-CSRF-TOKEN': getCsrfToken()
             }
         })
-        .then(response => {
-            console.log('Response status:', response.status, response.statusText);
-            if (!response.ok) {
-                return response.text().then(text => {
-                    console.error('Error response:', text);
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Response data:', data);
-            if (data.success && data.data && data.data.student_attendances) {
-                console.log('Found', data.data.student_attendances.length, 'students');
-                renderStudentsList(data.data.student_attendances);
-            } else {
-                console.error('Invalid response format:', data);
-                throw new Error('Invalid response format');
-            }
-        })
-        .catch(error => {
-            console.error('Error loading students:', error);
-            if (container) {
-                container.innerHTML = '<div class="text-center py-3"><p class="text-danger mb-0">Failed to load students. Please refresh the page.</p></div>';
-            }
-        });
+            .then(response => {
+                console.log('Response status:', response.status, response.statusText);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.error('Error response:', text);
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success && data.data && data.data.student_attendances) {
+                    console.log('Found', data.data.student_attendances.length, 'students');
+                    renderStudentsList(data.data.student_attendances);
+                } else {
+                    console.error('Invalid response format:', data);
+                    throw new Error('Invalid response format');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading students:', error);
+                if (container) {
+                    container.innerHTML = '<div class="text-center py-3"><p class="text-danger mb-0">Failed to load students. Please refresh the page.</p></div>';
+                }
+            });
     }
 
     /**
@@ -795,23 +875,23 @@
     function renderStudentsList(students) {
         const container = document.getElementById('studentsListContainer');
         if (!container) return;
-        
+
         if (!students || students.length === 0) {
             container.innerHTML = '<div class="text-center py-3"><p class="text-muted mb-0">No students found.</p></div>';
             return;
         }
-        
+
         let html = '<ul class="list-unstyled vstack gap-2 mb-0">';
-        
-        students.forEach(function(student) {
+
+        students.forEach(function (student) {
             const studentName = escapeHtml(student.student_name || 'N/A');
             const studentId = escapeHtml(student.student_id || 'N/A');
             const status = student.status || 'pending';
-            
+
             // Get image URL or use default
             const imageUrl = student.image_url || '/build/images/users/user-dummy-img.jpg';
             const hasImage = student.image_url && student.image_url !== null;
-            
+
             // Get status badge class
             let badgeClass = 'bg-secondary-subtle text-secondary';
             if (status === 'present') {
@@ -825,14 +905,14 @@
             } else if (status === 'excused') {
                 badgeClass = 'bg-primary-subtle text-primary';
             }
-            
+
             // Format check-in time (parse UTC time correctly)
             let checkInTime = '-';
             if (student.check_in_time) {
                 // Server sends ISO 8601 format (UTC), convert to Manila timezone
                 checkInTime = formatTimeToManila(student.check_in_time) || '-';
             }
-            
+
             // Create avatar HTML - use image if available, otherwise use initial
             let avatarHtml = '';
             if (hasImage) {
@@ -840,7 +920,7 @@
             } else {
                 avatarHtml = `<div class="avatar-title rounded-circle bg-primary-subtle text-primary">${(studentName.charAt(0) || '?').toUpperCase()}</div>`;
             }
-            
+
             html += `
                 <li>
                     <div class="d-flex align-items-center">
@@ -861,7 +941,7 @@
                 </li>
             `;
         });
-        
+
         html += '</ul>';
         container.innerHTML = html;
     }
@@ -872,14 +952,14 @@
     function updateTimeEntriesTabLabel(durationMinutes) {
         const durationSpan = document.getElementById('timeEntriesTabDuration');
         if (!durationSpan) return;
-        
+
         let durationText = '(0 min)';
         if (durationMinutes && durationMinutes > 0) {
             const hours = Math.floor(durationMinutes / 60);
             const minutes = durationMinutes % 60;
             durationText = hours > 0 ? `(${hours} hrs ${minutes} min)` : `(${minutes} min)`;
         }
-        
+
         durationSpan.textContent = durationText;
     }
 
@@ -904,16 +984,16 @@
     function loadTimeEntries() {
         const attendanceId = getAttendanceId();
         const studentAttendanceId = getStudentAttendanceId();
-        
+
         if (!attendanceId) {
             renderTimeEntriesTable();
             return;
         }
-        
+
         // If we have student attendance ID, we can get the data from the API
         // For now, we'll use the data from getStudentAttendances API
         const apiUrl = API.GET_STUDENT_ATTENDANCES(attendanceId);
-        
+
         fetch(apiUrl, {
             method: 'GET',
             headers: {
@@ -921,35 +1001,35 @@
                 'X-CSRF-TOKEN': getCsrfToken()
             }
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch time entries');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success && data.data && data.data.student_attendances) {
-                // Load all student attendances (not just current user)
-                // Filter to only show entries that have check_in_time (actual time entries)
-                timeEntriesData = data.data.student_attendances.filter(entry => {
-                    return entry.check_in_time !== null && entry.check_in_time !== '';
-                });
-                
-                // Apply current filter and render
-                filterTimeEntries();
-                renderTimeEntriesTable();
-                updateTimeEntriesPagination();
-                updateTimeEntriesTabLabelOnLoad();
-            } else {
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch time entries');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.data && data.data.student_attendances) {
+                    // Load all student attendances (not just current user)
+                    // Filter to only show entries that have check_in_time (actual time entries)
+                    timeEntriesData = data.data.student_attendances.filter(entry => {
+                        return entry.check_in_time !== null && entry.check_in_time !== '';
+                    });
+
+                    // Apply current filter and render
+                    filterTimeEntries();
+                    renderTimeEntriesTable();
+                    updateTimeEntriesPagination();
+                    updateTimeEntriesTabLabelOnLoad();
+                } else {
+                    timeEntriesData = [];
+                    renderTimeEntriesTable();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading time entries:', error);
                 timeEntriesData = [];
                 renderTimeEntriesTable();
-            }
-        })
-        .catch(error => {
-            console.error('Error loading time entries:', error);
-            timeEntriesData = [];
-            renderTimeEntriesTable();
-        });
+            });
     }
 
     /**
@@ -958,7 +1038,7 @@
     function filterTimeEntries() {
         const searchInput = document.getElementById('timeEntriesSearch');
         const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
-        
+
         if (!searchQuery) {
             filteredTimeEntries = [...timeEntriesData];
         } else {
@@ -968,15 +1048,15 @@
                 const timeIn = entry.check_in_time ? (formatTimeToManila(entry.check_in_time) || '').toLowerCase() : '';
                 const timeOut = entry.check_out_time ? (formatTimeToManila(entry.check_out_time) || '').toLowerCase() : '';
                 const status = (entry.status || '').toLowerCase();
-                
+
                 return studentName.includes(searchQuery) ||
-                       date.includes(searchQuery) ||
-                       timeIn.includes(searchQuery) ||
-                       timeOut.includes(searchQuery) ||
-                       status.includes(searchQuery);
+                    date.includes(searchQuery) ||
+                    timeIn.includes(searchQuery) ||
+                    timeOut.includes(searchQuery) ||
+                    status.includes(searchQuery);
             });
         }
-        
+
         currentPage = 1; // Reset to first page when filtering
     }
 
@@ -986,7 +1066,7 @@
     function renderTimeEntriesTable() {
         const tableBody = document.getElementById('timeEntriesTableBody');
         if (!tableBody) return;
-        
+
         if (filteredTimeEntries.length === 0) {
             tableBody.innerHTML = `
                 <tr>
@@ -997,18 +1077,18 @@
             `;
             return;
         }
-        
+
         // Calculate pagination
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const paginatedEntries = filteredTimeEntries.slice(startIndex, endIndex);
-        
+
         let html = '';
-        
-        paginatedEntries.forEach(function(entry) {
+
+        paginatedEntries.forEach(function (entry) {
             const studentName = escapeHtml(entry.student_name || 'N/A');
             const imageUrl = entry.image_url || '/build/images/users/user-dummy-img.jpg';
-            
+
             // Format dates and times
             const checkInDate = entry.check_in_time
                 ? formatDateToManila(entry.check_in_time) || '-'
@@ -1019,7 +1099,7 @@
             const checkOutTime = entry.check_out_time
                 ? formatTimeToManila(entry.check_out_time) || '-'
                 : '-';
-            
+
             // Format duration
             let durationText = '-';
             if (entry.duration_minutes) {
@@ -1034,7 +1114,7 @@
                 const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
                 durationText = hours > 0 ? `${hours} hrs ${minutes} min` : `${minutes} min`;
             }
-            
+
             // Status badge
             const status = entry.status || 'pending';
             let badgeClass = 'bg-secondary-subtle text-secondary';
@@ -1049,7 +1129,7 @@
             } else if (status === 'excused') {
                 badgeClass = 'bg-primary-subtle text-primary';
             }
-            
+
             html += `
                 <tr>
                     <th scope="row">
@@ -1074,7 +1154,7 @@
                 </tr>
             `;
         });
-        
+
         tableBody.innerHTML = html;
     }
 
@@ -1084,26 +1164,26 @@
     function updateTimeEntriesPagination() {
         const paginationContainer = document.getElementById('timeEntriesPaginationList');
         const summaryElement = document.getElementById('timeEntriesSummary');
-        
+
         if (!paginationContainer) return;
-        
+
         const totalItems = filteredTimeEntries.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
         const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-        
+
         // Update summary
         if (summaryElement) {
             summaryElement.textContent = `Showing ${startItem} to ${endItem} of ${totalItems} entries`;
         }
-        
+
         // Clear pagination
         paginationContainer.innerHTML = '';
-        
+
         if (totalPages <= 1) {
             return; // Don't show pagination if only one page
         }
-        
+
         // Previous button
         const prevDisabled = currentPage === 1 ? 'disabled' : '';
         paginationContainer.innerHTML += `
@@ -1113,7 +1193,7 @@
                 </a>
             </li>
         `;
-        
+
         // Page numbers
         for (let i = 1; i <= totalPages; i++) {
             if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
@@ -1131,7 +1211,7 @@
                 `;
             }
         }
-        
+
         // Next button
         const nextDisabled = currentPage === totalPages ? 'disabled' : '';
         paginationContainer.innerHTML += `
@@ -1141,10 +1221,10 @@
                 </a>
             </li>
         `;
-        
+
         // Attach event listeners
         paginationContainer.querySelectorAll('a[data-page]').forEach(link => {
-            link.addEventListener('click', function(e) {
+            link.addEventListener('click', function (e) {
                 e.preventDefault();
                 const page = parseInt(this.getAttribute('data-page'));
                 if (page && page !== currentPage && page >= 1 && page <= totalPages) {
@@ -1167,11 +1247,11 @@
     function initializeTimeEntriesSearch() {
         const searchInput = document.getElementById('timeEntriesSearch');
         if (!searchInput) return;
-        
+
         let searchTimeout;
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener('input', function () {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(function() {
+            searchTimeout = setTimeout(function () {
                 filterTimeEntries();
                 renderTimeEntriesTable();
                 updateTimeEntriesPagination();
@@ -1191,7 +1271,7 @@
             '"': '&quot;',
             "'": '&#039;'
         };
-        return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+        return String(text).replace(/[&<>"']/g, function (m) { return map[m]; });
     }
 
     /**
@@ -1226,8 +1306,8 @@
 
         // Initialize Flatpickr on any inputs with data-provider="flatpickr" attribute
         const flatpickrInputs = document.querySelectorAll('[data-provider="flatpickr"]');
-        
-        flatpickrInputs.forEach(function(input) {
+
+        flatpickrInputs.forEach(function (input) {
             // Check if already initialized
             if (input._flatpickr) {
                 return;
@@ -1263,7 +1343,7 @@
 
         // Also initialize on any input[type="date"] or input[type="time"] if needed
         const dateTimeInputs = document.querySelectorAll('input[type="date"], input[type="time"]');
-        dateTimeInputs.forEach(function(input) {
+        dateTimeInputs.forEach(function (input) {
             if (input._flatpickr || input.hasAttribute('data-provider')) {
                 return; // Skip if already initialized or has data-provider
             }
