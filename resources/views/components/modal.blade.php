@@ -19,33 +19,33 @@
 @php
     // Generate unique ID if not provided, use wire model if available
     $modalId = $id ?? ($attributes->wire('model') ? md5($attributes->wire('model')) : 'modal-' . uniqid());
-    
+
     // Validate size
     $validSizes = ['sm', 'md', 'lg', 'xl', 'fullscreen'];
     $normalizedSize = in_array($size, $validSizes, true) ? $size : 'md';
-    
+
     // Build modal dialog classes
     $dialogClasses = collect(['modal-dialog']);
-    
+
     // Add size class
     if ($normalizedSize !== 'md') {
         $dialogClasses->push('modal-' . $normalizedSize);
     }
-    
+
     // Add centered class
     if ($centered) {
         $dialogClasses->push('modal-dialog-centered');
     }
-    
+
     // Add scrollable class
     if ($scrollable) {
         $dialogClasses->push('modal-dialog-scrollable');
     }
-    
+
     // Validate vertical alignment
     $validAlignments = ['center', 'top'];
     $verticalAlign = in_array($verticalAlign, $validAlignments, true) ? $verticalAlign : 'center';
-    
+
     // Check if wire:model is provided via attributes
     $hasWireModel = $attributes->whereStartsWith('wire:model')->isNotEmpty();
 @endphp
@@ -112,29 +112,29 @@
         <div 
             x-bind:class="{ 'modal-bounce': bounce }"
             class="card mb-0 shadow-lg overflow-{{ $overflow }} modal-card-dark" 
-            style="border-radius: 0.5rem; will-change: transform; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;"
+            style="border-radius: 0.5rem; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;"
             x-on:click.stop
         >
                     <!-- Modal Header -->
                 @if($showHeader)
-                <div class="card-header border-bottom d-flex align-items-center justify-content-between" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
-                    @if(isset($header))
-                        {{ $header }}
-                    @else
-                        @if($title)
-                        <h5 class="modal-title mb-0">{{ $title }}</h5>
+                    <div class="card-header border-bottom d-flex align-items-center justify-content-between" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
+                        @if(isset($header))
+                            {{ $header }}
+                        @else
+                            @if($title)
+                                <h5 class="modal-title mb-0">{{ $title }}</h5>
+                            @endif
+
+                            @if($showCloseButton)
+                                <button
+                                    type="button"
+                                    class="btn-close"
+                                    x-on:click="show = false"
+                                    aria-label="Close"
+                                ></button>
+                            @endif
                         @endif
-                        
-                        @if($showCloseButton)
-                        <button
-                            type="button"
-                            class="btn-close"
-                            x-on:click="show = false"
-                            aria-label="Close"
-                        ></button>
-                        @endif
-                    @endif
-                </div>
+                    </div>
                 @endif
 
                 <!-- Modal Body -->
@@ -144,13 +144,13 @@
 
                 <!-- Modal Footer -->
                 @if($showFooter || isset($footer))
-                <div class="card-footer border-top d-flex justify-content-end gap-2" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
-                    @if(isset($footer))
-                        {{ $footer }}
-                    @else
-                        <button type="button" class="btn btn-light" x-on:click="show = false">Close</button>
-                    @endif
-                </div>
+                    <div class="card-footer border-top d-flex justify-content-end gap-2" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
+                        @if(isset($footer))
+                            {{ $footer }}
+                        @else
+                            <button type="button" class="btn btn-light" x-on:click="show = false">Close</button>
+                        @endif
+                    </div>
                 @endif
             </div>
         </div>

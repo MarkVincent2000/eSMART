@@ -7,6 +7,8 @@ use App\Enums\SystemSettingGroup;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class SystemSettings extends Component
 {
@@ -14,6 +16,9 @@ class SystemSettings extends Component
 
     public $search = '';
     public $perPage = 10;
+    
+    // Filter properties
+    public $selectedGroups = [];
 
     // Modal state
     public $showSettingModal = false;
@@ -33,6 +38,18 @@ class SystemSettings extends Component
 
     public function updatingSearch()
     {
+        $this->resetPage();
+    }
+    
+    public function updatingSelectedGroups()
+    {
+        $this->resetPage();
+    }
+    
+    public function clearAllFilters()
+    {
+        $this->selectedGroups = [];
+        $this->search = '';
         $this->resetPage();
     }
 
@@ -212,9 +229,24 @@ class SystemSettings extends Component
 
     public function render()
     {
-        // Query for paginated results (for "All" tab)
+        // Get all unique groups for filter
+        $filteredGroups = SystemSetting::query()
+            ->select('group')
+            ->distinct()
+            ->orderBy('group', 'asc')
+            ->pluck('group')
+            ->filter()
+            ->values();
+        
+        // Query for paginated results with filters
         $query = SystemSetting::query();
 
+        // Apply group filter
+        if (!empty($this->selectedGroups)) {
+            $query->whereIn('group', $this->selectedGroups);
+        }
+
+        // Apply search filter
         if (!empty($this->search)) {
             $query->where(function ($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
@@ -227,27 +259,17 @@ class SystemSettings extends Component
         $paginatedSettings = $query->orderBy('group', 'asc')
             ->orderBy('name', 'asc')
             ->paginate($this->perPage);
-
-        // Query for grouped results (for group tabs)
-        $groupedQuery = SystemSetting::query();
         
-        if (!empty($this->search)) {
-            $groupedQuery->where(function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhere('key', 'like', '%' . $this->search . '%')
-                    ->orWhere('value', 'like', '%' . $this->search . '%')
-                    ->orWhere('group', 'like', '%' . $this->search . '%');
-            });
-        }
-
-        $groupedSettings = $groupedQuery->orderBy('group', 'asc')
-            ->orderBy('name', 'asc')
-            ->get()
-            ->groupBy('group');
+        // Get group counts for filter badges
+        $groupCounts = SystemSetting::query()
+            ->select('group', DB::raw('count(*) as count'))
+            ->groupBy('group')
+            ->pluck('count', 'group');
 
         return view('livewire.management.system-settings', [
             'paginatedSettings' => $paginatedSettings,
-            'groupedSettings' => $groupedSettings,
+            'filteredGroups' => $filteredGroups,
+            'groupCounts' => $groupCounts,
         ]);
     }
 }

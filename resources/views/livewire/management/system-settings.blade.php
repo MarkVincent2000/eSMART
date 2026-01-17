@@ -1,87 +1,118 @@
 <div>
     <x-toast-notification />
 
-    <div class="card">
-        <div class="card-header border-0">
-            <div class="row g-4">
-                <div class="col-sm-auto">
-                    <div>
-                        <x-button color="primary" icon="ri-add-line" icon-position="left" wire:click="openCreateModal">
-                            Add Setting
-                        </x-button>
+    <div class="row">
+        <div class="col-xl-3 col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex mb-3">
+                        <div class="flex-grow-1">
+                            <h5 class="fs-16">Filters</h5>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <a href="#" class="text-decoration-underline" wire:click.prevent="clearAllFilters">Clear
+                                All</a>
+                        </div>
                     </div>
                 </div>
-                <div class="col-sm">
-                    <div class="d-flex justify-content-sm-end">
-                        <div class="search-box ms-2">
-                            <input type="text" class="form-control" id="searchSettings" placeholder="Search settings..."
-                                wire:model.live.debounce.300ms="search">
-                            <i class="ri-search-line search-icon"></i>
+
+                <div class="accordion accordion-flush filter-accordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="flush-headingGroups">
+                            <button class="accordion-button bg-transparent shadow-none" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#flush-collapseGroups" aria-expanded="true"
+                                aria-controls="flush-collapseGroups">
+                                <span class="text-muted text-uppercase fs-12 fw-medium">Groups</span>
+                                <span class="badge bg-success rounded-pill align-middle ms-1 filter-badge">
+                                    {{ count($selectedGroups) }}
+                                </span>
+                            </button>
+                        </h2>
+
+                        <div id="flush-collapseGroups" class="accordion-collapse collapse show"
+                            aria-labelledby="flush-headingGroups">
+                            <div class="accordion-body text-body pt-0">
+                                <div class="d-flex flex-column gap-2 filter-check">
+                                    @forelse($filteredGroups as $group)
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="{{ $group }}"
+                                                id="group_{{ Str::slug($group) }}" wire:model.change="selectedGroups">
+                                            <label class="form-check-label d-flex align-items-center gap-2 small"
+                                                for="group_{{ Str::slug($group) }}">
+                                                <span class="small">{{ $group }}</span>
+                                                @if(isset($groupCounts[$group]))
+                                                    <span class="badge bg-primary-subtle text-primary small">
+                                                        {{ $groupCounts[$group] }}
+                                                    </span>
+                                                @endif
+                                            </label>
+                                        </div>
+                                    @empty
+                                        <div class="text-muted text-center py-2">
+                                            <small>No groups found</small>
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card-header">
-            <div class="row align-items-center">
-                <div class="col">
-                    <ul class="nav nav-tabs-custom card-header-tabs border-bottom-0" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active fw-semibold" data-bs-toggle="tab" href="#settings-all" role="tab">
-                                All <span
-                                    class="badge bg-danger-subtle text-danger align-middle rounded-pill ms-1">{{ $paginatedSettings->total() }}</span>
-                            </a>
-                        </li>
-                        @foreach ($groupedSettings as $group => $groupSettings)
-                            @php
-                                $groupName = $group ?? 'General';
-                                $groupSlug = Str::slug($groupName);
-                            @endphp
-                            <li class="nav-item">
-                                <a class="nav-link fw-semibold" data-bs-toggle="tab" href="#settings-{{ $groupSlug }}"
-                                    role="tab">
-                                    {{ $groupName }} <span
-                                        class="badge bg-danger-subtle text-danger align-middle rounded-pill ms-1">{{ $groupSettings->count() }}</span>
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <!-- end card header -->
-
-        <div class="card-body">
-            @if ($paginatedSettings->isEmpty() && $groupedSettings->isEmpty())
-                <div class="text-center py-5">
-                    <div class="avatar-md mx-auto mb-4">
-                        <div
-                            class="avatar-title {{ !empty($search) ? 'bg-warning-subtle text-warning' : 'bg-primary-subtle text-primary' }} rounded-circle fs-24">
-                            <i class="{{ !empty($search) ? 'ri-search-line' : 'ri-settings-3-line' }}"></i>
+        <div class="col-xl-9 col-lg-8">
+            <div class="card">
+                <div class="card-header border-0">
+                    <div class="row g-4">
+                        <div class="col-sm-auto">
+                            <div>
+                                <x-button color="primary" icon="ri-add-line" icon-position="left"
+                                    wire:click="openCreateModal">
+                                    Add Setting
+                                </x-button>
+                            </div>
+                        </div>
+                        <div class="col-sm">
+                            <div class="d-flex justify-content-sm-end">
+                                <div class="search-box ms-2">
+                                    <input type="text" class="form-control" id="searchSettings"
+                                        placeholder="Search settings..." wire:model.live.debounce.300ms="search">
+                                    <i class="ri-search-line search-icon"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <h5>No Settings Found</h5>
-                    <p class="text-muted">
-                        @if (!empty($search))
-                            No settings match your search "{{ $search }}".
-                        @else
-                            Get started by creating your first system setting.
-                        @endif
-                    </p>
-                    @if (!empty($search))
-                        <button class="btn btn-primary" wire:click="$set('search', '')">
-                            <i class="ri-close-line align-bottom me-1"></i> Clear Search
-                        </button>
+                </div>
+
+                <div class="card-body">
+                    @if ($paginatedSettings->isEmpty())
+                        <div class="text-center py-5">
+                            <div class="avatar-md mx-auto mb-4">
+                                <div
+                                    class="avatar-title {{ !empty($search) || !empty($selectedGroups) ? 'bg-warning-subtle text-warning' : 'bg-primary-subtle text-primary' }} rounded-circle fs-24">
+                                    <i
+                                        class="{{ !empty($search) || !empty($selectedGroups) ? 'ri-search-line' : 'ri-settings-3-line' }}"></i>
+                                </div>
+                            </div>
+                            <h5>No Settings Found</h5>
+                            <p class="text-muted">
+                                @if (!empty($search) || !empty($selectedGroups))
+                                    No settings match your current filters.
+                                @else
+                                    Get started by creating your first system setting.
+                                @endif
+                            </p>
+                            @if (!empty($search) || !empty($selectedGroups))
+                                <button class="btn btn-primary" wire:click="clearAllFilters">
+                                    <i class="ri-close-line align-bottom me-1"></i> Clear Filters
+                                </button>
+                            @else
+                                <button class="btn btn-primary" wire:click="openCreateModal">
+                                    <i class="ri-add-line align-bottom me-1"></i> Add Setting
+                                </button>
+                            @endif
+                        </div>
                     @else
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSettingModal">
-                            <i class="ri-add-line align-bottom me-1"></i> Add Setting
-                        </button>
-                    @endif
-                </div>
-            @else
-                <div class="tab-content text-muted">
-                    <div class="tab-pane active" id="settings-all" role="tabpanel">
                         <div class="table-responsive">
                             <table class="table table-nowrap align-middle mb-0">
                                 <thead class="table-light">
@@ -97,7 +128,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($paginatedSettings as $index => $setting)
+                                    @foreach ($paginatedSettings as $index => $setting)
                                         <tr wire:key="setting-row-{{ $setting->id }}">
                                             <td>{{ $paginatedSettings->firstItem() + $index }}</td>
                                             <td>
@@ -174,16 +205,7 @@
                                                 </div>
                                             </td>
                                         </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="8" class="text-center py-4">
-                                                <div class="text-muted">
-                                                    <i class="ri-inbox-line fs-48 mb-3 d-block"></i>
-                                                    No settings found
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforelse
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
@@ -193,124 +215,15 @@
                                 <x-pagination :paginator="$paginatedSettings" />
                             </div>
                         @endif
-
-                    </div>
-
-
-                    <!-- end tab pane -->
-
-                    @foreach ($groupedSettings as $group => $groupSettings)
-                        @php
-                            $groupName = is_object($group) && method_exists($group, 'value') ? $group->value : ($group ?? 'General');
-                            $groupSlug = Str::slug($groupName);
-                        @endphp
-                        <div class="tab-pane" id="settings-{{ $groupSlug }}" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table table-nowrap align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th scope="col" style="width: 50px;">#</th>
-                                            <th scope="col">Key</th>
-                                            <th scope="col">Name</th>
-                                            <th scope="col">Value</th>
-                                            <th scope="col">Type</th>
-                                            <th scope="col">Status</th>
-                                            <th scope="col" style="width: 120px;">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $groupIndex = 1;
-                                        @endphp
-                                        @foreach ($groupSettings as $setting)
-                                            <tr wire:key="setting-{{ $groupSlug }}-{{ $setting->id }}">
-                                                <td>{{ $groupIndex++ }}</td>
-                                                <td>
-                                                    <code class="text-primary">{{ $setting->key }}</code>
-                                                </td>
-                                                <td>
-                                                    <span class="fw-medium">{{ $setting->name }}</span>
-                                                </td>
-                                                <td>
-                                                    @if ($setting->type === 'file' && $setting->value)
-                                                        <div class="d-flex align-items-center gap-2">
-                                                            <img src="{{ asset($setting->value) }}" alt="{{ $setting->name }}"
-                                                                class="img-thumbnail rounded"
-                                                                style="max-width: 50px; max-height: 50px; object-fit: contain;"
-                                                                onerror="this.style.display='none'">
-                                                            <span class="text-muted small">{{ Str::limit($setting->value, 30) }}</span>
-                                                        </div>
-                                                    @elseif ($setting->type === 'textarea')
-                                                        <span class="text-truncate d-inline-block" style="max-width: 200px;"
-                                                            title="{{ $setting->value }}">
-                                                            {{ Str::limit($setting->value ?? 'No value set', 50) }}
-                                                        </span>
-                                                    @else
-                                                        <span class="text-truncate d-inline-block" style="max-width: 200px;"
-                                                            title="{{ $setting->value }}">
-                                                            {{ Str::limit($setting->value ?? 'No value set', 50) }}
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-info-subtle text-info">
-                                                        {{ ucfirst($setting->type) }}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    @if ($setting->is_locked)
-                                                        <span class="badge bg-warning-subtle text-warning">
-                                                            <i class="ri-lock-line align-middle"></i> Locked
-                                                        </span>
-                                                    @else
-                                                        <span class="badge bg-success-subtle text-success">
-                                                            <i class="ri-edit-line align-middle"></i> Editable
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <div class="dropdown">
-                                                        <a href="javascript:void(0);" class="btn btn-soft-secondary btn-sm"
-                                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                                            <i class="ri-more-fill align-middle"></i>
-                                                        </a>
-                                                        <ul class="dropdown-menu dropdown-menu-end">
-                                                            <li>
-                                                                <a class="dropdown-item" href="javascript:void(0);"
-                                                                    wire:click="editSetting({{ $setting->id }})">
-                                                                    <i class="ri-edit-2-line align-bottom me-2 text-muted"></i> Edit
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item text-danger" href="javascript:void(0);"
-                                                                    wire:click="confirmDelete({{ $setting->id }})">
-                                                                    <i
-                                                                        class="ri-delete-bin-5-line align-bottom me-2 text-muted"></i>
-                                                                    Delete
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <!-- end tab pane -->
-                    @endforeach
+                    @endif
                 </div>
-                <!-- end tab content -->
-            @endif
+            </div>
         </div>
-        <!-- end card body -->
     </div>
-    <!-- end card -->
 
     <!-- Create/Edit Setting Modal -->
     <x-modal wire:model="showSettingModal" :title="$settingId ? 'Edit Setting' : 'Create Setting'" size="lg"
-        :show-footer="true" close-on-backdrop>
+        :show-footer="true">
         <form wire:submit.prevent="saveSetting">
             <div class="row g-3">
                 <div class="col-md-6">
@@ -367,33 +280,33 @@
                                 class="text-danger">{{ $settingId ? '' : '*' }}</span></label>
                         <div wire:ignore>
                             <div x-data x-init="
-                                            FilePond.registerPlugin(FilePondPluginImagePreview);
-                                            FilePond.registerPlugin(FilePondPluginFileValidateSize);
-                                            FilePond.registerPlugin(FilePondPluginImageExifOrientation);
-                                            FilePond.registerPlugin(FilePondPluginFileEncode);
+                                                                FilePond.registerPlugin(FilePondPluginImagePreview);
+                                                                FilePond.registerPlugin(FilePondPluginFileValidateSize);
+                                                                FilePond.registerPlugin(FilePondPluginImageExifOrientation);
+                                                                FilePond.registerPlugin(FilePondPluginFileEncode);
 
-                                            FilePond.setOptions({
-                                                allowMultiple: false,
-                                                maxFileSize: '2MB',
-                                                acceptedFileTypes: ['image/*'],
-                                                server: {
-                                                    process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
-                                                        @this.upload('file', file, load, error, progress);
-                                                    },
-                                                    revert: (filename, load) => {
-                                                        @this.removeUpload('file', filename);
-                                                        load();
-                                                    }
-                                                },
-                                                labelIdle: 'Drag & Drop your image or Browse',
-                                                labelMaxFileSizeExceeded: 'File is too large',
-                                                labelMaxFileSize: 'Maximum file size is 2MB',
-                                                imagePreviewHeight: 170,
-                                                credits: false
-                                            });
+                                                                FilePond.setOptions({
+                                                                    allowMultiple: false,
+                                                                    maxFileSize: '2MB',
+                                                                    acceptedFileTypes: ['image/*'],
+                                                                    server: {
+                                                                        process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                                                                            @this.upload('file', file, load, error, progress);
+                                                                        },
+                                                                        revert: (filename, load) => {
+                                                                            @this.removeUpload('file', filename);
+                                                                            load();
+                                                                        }
+                                                                    },
+                                                                    labelIdle: 'Drag & Drop your image or Browse',
+                                                                    labelMaxFileSizeExceeded: 'File is too large',
+                                                                    labelMaxFileSize: 'Maximum file size is 2MB',
+                                                                    imagePreviewHeight: 170,
+                                                                    credits: false
+                                                                });
 
-                                            FilePond.create($refs.fileInput);
-                                        ">
+                                                                FilePond.create($refs.fileInput);
+                                                            ">
                                 <input type="file" x-ref="fileInput" class="@error('file') is-invalid @enderror"
                                     accept="image/*">
                             </div>
@@ -486,7 +399,4 @@
             </x-button>
         </x-slot:footer>
     </x-modal>
-
-
-
 </div>

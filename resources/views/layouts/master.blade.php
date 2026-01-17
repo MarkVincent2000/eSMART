@@ -1,16 +1,23 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-layout="vertical" data-topbar="light"
-    data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default"
-    data-theme-colors="default">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+    data-layout="{{ \App\Models\SystemSetting::getValue('theme.layout', 'vertical') }}"
+    data-topbar="{{ \App\Models\SystemSetting::getValue('theme.topbar', 'light') }}"
+    data-sidebar="{{ \App\Models\SystemSetting::getValue('theme.sidebar', 'dark') }}"
+    data-sidebar-size="{{ \App\Models\SystemSetting::getValue('theme.sidebar_size', 'lg') }}"
+    data-sidebar-image="{{ \App\Models\SystemSetting::getValue('theme.sidebar_image', 'none') }}"
+    data-preloader="{{ \App\Models\SystemSetting::getValue('theme.preloader', 'disable') }}"
+    data-theme="{{ \App\Models\SystemSetting::getValue('theme.theme', 'default') }}"
+    data-theme-colors="{{ \App\Models\SystemSetting::getValue('theme.theme_colors', 'default') }}">
 
 <head>
     <meta charset="utf-8" />
-    <title>@yield('title') | eSMART Campus</title>
+    <title>@yield('title') | {{ \App\Models\SystemSetting::getValue('site.short_name', 'smart') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="eSMART Campus - Student Management System" name="description" />
     <meta content="eSMART Campus Team" name="author" />
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
+    <link rel="shortcut icon"
+        href="{{ \App\Models\SystemSetting::getAsset('site.favicon', URL::asset('build/images/favicon.ico')) }}">
     @include('layouts.head-css')
 
 
@@ -72,7 +79,12 @@
 
         /* Custom Modal Overlay */
         .custom-modal-overlay {
-            overflow-y: auto;
+            overflow: hidden;
+        }
+
+        /* Allow scrolling only on the modal content container */
+        .custom-modal-overlay>div[style*="overflow-y: auto"] {
+            overflow-y: auto !important;
         }
 
         /* Transition utilities for Alpine.js */
@@ -153,12 +165,27 @@
             box-shadow: 0 20px 25px -5px rgba(177, 177, 177, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
-        /* Modal Bounce Animation */
+        /* Ensure modal content remains sharp and clear */
+        .modal-card-dark {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+        }
+
+        /* Modal Bounce Animation - optimized to prevent blur */
         .card.modal-bounce {
-            /* Ensure the animation is clean and not affected by x-cloak */
             animation: modalBounce 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
             animation-fill-mode: both !important;
             transform-origin: center center !important;
+            /* Use will-change only during animation to prevent blur */
+            will-change: transform !important;
+        }
+
+        /* Reset will-change after animation to prevent blur */
+        .card:not(.modal-bounce) {
+            will-change: auto !important;
         }
 
         /* Ensure animation works even when element is visible */
@@ -169,17 +196,33 @@
 
         @keyframes modalBounce {
             0% {
-                transform: scale(1);
+                transform: translate3d(0, 0, 0) scale(1);
+                -webkit-transform: translate3d(0, 0, 0) scale(1);
             }
 
             50% {
-                transform: scale(1.02);
-                /* Subtle scale for smooth effect */
+                transform: translate3d(0, 0, 0) scale(1.02);
+                -webkit-transform: translate3d(0, 0, 0) scale(1.02);
             }
 
             100% {
-                transform: scale(1);
+                transform: translate3d(0, 0, 0) scale(1);
+                -webkit-transform: translate3d(0, 0, 0) scale(1);
             }
+        }
+
+        /* Prevent blur on modal content during and after animation */
+        .modal-card-dark * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* Ensure crisp rendering after animation */
+        .card.modal-bounce,
+        .card:not(.modal-bounce) {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
         }
     </style>
 
