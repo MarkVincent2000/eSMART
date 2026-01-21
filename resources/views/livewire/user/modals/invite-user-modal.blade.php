@@ -101,10 +101,12 @@
 
             <div class="col-md-6">
                 <label for="sex" class="form-label">Sex</label>
-                <select class="form-select border @error('sex') is-invalid @enderror" id="sex" wire:model="sex">
+                <select class="form-select border @error('sex') is-invalid @enderror" id="sex" wire:model.blur="sex"
+                    wire:key="sex-select-{{ $userId ?? 'new' }}">
                     <option value="" disabled {{ empty($sex) ? 'selected' : '' }}>Select Sex</option>
                     @foreach($this->sexOptions as $sexOption)
-                        <option value="{{ $sexOption->value }}">{{ ucfirst($sexOption->value) }}</option>
+                        <option value="{{ $sexOption->value }}" {{ $sex === $sexOption->value ? 'selected' : '' }}>
+                            {{ ucfirst($sexOption->value) }}</option>
                     @endforeach
                 </select>
                 @error('sex')
@@ -124,10 +126,10 @@
             <div class="col-md-6">
                 <label for="religion" class="form-label">Religion</label>
                 <select class="form-select border @error('religion') is-invalid @enderror" id="religion"
-                    wire:model="religion">
+                    wire:model.blur="religion" wire:key="religion-select-{{ $userId ?? 'new' }}">
                     <option value="" disabled {{ empty($religion) ? 'selected' : '' }}>Select Religion</option>
                     @foreach($this->religionOptions as $religionOption)
-                        <option value="{{ $religionOption->value }}">{{ ucfirst($religionOption->value) }}</option>
+                        <option value="{{ $religionOption->value }}" {{ $religion === $religionOption->value ? 'selected' : '' }}>{{ ucfirst($religionOption->value) }}</option>
                     @endforeach
                 </select>
                 @error('religion')
@@ -200,11 +202,12 @@
             <div class="col-md-6">
                 <label for="guardian_relationship" class="form-label">Guardian Relationship</label>
                 <select class="form-select border @error('guardian_relationship') is-invalid @enderror"
-                    id="guardian_relationship" wire:model="guardian_relationship">
+                    id="guardian_relationship" wire:model.blur="guardian_relationship"
+                    wire:key="guardian-relationship-select-{{ $userId ?? 'new' }}">
                     <option value="" disabled {{ empty($guardian_relationship) ? 'selected' : '' }}>Select Relationship
                     </option>
                     @foreach($this->guardianRelationshipOptions as $relationship)
-                        <option value="{{ $relationship->value }}">{{ ucfirst($relationship->value) }}</option>
+                        <option value="{{ $relationship->value }}" {{ $guardian_relationship === $relationship->value ? 'selected' : '' }}>{{ ucfirst($relationship->value) }}</option>
                     @endforeach
                 </select>
                 @error('guardian_relationship')

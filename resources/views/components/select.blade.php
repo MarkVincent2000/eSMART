@@ -233,18 +233,18 @@
                         <template x-for="option in filteredOptions" :key="option.value">
                             <li 
                                 @click="select(option.value)"
-                                @mouseenter="$el.style.backgroundColor = isSelected(option.value) ? '#e7f1ff' : '#f8f9fa'"
-                                @mouseleave="$el.style.backgroundColor = isSelected(option.value) ? '#e7f1ff' : 'transparent'"
+                                @mouseenter="$el.style.backgroundColor = (multiple ? selected.includes(option.value) : selected == option.value) ? '#e7f1ff' : '#f8f9fa'"
+                                @mouseleave="$el.style.backgroundColor = (multiple ? selected.includes(option.value) : selected == option.value) ? '#e7f1ff' : 'transparent'"
                                 class="list-group-item list-group-item-action cursor-pointer d-flex justify-content-between align-items-center px-3 py-2 border-0"
-                                :class="{'bg-primary-subtle text-primary fw-semibold': isSelected(option.value)}"
+                                :class="{'bg-primary-subtle text-primary fw-semibold': (multiple ? selected.includes(option.value) : selected == option.value)}"
                                 style="cursor: pointer; transition: all 0.15s ease;"
                             >
-                                <span x-text="option.label" class="d-flex align-items-center">
-                                    <i x-show="isSelected(option.value)" class="ri-checkbox-circle-fill me-2 text-primary" style="font-size: 1.1rem;"></i>
-                                    <i x-show="!isSelected(option.value)" class="ri-checkbox-blank-circle-line me-2 text-muted" style="font-size: 1.1rem; opacity: 0.5;"></i>
+                                <span class="d-flex align-items-center">
+                                    <i x-show="multiple ? selected.includes(option.value) : selected == option.value" class="ri-checkbox-circle-fill me-2 text-primary" style="font-size: 1.1rem;"></i>
+                                    <i x-show="!(multiple ? selected.includes(option.value) : selected == option.value)" class="ri-checkbox-blank-circle-line me-2 text-muted" style="font-size: 1.1rem; opacity: 0.5;"></i>
                                     <span x-text="option.label"></span>
                                 </span>
-                                <i x-show="isSelected(option.value)" class="ri-check-line text-primary fw-bold fs-5"></i>
+                                <i x-show="multiple ? selected.includes(option.value) : selected == option.value" class="ri-check-line text-primary fw-bold fs-5"></i>
                             </li>
                         </template>
                         <li x-show="filteredOptions.length === 0" class="list-group-item text-muted text-center p-4">

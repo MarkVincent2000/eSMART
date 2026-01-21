@@ -142,12 +142,6 @@
                 <div 
                     class="card-body" 
                     style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; {{ $contentScrollable ? 'overflow-y: auto !important;' : 'overflow-y: visible !important;' }} {{ $overflow === 'visible' ? 'overflow-x: visible !important;' : 'overflow-x: hidden !important;' }} flex: 1 1 auto; min-height: 0;"
-                    x-on:click="
-                        // Close any open select dropdowns when clicking on modal body (but not when selecting text)
-                        if (window.getSelection().toString().length === 0) {
-                            window.dispatchEvent(new CustomEvent('close-select-dropdowns'));
-                        }
-                    "
                 >
                     {{ $slot }}
                 </div>
