@@ -17,6 +17,9 @@
         GET_STUDENT_ATTENDANCES: (id) => `/attendance/view/students?id=${id}`,
         TIME_IN: '/attendance/students/time-in',
         TIME_OUT: '/attendance/students/time-out',
+        COMMENTS: '/attendance/comments',
+        UPDATE_COMMENT: (id) => `/attendance/comments/${id}`,
+        DELETE_COMMENT: (id) => `/attendance/comments/${id}`,
     };
 
     // Get attendance ID from URL query parameter or window variable
@@ -34,6 +37,11 @@
     function getStudentAttendanceId() {
         // This will be set from the blade template
         return window.currentStudentAttendanceId || null;
+    }
+
+    // Get current user ID
+    function getCurrentUserId() {
+        return window.currentUserId || null;
     }
 
     // Get CSRF token
@@ -122,12 +130,27 @@
     let currentPage = 1;
     const itemsPerPage = 10;
 
+    // Comments state
+
+
+    // Comments state
+    let commentsData = [];
+
+    // Delete comment state
+    let pendingDeleteComment = {
+        id: null,
+        element: null
+    };
+
     // Digital clock state
     let digitalClockInterval = null;
     let currentClockTime = null; // Store current clock time for time in/out
 
     function initialize() {
         console.log('Student Attendance page initialized');
+
+        // Initialize analog clock
+        initializeAnalogClock();
 
         // Initialize digital clock
         initializeDigitalClock();
@@ -152,6 +175,87 @@
 
         // Update time entries tab label on load
         updateTimeEntriesTabLabelOnLoad();
+
+        // Initialize comments section
+        initializeComments();
+
+        // Initialize delete comment modal
+        initializeDeleteCommentModal();
+
+        // Initialize SimpleBar on comments container
+        initializeCommentsSimpleBar();
+    }
+
+    /**
+     * Initialize analog clock
+     */
+    function initializeAnalogClock() {
+        const hourEl = document.querySelector('.analog-clock .needle.hour');
+        const minuteEl = document.querySelector('.analog-clock .needle.minute');
+        const secondEl = document.querySelector('.analog-clock .needle.second');
+        const timeEl = document.querySelector('.analog-time');
+        const dateEl = document.querySelector('.analog-date');
+
+        if (!hourEl || !minuteEl || !secondEl || !timeEl || !dateEl) {
+            return;
+        }
+
+        const days = [
+            'Sunday',
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday'
+        ];
+
+        const months = [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec'
+        ];
+
+        function setAnalogTime() {
+            const time = new Date();
+            const month = time.getMonth();
+            const day = time.getDay();
+            const date = time.getDate();
+            const hours = time.getHours();
+            const hoursForClock = hours % 12;
+            const minutes = time.getMinutes();
+            const seconds = time.getSeconds();
+
+            // Calculate hour hand position (including minutes for smooth movement)
+            const hourAngle = ((hoursForClock * 30) + (minutes * 0.5));
+
+            hourEl.style.transform = `translate(-50%, -100%) rotate(${hourAngle}deg)`;
+            minuteEl.style.transform = `translate(-50%, -100%) rotate(${minutes * 6}deg)`;
+            secondEl.style.transform = `translate(-50%, -100%) rotate(${seconds * 6}deg)`;
+
+            // Format time in 12-hour format with seconds and AM/PM
+            const displayHours = hoursForClock || 12;
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            timeEl.innerHTML = `${displayHours}:${minutes < 10 ? `0${minutes}` : minutes}:${seconds < 10 ? `0${seconds}` : seconds} ${ampm}`;
+
+            const dateText = `${days[day]}, ${months[month]} <span class="circle">${date}</span>`;
+            dateEl.innerHTML = dateText;
+        }
+
+        // Set time immediately
+        setAnalogTime();
+
+        // Update every second
+        setInterval(setAnalogTime, 1000);
     }
 
     /**
@@ -264,6 +368,584 @@
             }, 0);
             if (totalMinutes > 0) {
                 updateTimeEntriesTabLabel(totalMinutes);
+            }
+        }
+    }
+
+    /**
+     * Initialize SimpleBar on comments container
+     */
+    function initializeCommentsSimpleBar() {
+        const commentsContainer = document.getElementById('commentsContainer');
+        if (commentsContainer) {
+            // Wait a bit for DOM to be ready
+            setTimeout(() => {
+                updateSimpleBar(commentsContainer);
+            }, 200);
+        }
+    }
+
+    /**
+     * Initialize delete comment modal
+     */
+    function initializeDeleteCommentModal() {
+        const confirmBtn = document.getElementById('confirmDeleteCommentBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', confirmDeleteComment);
+        }
+
+        // Reset pending delete state when modal is hidden
+        const modal = document.getElementById('deleteCommentModal');
+        if (modal) {
+            modal.addEventListener('hidden.bs.modal', function () {
+                pendingDeleteComment.id = null;
+                pendingDeleteComment.element = null;
+
+                // Reset button state
+                const btn = document.getElementById('confirmDeleteCommentBtn');
+                if (btn) {
+                    btn.disabled = false;
+                    const spinner = btn.querySelector('.spinner-border');
+                    const icon = btn.querySelector('i');
+                    if (spinner) spinner.classList.add('d-none');
+                    if (icon) icon.classList.remove('d-none');
+                }
+            });
+        }
+    }
+
+    /**
+     * Initialize comments section
+     */
+    function initializeComments() {
+        const commentsContainer = document.getElementById('commentsContainer');
+        const commentTextarea = document.getElementById('commentTextarea');
+        const postCommentBtn = document.getElementById('postCommentBtn');
+
+        if (!commentsContainer) return;
+
+        // Load existing comments
+        loadComments();
+
+        // Submit comment
+        if (postCommentBtn && commentTextarea) {
+            postCommentBtn.addEventListener('click', function () {
+                const body = commentTextarea.value.trim();
+
+                if (!body) {
+                    showToast('Validation', 'Please enter a comment.', 'warning');
+                    return;
+                }
+
+                const btnText = postCommentBtn.querySelector('.btn-text');
+                postCommentBtn.disabled = true;
+                postCommentBtn.querySelector('.spinner-border')?.classList.remove('d-none');
+                if (btnText) btnText.textContent = 'Posting...';
+
+                const formData = new FormData();
+                const studentAttendanceId = getStudentAttendanceId();
+                const attendanceId = getAttendanceId();
+
+                if (studentAttendanceId) {
+                    formData.append('student_attendance_id', studentAttendanceId);
+                } else if (attendanceId) {
+                    formData.append('attendance_id', attendanceId);
+                } else {
+                    showToast('Error', 'Unable to determine attendance. Please refresh.', 'danger');
+                    resetCommentButton();
+                    return;
+                }
+
+                formData.append('body', body);
+
+                fetch(API.COMMENTS, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': getCsrfToken()
+                    },
+                    body: formData
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data?.success) {
+                            showToast('Success', 'Comment posted successfully.', 'success');
+                            commentTextarea.value = '';
+                            loadComments();
+                            // SimpleBar will be updated in loadComments -> renderComments
+                        } else {
+                            const message = data?.message || 'Failed to post comment.';
+                            showToast('Error', message, 'danger');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Failed to post comment', err);
+                        showToast('Error', 'Failed to post comment. Please try again.', 'danger');
+                    })
+                    .finally(() => {
+                        resetCommentButton();
+                    });
+
+                function resetCommentButton() {
+                    postCommentBtn.disabled = false;
+                    postCommentBtn.querySelector('.spinner-border')?.classList.add('d-none');
+                    const btnText = postCommentBtn.querySelector('.btn-text');
+                    if (btnText) btnText.textContent = 'Post Comment';
+                }
+            });
+        }
+    }
+
+    /**
+     * Load comments from server
+     */
+    function loadComments() {
+        const commentsContainer = document.getElementById('commentsContainer');
+        if (!commentsContainer) return;
+
+        commentsContainer.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mb-0 mt-2">Loading comments...</p>
+            </div>
+        `;
+
+        const studentAttendanceId = getStudentAttendanceId();
+        const attendanceId = getAttendanceId();
+
+        if (!studentAttendanceId && !attendanceId) {
+            commentsContainer.innerHTML = `<p class="text-muted text-center py-3 mb-0">Unable to load comments.</p>`;
+            return;
+        }
+
+        const params = new URLSearchParams();
+        if (studentAttendanceId) {
+            params.set('student_attendance_id', studentAttendanceId);
+        } else if (attendanceId) {
+            params.set('attendance_id', attendanceId);
+        }
+
+        fetch(`${API.COMMENTS}?${params.toString()}`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data?.success) {
+                    commentsData = data.data?.comments || [];
+                    renderComments(commentsData);
+                    updateCommentCount(commentsData);
+                } else {
+                    const message = data?.message || 'Failed to load comments.';
+                    commentsContainer.innerHTML = `<p class="text-muted text-center py-3 mb-0">${message}</p>`;
+                    updateCommentCount([]);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load comments', err);
+                commentsContainer.innerHTML = `<p class="text-muted text-center py-3 mb-0">Failed to load comments. Please try again.</p>`;
+                updateCommentCount([]);
+            });
+    }
+
+    /**
+     * Render comments list
+     */
+    function renderComments(comments = []) {
+        const commentsContainer = document.getElementById('commentsContainer');
+        if (!commentsContainer) return;
+
+        if (!comments.length) {
+            commentsContainer.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="ri-chat-3-line fs-48 text-muted mb-2 d-block"></i>
+                    <p class="text-muted mb-0">No comments yet. Be the first to comment!</p>
+                </div>
+            `;
+            // Update SimpleBar after content change
+            updateSimpleBar(commentsContainer);
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        comments.forEach(comment => {
+            const commentItem = createCommentElement(comment);
+            fragment.appendChild(commentItem);
+        });
+
+        commentsContainer.innerHTML = '';
+        commentsContainer.appendChild(fragment);
+
+        // Update SimpleBar after content change
+        updateSimpleBar(commentsContainer);
+    }
+
+    /**
+     * Initialize or update SimpleBar on comments container
+     */
+    function updateSimpleBar(container) {
+        if (!container) return;
+
+        // Check if SimpleBar is available
+        if (typeof SimpleBar !== 'undefined') {
+            // Check if SimpleBar instance already exists
+            let simpleBarInstance = SimpleBar.instances?.get(container);
+
+            if (!simpleBarInstance) {
+                // Initialize SimpleBar if not already initialized
+                try {
+                    simpleBarInstance = new SimpleBar(container);
+                } catch (e) {
+                    console.warn('Failed to initialize SimpleBar:', e);
+                }
+            } else {
+                // Recalculate scrollbar if instance exists
+                try {
+                    simpleBarInstance.recalculate();
+                } catch (e) {
+                    console.warn('Failed to recalculate SimpleBar:', e);
+                }
+            }
+        } else {
+            // Fallback: SimpleBar should auto-initialize via data-simplebar attribute
+            // But we can trigger a manual check if needed
+            if (container.hasAttribute('data-simplebar')) {
+                // SimpleBar should auto-initialize, but we can ensure it's ready
+                setTimeout(() => {
+                    if (typeof SimpleBar !== 'undefined' && SimpleBar.initDOMLoadedElements) {
+                        SimpleBar.initDOMLoadedElements();
+                    }
+                }, 100);
+            }
+        }
+    }
+
+    /**
+     * Create a comment element with improved UI
+     */
+    function createCommentElement(comment) {
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'd-flex align-items-start gap-2 mb-3 pb-3 border-bottom';
+
+        // Avatar
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'flex-shrink-0';
+        const avatarImg = document.createElement('img');
+        avatarImg.src = comment.user?.avatar_url || window.currentUserAvatar || '/build/images/users/user-dummy-img.jpg';
+        avatarImg.alt = comment.user?.name || 'User';
+        avatarImg.className = 'rounded-circle';
+        avatarImg.style.cssText = 'width: 2.5rem; height: 2.5rem; object-fit: cover;';
+        avatarDiv.appendChild(avatarImg);
+
+        // Content
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'flex-grow-1';
+
+        // Header with name and date
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'd-flex align-items-center justify-content-between mb-1';
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'd-flex align-items-center gap-2';
+        const nameH6 = document.createElement('h6');
+        nameH6.className = 'mb-0 small fw-semibold';
+        nameH6.textContent = comment.user?.name || 'Unknown';
+        nameDiv.appendChild(nameH6);
+
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'text-muted small';
+        dateSpan.textContent = comment.created_at_human || formatCommentDate(comment.created_at);
+        nameDiv.appendChild(dateSpan);
+
+        headerDiv.appendChild(nameDiv);
+
+        // Action dropdown (only show if current user is the comment author)
+        const currentUserId = getCurrentUserId();
+        if (currentUserId && comment.user_id == currentUserId) {
+            const actionDiv = document.createElement('div');
+            actionDiv.className = 'dropdown';
+
+            const dropdownBtn = document.createElement('button');
+            dropdownBtn.className = 'btn btn-sm btn-ghost-secondary btn-icon';
+            dropdownBtn.type = 'button';
+            dropdownBtn.setAttribute('data-bs-toggle', 'dropdown');
+            dropdownBtn.setAttribute('aria-expanded', 'false');
+            dropdownBtn.innerHTML = '<i class="ri-more-2-fill"></i>';
+
+            const dropdownMenu = document.createElement('ul');
+            dropdownMenu.className = 'dropdown-menu dropdown-menu-end';
+
+            // Edit option
+            const editLi = document.createElement('li');
+            const editBtn = document.createElement('a');
+            editBtn.className = 'dropdown-item';
+            editBtn.href = '#';
+            editBtn.innerHTML = '<i class="ri-edit-line me-2"></i>Edit';
+            editBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                editComment(comment.id, comment.body, bodyP, commentDiv);
+            });
+            editLi.appendChild(editBtn);
+            dropdownMenu.appendChild(editLi);
+
+            // Delete option
+            const deleteLi = document.createElement('li');
+            const deleteBtn = document.createElement('a');
+            deleteBtn.className = 'dropdown-item text-danger';
+            deleteBtn.href = '#';
+            deleteBtn.innerHTML = '<i class="ri-delete-bin-line me-2"></i>Delete';
+            deleteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                deleteComment(comment.id, commentDiv);
+            });
+            deleteLi.appendChild(deleteBtn);
+            dropdownMenu.appendChild(deleteLi);
+
+            actionDiv.appendChild(dropdownBtn);
+            actionDiv.appendChild(dropdownMenu);
+            headerDiv.appendChild(actionDiv);
+        }
+
+        contentDiv.appendChild(headerDiv);
+
+        // Comment body (with data attribute for editing)
+        const bodyP = document.createElement('p');
+        bodyP.className = 'mb-0 text-break';
+        bodyP.style.whiteSpace = 'pre-wrap';
+        bodyP.textContent = comment.body || '';
+        bodyP.setAttribute('data-comment-id', comment.id);
+        contentDiv.appendChild(bodyP);
+
+        // Replies section (if any)
+        if (comment.replies && comment.replies.length > 0) {
+            const repliesDiv = document.createElement('div');
+            repliesDiv.className = 'mt-3 ps-3 border-start border-2';
+            comment.replies.forEach(reply => {
+                const replyElement = createCommentElement(reply);
+                replyElement.classList.remove('border-bottom');
+                replyElement.classList.add('mb-2', 'pb-2');
+                repliesDiv.appendChild(replyElement);
+            });
+            contentDiv.appendChild(repliesDiv);
+        }
+
+        commentDiv.appendChild(avatarDiv);
+        commentDiv.appendChild(contentDiv);
+
+        return commentDiv;
+    }
+
+    function formatCommentDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '';
+        return date.toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    /**
+     * Edit a comment inline
+     */
+    function editComment(commentId, currentBody, bodyElement, commentDiv) {
+        // Create edit form
+        const editForm = document.createElement('div');
+        editForm.className = 'mt-2';
+
+        const textarea = document.createElement('textarea');
+        textarea.className = 'form-control';
+        textarea.rows = 3;
+        textarea.value = currentBody;
+        textarea.style.resize = 'vertical';
+
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'd-flex justify-content-end gap-2 mt-2';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'btn btn-sm btn-light';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.addEventListener('click', () => {
+            editForm.remove();
+            bodyElement.style.display = '';
+        });
+
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'btn btn-sm btn-success';
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm d-none me-1"></span>Save';
+        saveBtn.addEventListener('click', () => {
+            const newBody = textarea.value.trim();
+            if (!newBody) {
+                showToast('Validation', 'Comment cannot be empty.', 'warning');
+                return;
+            }
+
+            saveBtn.disabled = true;
+            saveBtn.querySelector('.spinner-border')?.classList.remove('d-none');
+
+            fetch(API.UPDATE_COMMENT(commentId), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    body: newBody
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data?.success) {
+                        showToast('Success', 'Comment updated successfully.', 'success');
+                        bodyElement.textContent = newBody;
+                        editForm.remove();
+                        bodyElement.style.display = '';
+                        // Reload comments to get updated data
+                        loadComments();
+                    } else {
+                        const message = data?.message || 'Failed to update comment.';
+                        showToast('Error', message, 'danger');
+                        saveBtn.disabled = false;
+                        saveBtn.querySelector('.spinner-border')?.classList.add('d-none');
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to update comment', err);
+                    showToast('Error', 'Failed to update comment. Please try again.', 'danger');
+                    saveBtn.disabled = false;
+                    saveBtn.querySelector('.spinner-border')?.classList.add('d-none');
+                });
+        });
+
+        buttonGroup.appendChild(cancelBtn);
+        buttonGroup.appendChild(saveBtn);
+
+        editForm.appendChild(textarea);
+        editForm.appendChild(buttonGroup);
+
+        // Hide original body and show edit form
+        bodyElement.style.display = 'none';
+        bodyElement.parentNode.insertBefore(editForm, bodyElement.nextSibling);
+
+        // Focus textarea
+        setTimeout(() => textarea.focus(), 100);
+    }
+
+    /**
+     * Delete a comment - shows confirmation modal
+     */
+    function deleteComment(commentId, commentDiv) {
+        // Store the comment ID and element for later use
+        pendingDeleteComment.id = commentId;
+        pendingDeleteComment.element = commentDiv;
+
+        // Show the confirmation modal
+        const modal = new bootstrap.Modal(document.getElementById('deleteCommentModal'));
+        modal.show();
+    }
+
+    /**
+     * Confirm and execute comment deletion
+     */
+    function confirmDeleteComment() {
+        const commentId = pendingDeleteComment.id;
+        const commentDiv = pendingDeleteComment.element;
+
+        if (!commentId || !commentDiv) {
+            return;
+        }
+
+        const confirmBtn = document.getElementById('confirmDeleteCommentBtn');
+        const spinner = confirmBtn.querySelector('.spinner-border');
+        const icon = confirmBtn.querySelector('i');
+
+        // Disable button and show loading
+        confirmBtn.disabled = true;
+        if (spinner) spinner.classList.remove('d-none');
+        if (icon) icon.classList.add('d-none');
+
+        fetch(API.DELETE_COMMENT(commentId), {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Accept': 'application/json'
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data?.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteCommentModal'));
+                    if (modal) modal.hide();
+
+                    showToast('Success', 'Comment deleted successfully.', 'success');
+
+                    // Remove comment element with fade out animation
+                    commentDiv.style.transition = 'opacity 0.3s';
+                    commentDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        commentDiv.remove();
+                        // Update SimpleBar after removal
+                        const commentsContainer = document.getElementById('commentsContainer');
+                        if (commentsContainer) {
+                            updateSimpleBar(commentsContainer);
+                        }
+                        // Reload comments to update count
+                        loadComments();
+                    }, 300);
+
+                    // Reset pending delete state
+                    pendingDeleteComment.id = null;
+                    pendingDeleteComment.element = null;
+                } else {
+                    const message = data?.message || 'Failed to delete comment.';
+                    showToast('Error', message, 'danger');
+                    resetDeleteButton();
+                }
+            })
+            .catch(err => {
+                console.error('Failed to delete comment', err);
+                showToast('Error', 'Failed to delete comment. Please try again.', 'danger');
+                resetDeleteButton();
+            });
+
+        function resetDeleteButton() {
+            confirmBtn.disabled = false;
+            if (spinner) spinner.classList.add('d-none');
+            if (icon) icon.classList.remove('d-none');
+        }
+    }
+
+    /**
+     * Update comment count in tab header
+     */
+    function updateCommentCount(comments) {
+        // Count all comments including replies
+        let totalCount = 0;
+        if (Array.isArray(comments)) {
+            comments.forEach(comment => {
+                totalCount++; // Count main comment
+                if (comment.replies && Array.isArray(comment.replies)) {
+                    totalCount += comment.replies.length; // Count replies
+                }
+            });
+        }
+
+        const commentTab = document.querySelector('a[href="#home-1"]');
+        if (commentTab) {
+            const countSpan = document.getElementById('commentCount');
+            if (countSpan) {
+                countSpan.textContent = totalCount;
+            } else {
+                commentTab.textContent = `Comments (${totalCount})`;
             }
         }
     }

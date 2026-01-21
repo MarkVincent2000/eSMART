@@ -72,10 +72,6 @@
         }
 
         /* Prevent animation on cloaked elements */
-        [x-cloak] .modal-bounce,
-        [x-cloak].modal-bounce {
-            animation: none !important;
-        }
 
         /* Custom Modal Overlay */
         .custom-modal-overlay {
@@ -174,55 +170,11 @@
             -webkit-transform: translate3d(0, 0, 0);
         }
 
-        /* Modal Bounce Animation - optimized to prevent blur */
-        .card.modal-bounce {
-            animation: modalBounce 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-            animation-fill-mode: both !important;
-            transform-origin: center center !important;
-            /* Use will-change only during animation to prevent blur */
-            will-change: transform !important;
-        }
-
-        /* Reset will-change after animation to prevent blur */
-        .card:not(.modal-bounce) {
-            will-change: auto !important;
-        }
-
-        /* Ensure animation works even when element is visible */
-        .custom-modal-overlay:not([x-cloak]) .card.modal-bounce,
-        .custom-modal-overlay[x-show="true"] .card.modal-bounce {
-            animation: modalBounce 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-        }
-
-        @keyframes modalBounce {
-            0% {
-                transform: translate3d(0, 0, 0) scale(1);
-                -webkit-transform: translate3d(0, 0, 0) scale(1);
-            }
-
-            50% {
-                transform: translate3d(0, 0, 0) scale(1.02);
-                -webkit-transform: translate3d(0, 0, 0) scale(1.02);
-            }
-
-            100% {
-                transform: translate3d(0, 0, 0) scale(1);
-                -webkit-transform: translate3d(0, 0, 0) scale(1);
-            }
-        }
-
-        /* Prevent blur on modal content during and after animation */
+        /* Prevent blur on modal content */
         .modal-card-dark * {
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
-        }
-
-        /* Ensure crisp rendering after animation */
-        .card.modal-bounce,
-        .card:not(.modal-bounce) {
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
         }
     </style>
 

@@ -85,26 +85,26 @@
 
         <!-- Create Assignment Button -->
         @if(!$isStudent)
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="flex-shrink-0">
-                        <div class="avatar-sm">
-                            <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-18">
-                                <i class="ri-user-line"></i>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-sm">
+                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-18">
+                                    <i class="ri-user-line"></i>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="border rounded p-3 bg-light cursor-pointer" wire:click="toggleAssignmentForm" style="cursor: pointer;">
-                            <p class="text-muted mb-0">
-                                <i class="ri-file-edit-line me-2"></i>Create an assignment...
-                            </p>
+                        <div class="flex-grow-1">
+                            <div class="border rounded p-3 bg-light cursor-pointer" wire:click="toggleAssignmentForm" style="cursor: pointer;">
+                                <p class="text-muted mb-0">
+                                    <i class="ri-file-edit-line me-2"></i>Create an assignment...
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
         @endif
 
         <!-- Create Assignment Modal -->
@@ -118,7 +118,7 @@
                         placeholder="Assignment title (e.g., Math Homework Chapter 5)">
                     @error('title') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
-                
+
                 <div class="mb-3">
                     <label class="form-label">Description</label>
                     <textarea class="form-control @error('description') is-invalid @enderror" 
@@ -251,14 +251,14 @@
                                 @if($assignment->creator)
                                     @php
                                         $photoPath = $assignment->creator->photo_path
-                                            ? (str_starts_with($assignment->creator->photo_path, 'http') 
-                                                ? $assignment->creator->photo_path 
+                                            ? (str_starts_with($assignment->creator->photo_path, 'http')
+                                                ? $assignment->creator->photo_path
                                                 : asset('storage/' . $assignment->creator->photo_path))
-                                            : ($assignment->creator->avatar 
-                                                ? asset('build/images/users/' . $assignment->creator->avatar) 
+                                            : ($assignment->creator->avatar
+                                                ? asset('build/images/users/' . $assignment->creator->avatar)
                                                 : asset('build/images/users/user-dummy-img.jpg'));
                                     @endphp
-                                    <a href="{{ url('/profile?user_id=' . $assignment->creator->id) }}" class="text-decoration-none">
+                                    <a href="{{ url('/profile.index?user_id=' . $assignment->creator->id) }}" class="text-decoration-none">
                                         <div class="avatar-sm">
                                             <img src="{{ $photoPath }}" 
                                                 alt="{{ $assignment->creator->name ?? 'User' }}" 
@@ -298,37 +298,37 @@
                                             {{ ucfirst($assignment->status) }}
                                         </span>
                                         @if(!$isStudent && $assignment->created_by === auth()->id())
-                                        <div class="dropdown">
-                                            <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button"
-                                                data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="ri-more-fill align-middle"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li>
-                                                    <a class="dropdown-item" href="#"
-                                                        wire:click.prevent="editAssignment({{ $assignment->id }})"
-                                                        wire:target="editAssignment({{ $assignment->id }})">
-                                                        <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <hr class="dropdown-divider">
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item text-danger" href="#"
-                                                        wire:click.prevent="deleteAssignment({{ $assignment->id }})"
-                                                        wire:target="deleteAssignment({{ $assignment->id }})">
-                                                        <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
+                                            <div class="dropdown">
+                                                <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button"
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="ri-more-fill align-middle"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="#"
+                                                            wire:click.prevent="editAssignment({{ $assignment->id }})"
+                                                            wire:target="editAssignment({{ $assignment->id }})">
+                                                            <i class="ri-pencil-fill align-bottom me-2 text-muted"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <hr class="dropdown-divider">
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="#"
+                                                            wire:click.prevent="deleteAssignment({{ $assignment->id }})"
+                                                            wire:target="deleteAssignment({{ $assignment->id }})">
+                                                            <i class="ri-delete-bin-fill align-bottom me-2 text-muted"></i> Delete
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>
-                                
+
                                 <h5 class="mb-2">{{ $assignment->title }}</h5>
-                                
+
                                 @if($assignment->description)
                                     <p class="mb-2">{{ $assignment->description }}</p>
                                 @endif
@@ -352,8 +352,8 @@
                                             Due: {{ $assignment->due_date->format('M d, Y') }}
                                             @if($assignment->due_time)
                                                 @php
-                                                    $dueTime = is_string($assignment->due_time) 
-                                                        ? \Carbon\Carbon::parse($assignment->due_time) 
+                                                    $dueTime = is_string($assignment->due_time)
+                                                        ? \Carbon\Carbon::parse($assignment->due_time)
                                                         : $assignment->due_time;
                                                 @endphp
                                                 {{ $dueTime->format('h:i A') }}
@@ -466,7 +466,7 @@
                             'submissions.attachments',
                             'submissions.grader'
                         ])->find($assignment->id);
-                        
+
                         // Filter submissions for students - only show their own
                         $submissionsToShow = collect([]);
                         if ($assignmentWithSubmissions) {
@@ -517,13 +517,13 @@
                                                 @php
                                                     $user = $submission->studentInfo->user ?? null;
                                                     $photoPath = $user && $user->photo_path
-                                                        ? (str_starts_with($user->photo_path, 'http') 
-                                                            ? $user->photo_path 
+                                                        ? (str_starts_with($user->photo_path, 'http')
+                                                            ? $user->photo_path
                                                             : asset('storage/' . $user->photo_path))
-                                                        : ($user && $user->avatar 
-                                                            ? asset('build/images/users/' . $user->avatar) 
+                                                        : ($user && $user->avatar
+                                                            ? asset('build/images/users/' . $user->avatar)
                                                             : asset('build/images/users/user-dummy-img.jpg'));
-                                                    
+
                                                     $statusColors = [
                                                         'draft' => 'secondary',
                                                         'submitted' => 'success',
@@ -655,11 +655,11 @@
                                             @php
                                                 $user = auth()->user();
                                                 $photoPath = $user && $user->photo_path
-                                                    ? (str_starts_with($user->photo_path, 'http') 
-                                                        ? $user->photo_path 
+                                                    ? (str_starts_with($user->photo_path, 'http')
+                                                        ? $user->photo_path
                                                         : asset('storage/' . $user->photo_path))
-                                                    : ($user && $user->avatar 
-                                                        ? asset('build/images/users/' . $user->avatar) 
+                                                    : ($user && $user->avatar
+                                                        ? asset('build/images/users/' . $user->avatar)
                                                         : asset('build/images/users/user-dummy-img.jpg'));
                                             @endphp
                                             <img src="{{ $photoPath }}" 
@@ -725,11 +725,11 @@
                                         @php
                                             $commentUser = $comment->user;
                                             $commentPhotoPath = $commentUser && $commentUser->photo_path
-                                                ? (str_starts_with($commentUser->photo_path, 'http') 
-                                                    ? $commentUser->photo_path 
+                                                ? (str_starts_with($commentUser->photo_path, 'http')
+                                                    ? $commentUser->photo_path
                                                     : asset('storage/' . $commentUser->photo_path))
-                                                : ($commentUser && $commentUser->avatar 
-                                                    ? asset('build/images/users/' . $commentUser->avatar) 
+                                                : ($commentUser && $commentUser->avatar
+                                                    ? asset('build/images/users/' . $commentUser->avatar)
                                                     : asset('build/images/users/user-dummy-img.jpg'));
                                         @endphp
                                         <div class="d-flex align-items-start gap-2 mb-3 pb-3 border-bottom">
@@ -815,8 +815,8 @@
                                                         @endif
 
                                                         @php
-                                                            $existingAttachments = is_object($editingCommentExistingAttachments) 
-                                                                ? $editingCommentExistingAttachments 
+                                                            $existingAttachments = is_object($editingCommentExistingAttachments)
+                                                                ? $editingCommentExistingAttachments
                                                                 : collect($editingCommentExistingAttachments ?? []);
                                                         @endphp
                                                         @if($existingAttachments->isNotEmpty())
@@ -825,8 +825,8 @@
                                                                 @foreach($existingAttachments as $attachment)
                                                                     @php
                                                                         $attachmentObj = is_object($attachment) ? $attachment : (object) $attachment;
-                                                                        $url = is_object($attachment) && method_exists($attachment, 'getUrlAttribute') 
-                                                                            ? $attachment->url 
+                                                                        $url = is_object($attachment) && method_exists($attachment, 'getUrlAttribute')
+                                                                            ? $attachment->url
                                                                             : asset('storage/' . ($attachmentObj->file_path ?? ''));
                                                                     @endphp
                                                                     <div class="d-flex align-items-center justify-content-between border rounded p-2 mb-2">
@@ -871,7 +871,7 @@
                                                 @else
                                                     <!-- Display Comment -->
                                                     <p class="mb-2 small" style="white-space: pre-wrap;">{{ $comment->body }}</p>
-                                                    
+
                                                     @if($comment->attachments->isNotEmpty())
                                                         <div class="d-flex flex-wrap gap-2 mb-2">
                                                             @foreach($comment->attachments as $attachment)
@@ -918,7 +918,7 @@
             <x-pagination :paginator="$assignments" :show-summary="true" />
         @endif
 
-       
+
         <!-- Delete Assignment Modal -->
         <x-modal wire:model="showDeleteModal" title="Delete Assignment" size="md" :centered="true" :showFooter="true">
             <div class="text-center">
@@ -984,11 +984,11 @@
                     @php
                         $creator = $classroom->creator;
                         $creatorPhotoPath = $creator->photo_path
-                            ? (str_starts_with($creator->photo_path, 'http') 
-                                ? $creator->photo_path 
+                            ? (str_starts_with($creator->photo_path, 'http')
+                                ? $creator->photo_path
                                 : asset('storage/' . $creator->photo_path))
-                            : ($creator->avatar 
-                                ? asset('build/images/users/' . $creator->avatar) 
+                            : ($creator->avatar
+                                ? asset('build/images/users/' . $creator->avatar)
                                 : asset('build/images/users/user-dummy-img.jpg'));
                     @endphp
                     <div class="mb-4">
@@ -1040,75 +1040,75 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($classroom->students->sortBy(function($student) {
-                                    $user = $student->user;
-                                    return $user ? ($user->last_name ?? $user->name ?? '') : '';
-                                }) as $student)
-                                    @php
+                                @foreach($classroom->students->sortBy(function ($student) {
                                         $user = $student->user;
-                                        $photoPath = $user && $user->photo_path
-                                            ? (str_starts_with($user->photo_path, 'http') 
-                                                ? $user->photo_path 
-                                                : asset('storage/' . $user->photo_path))
-                                            : ($user && $user->avatar 
-                                                ? asset('build/images/users/' . $user->avatar) 
-                                                : asset('build/images/users/user-dummy-img.jpg'));
-                                        
-                                        // Get pivot data
-                                        $enrollmentStatus = $student->pivot->status ?? 'enrolled';
-                                    @endphp
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <img src="{{ $photoPath }}" 
-                                                    alt="{{ $user->name ?? 'Student' }}" 
-                                                    class="rounded-circle"
-                                                    style="width: 2.5rem; height: 2.5rem; object-fit: cover;">
-                                                <div>
-                                                    <h6 class="mb-0">
-                                                        @if($user)
-                                                            @if(!empty($user->first_name) || !empty($user->last_name))
-                                                                {{ trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) }}
-                                                            @else
-                                                                {{ $user->name ?? 'Unknown' }}
-                                                            @endif
-                                                        @else
-                                                            Unknown
-                                                        @endif
-                                                    </h6>
-                                                    @if($user && $user->email)
-                                                        <small class="text-muted">{{ $user->email }}</small>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="text-muted">{{ $student->student_number ?? 'N/A' }}</span>
-                                        </td>
-                                        <td>
-                                            @if($student->program)
-                                                <span class="badge bg-info-subtle text-info">
-                                                    {{ $student->program->code ?? $student->program->name }}
-                                                </span>
-                                            @else
-                                                <span class="text-muted">N/A</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($student->year_level)
-                                                <span class="badge bg-primary-subtle text-primary">
-                                                    Grade {{ $student->year_level }}
-                                                </span>
-                                            @else
-                                                <span class="text-muted">N/A</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-{{ $enrollmentStatus === 'enrolled' ? 'success' : ($enrollmentStatus === 'active' ? 'primary' : 'warning') }}-subtle text-{{ $enrollmentStatus === 'enrolled' ? 'success' : ($enrollmentStatus === 'active' ? 'primary' : 'warning') }}">
-                                                {{ ucfirst($enrollmentStatus) }}
-                                            </span>
-                                        </td>
-                                    </tr>
+                                        return $user ? ($user->last_name ?? $user->name ?? '') : '';
+                                    }) as $student)
+                                                                            @php
+                                                                                $user = $student->user;
+                                                                                $photoPath = $user && $user->photo_path
+                                                                                    ? (str_starts_with($user->photo_path, 'http')
+                                                                                        ? $user->photo_path
+                                                                                        : asset('storage/' . $user->photo_path))
+                                                                                    : ($user && $user->avatar
+                                                                                        ? asset('build/images/users/' . $user->avatar)
+                                                                                        : asset('build/images/users/user-dummy-img.jpg'));
+
+                                                                                // Get pivot data
+                                                                                $enrollmentStatus = $student->pivot->status ?? 'enrolled';
+                                                                            @endphp
+                                                                            <tr>
+                                                                                <td>
+                                                                                    <div class="d-flex align-items-center gap-2">
+                                                                                        <img src="{{ $photoPath }}" 
+                                                                                            alt="{{ $user->name ?? 'Student' }}" 
+                                                                                            class="rounded-circle"
+                                                                                            style="width: 2.5rem; height: 2.5rem; object-fit: cover;">
+                                                                                        <div>
+                                                                                            <h6 class="mb-0">
+                                                                                                @if($user)
+                                                                                                    @if(!empty($user->first_name) || !empty($user->last_name))
+                                                                                                        {{ trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) }}
+                                                                                                    @else
+                                                                                                        {{ $user->name ?? 'Unknown' }}
+                                                                                                    @endif
+                                                                                                @else
+                                                                                                    Unknown
+                                                                                                @endif
+                                                                                            </h6>
+                                                                                            @if($user && $user->email)
+                                                                                                <small class="text-muted">{{ $user->email }}</small>
+                                                                                            @endif
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </td>
+                                                                                <td>
+                                                                                    <span class="text-muted">{{ $student->student_number ?? 'N/A' }}</span>
+                                                                                </td>
+                                                                                <td>
+                                                                                    @if($student->program)
+                                                                                        <span class="badge bg-info-subtle text-info">
+                                                                                            {{ $student->program->code ?? $student->program->name }}
+                                                                                        </span>
+                                                                                    @else
+                                                                                        <span class="text-muted">N/A</span>
+                                                                                    @endif
+                                                                                </td>
+                                                                                <td>
+                                                                                    @if($student->year_level)
+                                                                                        <span class="badge bg-primary-subtle text-primary">
+                                                                                            Grade {{ $student->year_level }}
+                                                                                        </span>
+                                                                                    @else
+                                                                                        <span class="text-muted">N/A</span>
+                                                                                    @endif
+                                                                                </td>
+                                                                                <td>
+                                                                                    <span class="badge bg-{{ $enrollmentStatus === 'enrolled' ? 'success' : ($enrollmentStatus === 'active' ? 'primary' : 'warning') }}-subtle text-{{ $enrollmentStatus === 'enrolled' ? 'success' : ($enrollmentStatus === 'active' ? 'primary' : 'warning') }}">
+                                                                                        {{ ucfirst($enrollmentStatus) }}
+                                                                                    </span>
+                                                                                </td>
+                                                                            </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -1140,13 +1140,13 @@
                 @php
                     $user = $selectedSubmission->studentInfo->user ?? null;
                     $photoPath = $user && $user->photo_path
-                        ? (str_starts_with($user->photo_path, 'http') 
-                            ? $user->photo_path 
+                        ? (str_starts_with($user->photo_path, 'http')
+                            ? $user->photo_path
                             : asset('storage/' . $user->photo_path))
-                        : ($user && $user->avatar 
-                            ? asset('build/images/users/' . $user->avatar) 
+                        : ($user && $user->avatar
+                            ? asset('build/images/users/' . $user->avatar)
                             : asset('build/images/users/user-dummy-img.jpg'));
-                    
+
                     $statusColors = [
                         'draft' => 'secondary',
                         'submitted' => 'success',
@@ -1156,7 +1156,7 @@
                     ];
                     $statusColor = $statusColors[$selectedSubmission->status] ?? 'secondary';
                 @endphp
-                
+
                 <!-- Student Info -->
                 <div class="card border mb-3">
                     <div class="card-body">
@@ -1317,7 +1317,7 @@
                                     This submission has already been graded. You can update the grade below.
                                 </div>
                             @endif
-                            
+
                             <form wire:submit.prevent="saveGrade">
                                 <div class="row g-3 mb-3">
                                     <div class="col-md-6">
@@ -1359,7 +1359,7 @@
                                         @endif
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label">Feedback <span class="text-muted small">(Optional)</span></label>
                                     <textarea class="form-control @error('gradingFeedback') is-invalid @enderror" 
@@ -1440,15 +1440,13 @@
                                     @if($selectedSubmission->grader)
                                         <div class="mt-1">
                                             <small class="text-muted">
-                                                by {{ !empty($selectedSubmission->grader->first_name) || !empty($selectedSubmission->grader->last_name) 
-                                                    ? trim(($selectedSubmission->grader->first_name ?? '') . ' ' . ($selectedSubmission->grader->last_name ?? '')) 
-                                                    : ($selectedSubmission->grader->name ?? 'Unknown') }}
-                                            </small>
+                                                 by {{ !empty($selectedSubmission->grader->first_name) || !empty($selectedSubmission->grader->last_name) ? trim(($selectedSubmission->grader->first_name ?? '') . ' ' . ($selectedSubmission->grader->last_name ?? '')) : ($selectedSubmission->grader->name ?? 'Unknown') }}
+                                             </small>
                                         </div>
                                     @endif
                                 </div>
                             </div>
-                            
+
                             @if($selectedSubmission->feedback)
                                 <div class="border-top pt-3">
                                     <label class="form-label fw-semibold mb-2">
@@ -1477,17 +1475,18 @@
                     </div>
                 @endif
 
-                <div class="d-flex justify-content-end mt-4">
-                    <button type="button" class="btn btn-light" wire:click="closeViewSubmissionModal">Close</button>
-                </div>
+
             @else
                 <div class="text-center py-5">
                     <i class="ri-error-warning-line display-4 text-danger mb-3"></i>
                     <h5 class="mb-2">Submission Not Found</h5>
                     <p class="text-muted mb-4">Unable to load submission information.</p>
-                    <button type="button" class="btn btn-light" wire:click="closeViewSubmissionModal">Close</button>
+
                 </div>
             @endif
+            <x-slot:footer>
+                <button type="button" class="btn btn-light" wire:click="closeViewSubmissionModal">Close</button>
+            </x-slot:footer>
         </x-modal>
 
         <!-- Submission Modal -->
@@ -1514,8 +1513,8 @@
                                     Due: {{ $assignment->due_date instanceof \Carbon\Carbon ? $assignment->due_date->format('M d, Y') : \Carbon\Carbon::parse($assignment->due_date)->format('M d, Y') }}
                                     @if($assignment->due_time)
                                         @php
-                                            $dueTime = is_string($assignment->due_time) 
-                                                ? \Carbon\Carbon::parse($assignment->due_time) 
+                                            $dueTime = is_string($assignment->due_time)
+                                                ? \Carbon\Carbon::parse($assignment->due_time)
                                                 : ($assignment->due_time instanceof \Carbon\Carbon ? $assignment->due_time : \Carbon\Carbon::parse($assignment->due_time));
                                         @endphp
                                         {{ $dueTime->format('h:i A') }}
@@ -1574,17 +1573,17 @@
                                             @endif
                                         </strong>
                                         @if($existingSubmission->grader)
-                                            <div class="mt-1">
-                                                <small class="text-muted">
-                                                    by {{ !empty($existingSubmission->grader->first_name) || !empty($existingSubmission->grader->last_name) 
-                                                        ? trim(($existingSubmission->grader->first_name ?? '') . ' ' . ($existingSubmission->grader->last_name ?? '')) 
-                                                        : ($existingSubmission->grader->name ?? 'Unknown') }}
-                                                </small>
-                                            </div>
+                                                                                                                                                                                                                                                    <div class="mt-1">
+                                                                                                                                                                                                                                                        <small class="text-muted">
+                                                                                                                                                                                                                                                            by {{ !empty($existingSubmission->grader->first_name) || !empty($existingSubmission->grader->last_name)
+                                            ? trim(($existingSubmission->grader->first_name ?? '') . ' ' . ($existingSubmission->grader->last_name ?? ''))
+                                            : ($existingSubmission->grader->name ?? 'Unknown') }}
+                                                                                                                                                                                                                                                        </small>
+                                                                                                                                                                                                                                                    </div>
                                         @endif
                                     </div>
                                 </div>
-                                
+
                                 @if($existingSubmission->feedback)
                                     <div class="border-top pt-3">
                                         <label class="form-label fw-semibold mb-2">

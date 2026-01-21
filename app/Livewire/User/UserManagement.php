@@ -447,6 +447,22 @@ class UserManagement extends Component
 
         $this->validate($rules);
 
+        // Check if user is trying to assign super-admin or admin roles without being super-admin
+        $currentUser = Auth::user();
+        $isSuperAdmin = $currentUser && $currentUser->hasRole('super-admin');
+        
+        if (!$isSuperAdmin) {
+            $restrictedRoles = array_intersect($this->selectedRoles, ['super-admin', 'admin']);
+            if (!empty($restrictedRoles)) {
+                $this->addError('selectedRoles', 'You do not have permission to assign super-admin or admin roles.');
+                $this->dispatch('show-toast', [
+                    'message' => 'You do not have permission to assign super-admin or admin roles.',
+                    'type' => 'error'
+                ]);
+                return;
+            }
+        }
+
         // Build full name from components
         $nameParts = array_filter([$this->first_name, $this->middle_name, $this->last_name]);
         $fullName = implode(' ', $nameParts);
@@ -675,16 +691,19 @@ class UserManagement extends Component
             return;
         }
 
-        // Check if user is trying to assign super-admin role without permission
+        // Check if user is trying to assign super-admin or admin roles without being super-admin
         $currentUser = Auth::user();
-        $canAssignSuperAdmin = $currentUser && $currentUser->can('can-assign-super-admin-role');
+        $isSuperAdmin = $currentUser && $currentUser->hasRole('super-admin');
         
-        if (in_array('super-admin', $this->bulkUpdateRoles) && !$canAssignSuperAdmin) {
-            $this->dispatch('show-toast', [
-                'message' => 'You do not have permission to assign the super-admin role.',
-                'type' => 'error'
-            ]);
-            return;
+        if (!$isSuperAdmin) {
+            $restrictedRoles = array_intersect($this->bulkUpdateRoles, ['super-admin', 'admin']);
+            if (!empty($restrictedRoles)) {
+                $this->dispatch('show-toast', [
+                    'message' => 'You do not have permission to assign super-admin or admin roles.',
+                    'type' => 'error'
+                ]);
+                return;
+            }
         }
 
         // Validate roles exist
@@ -753,16 +772,16 @@ class UserManagement extends Component
     public function roleOptions()
     {
         $currentUser = Auth::user();
-        $canAssignSuperAdmin = $currentUser && $currentUser->can('can-assign-super-admin-role');
+        $isSuperAdmin = $currentUser && $currentUser->hasRole('super-admin');
         
         return $this->roles
-            ->filter(function($role) use ($canAssignSuperAdmin) {
-                // If role is 'super-admin', only show it if user has permission
-                if ($role->name === 'super-admin') {
-                    return $canAssignSuperAdmin;
+            ->filter(function($role) use ($isSuperAdmin) {
+                // If user is super-admin, only show super-admin and admin roles
+                if ($isSuperAdmin) {
+                    return in_array($role->name, ['super-admin', 'admin']);
                 }
-                // Show all other roles
-                return true;
+                // If user is not super-admin, hide super-admin and admin roles
+                return !in_array($role->name, ['super-admin', 'admin']);
             })
             ->map(function($role) {
                 return [

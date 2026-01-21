@@ -47,18 +47,145 @@
     window.currentUserAvatar = @json($userAvatar);
 </script>
 
+<style>
+    /* Analog Clock Styles */
+    .analog-clock-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        margin: 20px 0;
+    }
+
+    .analog-clock {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        box-shadow: var(--vz-primary, #405189) 0px 0px 30px;
+        border-radius: 50%;
+        margin-bottom: 20px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        border: 3px solid var(--vz-border-color, #e9ecef);
+    }
+
+    .analog-clock .needle {
+        background-color: var(--vz-body-color, #212529);
+        box-shadow: var(--vz-primary, #405189) 0px 0px 5px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        height: 50px;
+        width: 3px;
+        transform-origin: bottom center;
+        transition: transform 0s;
+    }
+
+    .analog-clock .needle.hour {
+        transform: translate(-50%, -100%) rotate(0deg);
+        height: 40px;
+        width: 4px;
+    }
+
+    .analog-clock .needle.minute {
+        transform: translate(-50%, -100%) rotate(0deg);
+        height: 70px;
+        width: 3px;
+    }
+
+    .analog-clock .needle.second {
+        transform: translate(-50%, -100%) rotate(0deg);
+        height: 70px;
+        width: 2px;
+        background-color: var(--vz-primary, #405189);
+        box-shadow: var(--vz-primary, #405189) 0px 0px 8px;
+    }
+
+    .analog-clock .center-point {
+        background-color: var(--vz-body-color, #212529);
+        width: 10px;
+        height: 10px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        z-index: 10;
+    }
+
+    .analog-time {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--vz-body-color, #212529);
+        margin-bottom: 5px;
+    }
+
+    .analog-date {
+        color: var(--vz-body-color-rgb, 33, 37, 41);
+        font-size: 12px;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        opacity: 0.7;
+    }
+
+    .analog-date .circle {
+        background-color: var(--vz-primary, #405189);
+        color: #fff;
+        border-radius: 50%;
+        height: 18px;
+        width: 18px;
+        font-size: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 18px;
+        margin-left: 5px;
+    }
+
+    /* Dark mode support */
+    [data-bs-theme="dark"] .analog-clock {
+        box-shadow: var(--vz-primary, #405189) 0px 0px 30px;
+        border-color: var(--vz-border-color, #32394e);
+    }
+
+    [data-bs-theme="dark"] .analog-clock .needle {
+        background-color: var(--vz-body-color, #e9ecef);
+    }
+
+    [data-bs-theme="dark"] .analog-clock .center-point {
+        background-color: var(--vz-body-color, #e9ecef);
+    }
+
+    [data-bs-theme="dark"] .analog-time {
+        color: var(--vz-body-color, #e9ecef);
+    }
+
+    [data-bs-theme="dark"] .analog-date {
+        color: var(--vz-body-color, #e9ecef);
+    }
+</style>
+
 <div class="row">
     <div class="col-xxl-3">
         <div class="card">
             <div class="card-body text-center">
                 <h6 class="card-title mb-3 flex-grow-1 text-start">Time Tracking</h6>
-                <div class="mb-2">
-                    <lord-icon src="https://cdn.lordicon.com/kbtmbyzy.json" trigger="loop"
-                        colors="primary:#405189,secondary:#02a8b5" style="width:90px;height:90px"></lord-icon>
+                <div class="mb-2 d-flex justify-content-center">
+                    <div class="analog-clock-container">
+                        <div class="analog-clock">
+                            <div class="needle hour"></div>
+                            <div class="needle minute"></div>
+                            <div class="needle second"></div>
+                            <div class="center-point"></div>
+                        </div>
+                        <div class="analog-time"></div>
+                        <div class="analog-date">
+                            <span class="circle"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Digital Clock -->
-                <div class="mb-3">
+                {{-- <div class="mb-3">
                     <div class="card border-primary-subtle bg-primary-subtle">
                         <div class="card-body py-2">
                             <p class="text-muted mb-1 fs-11">Current Time</p>
@@ -69,7 +196,7 @@
                             <p class="text-muted mb-0 fs-10" id="clockDate">-- --, ----</p>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <div id="timeTrackingAlertContainer"></div>
                 <h3 class="mb-1" id="timeDuration">--</h3>
@@ -231,7 +358,7 @@
                     <ul class="nav nav-tabs-custom rounded card-header-tabs border-bottom-0" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" data-bs-toggle="tab" href="#home-1" role="tab">
-                                Comments (5)
+                                Comments (<span id="commentCount">0</span>)
                             </a>
                         </li>
 
@@ -249,7 +376,8 @@
                 <div class="tab-content">
                     <div class="tab-pane active" id="home-1" role="tabpanel">
                         <h5 class="card-title mb-4">Comments</h5>
-                        <div data-simplebar style="height: 508px;" class="px-3 mx-n3 mb-2" id="commentsContainer">
+                        <div data-simplebar="init" style="height: 508px; max-height: 508px;" class="px-3 mx-n3 mb-2"
+                            id="commentsContainer">
                             <div class="text-center py-4">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
                                     <span class="visually-hidden">Loading...</span>
@@ -258,32 +386,24 @@
                             </div>
                         </div>
                         <form class="mt-4" id="commentForm" onsubmit="return false;">
-                            <div class="row g-3">
-                                <div class="col-lg-12">
-                                    <label for="commentTextarea" class="form-label">Leave a Comment</label>
+                            <div class="d-flex align-items-start gap-2">
+                                <div class="flex-shrink-0">
+                                    <img src="{{ $userAvatar }}" alt="{{ auth()->user()->name ?? 'User' }}"
+                                        class="rounded-circle"
+                                        style="width: 2.5rem; height: 2.5rem; object-fit: cover;">
+                                </div>
+                                <div class="flex-grow-1">
                                     <textarea class="form-control bg-light border-light" id="commentTextarea" rows="3"
-                                        placeholder="Enter comments"></textarea>
-                                </div>
-                                <!--end col-->
-                                <div class="col-12">
-                                    <div id="commentAttachmentsPreview" class="mb-2 d-flex flex-wrap gap-2"></div>
-                                    <input type="file" id="commentFileInput" multiple
-                                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt" style="display: none;">
-                                </div>
-                                <div class="col-12 text-end">
-                                    <button type="button" id="commentAttachmentBtn"
-                                        class="btn btn-ghost-secondary btn-icon waves-effect me-1"
-                                        title="Add attachment">
-                                        <i class="ri-attachment-line fs-16"></i>
-                                    </button>
-                                    <button type="button" id="postCommentBtn" class="btn btn-success">
-                                        <span class="spinner-border spinner-border-sm d-none" role="status"
-                                            aria-hidden="true"></span>
-                                        Post Comment
-                                    </button>
+                                        placeholder="Write a comment..."></textarea>
+                                    <div class="d-flex justify-content-end mt-2">
+                                        <button type="button" id="postCommentBtn" class="btn btn-success btn-sm">
+                                            <span class="spinner-border spinner-border-sm d-none" role="status"
+                                                aria-hidden="true"></span>
+                                            <span class="btn-text">Post Comment</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <!--end row-->
                         </form>
                     </div>
                     <!--end tab-pane-->
@@ -411,6 +531,39 @@
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-danger" id="confirmTimeOutBtn">
                     <i class="ri-logout-circle-line align-bottom me-1"></i>Yes, Time Out
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Delete Comment Confirmation Modal --}}
+<div class="modal fade" id="deleteCommentModal" tabindex="-1" aria-labelledby="deleteCommentModalLabel"
+    aria-hidden="true" data-bs-backdrop="static" aria-modal="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header p-3 ps-4 bg-danger-subtle">
+                <h5 class="modal-title" id="deleteCommentModalLabel">
+                    <i class="ri-delete-bin-line align-bottom me-2"></i>Delete Comment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center">
+                    <div class="mb-3">
+                        <lord-icon src="https://cdn.lordicon.com/gsqxdxog.json" trigger="loop"
+                            colors="primary:#dc3545,secondary:#dc3545" style="width:80px;height:80px"></lord-icon>
+                    </div>
+                    <h5 class="mb-3">Are you sure?</h5>
+                    <p class="text-muted mb-0">This action cannot be undone. This will permanently delete your comment.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteCommentBtn">
+                    <span class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
+                    <i class="ri-delete-bin-line align-bottom me-1"></i>Yes, Delete
                 </button>
             </div>
         </div>

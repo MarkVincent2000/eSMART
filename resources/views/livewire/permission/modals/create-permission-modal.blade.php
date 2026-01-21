@@ -1,4 +1,6 @@
-<x-modal id="create-permission-modal" wire:model="showPermissionModal" overflow="visible" :title="$permissionId ? 'Edit Permission' : 'Create Permission'" size="lg" :centered="true" :show-footer="true">
+<x-modal id="create-permission-modal" wire:model="showPermissionModal" overflow="visible" :contentScrollable="false"
+    :title="$permissionId ? 'Edit Permission' : 'Create Permission'" size="lg" :centered="false" vertical-align="top"
+    :show-footer="true">
     <form wire:submit.prevent="savePermission">
         <div class="row g-3">
             <div class="col-md-12">

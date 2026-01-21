@@ -1,5 +1,5 @@
 <x-modal id="update-roles-modal" wire:model="showUpdateRolesModal" overflow="visible" title="Update Roles" size="lg"
-    :centered="false" vertical-align="top" :show-footer="true">
+    :centered="false" vertical-align="top" :show-footer="true" :contentScrollable="false">
     <div class="row g-3">
         <div class="col-12">
             <div class="alert alert-info">

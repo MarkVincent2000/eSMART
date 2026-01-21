@@ -2,8 +2,8 @@
     <x-toast-notification />
 
     {{-- Delete Multiple Subjects Modal --}}
-    <x-modal id="delete-multiple-subjects-modal" wire:model="showDeleteMultipleModal" title="Delete Multiple Subjects" size="md"
-        :centered="true" :show-footer="true">
+    <x-modal id="delete-multiple-subjects-modal" wire:model="showDeleteMultipleModal" title="Delete Multiple Subjects"
+        size="md" :centered="true" :show-footer="true">
 
         <div class="text-center">
             <div class="mb-4">
@@ -130,8 +130,7 @@
     </x-modal>
 
     {{-- Create Subject Modal --}}
-    <x-modal id="create-subject-modal" wire:model="showCreateModal" :title="$subjectId ? 'Edit Subject' : 'Create Subject'"
-        size="lg" vertical-align="top" :show-footer="true" overflow="visible">
+    <x-modal id="create-subject-modal" wire:model="showCreateModal" :title="$subjectId ? 'Edit Subject' : 'Create Subject'" size="lg" vertical-align="center" :show-footer="true" overflow="visible">
         <form wire:submit.prevent="saveSubject">
             <div class="row g-3">
                 <div class="col-md-6">
@@ -166,8 +165,9 @@
 
                 <div class="col-md-6">
                     <label for="units" class="form-label">Units</label>
-                    <input type="number" step="0.01" min="0" max="999.99" class="form-control @error('units') is-invalid @enderror" id="units"
-                        wire:model="units" placeholder="Enter number of units (e.g., 3.00)">
+                    <input type="number" step="0.01" min="0" max="999.99"
+                        class="form-control @error('units') is-invalid @enderror" id="units" wire:model="units"
+                        placeholder="Enter number of units (e.g., 3.00)">
                     @error('units')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -224,10 +224,13 @@
                         </div>
                         <div class="col-sm-auto">
                             <div class="d-flex gap-1 flex-wrap">
-                                <x-button color="success" icon="ri-add-line" loading="true" loading-text="Adding Subject..." wireTarget="openCreateModal" wire:click="openCreateModal">Add Subject</x-button>
-                                
+                                <x-button color="success" icon="ri-add-line" loading="true"
+                                    loading-text="Adding Subject..." wireTarget="openCreateModal"
+                                    wire:click="openCreateModal">Add Subject</x-button>
+
                                 @if (!empty($selected))
-                                    <x-button color="danger" icon="ri-delete-bin-2-line" wire:click="deleteMultiple" wireTarget="deleteMultiple">
+                                    <x-button color="danger" icon="ri-delete-bin-2-line" wire:click="deleteMultiple"
+                                        wireTarget="deleteMultiple">
                                         Delete Selected ({{ count($selected) }})
                                     </x-button>
                                 @endif
@@ -240,13 +243,15 @@
                         <div class="row g-3">
                             <div class="col-xxl-5 col-sm-6">
                                 <div class="search-box">
-                                    <input type="text" class="form-control search" placeholder="Search for subject code, name, or description..." wire:model.live.debounce.300ms="search">
+                                    <input type="text" class="form-control search"
+                                        placeholder="Search for subject code, name, or description..."
+                                        wire:model.live.debounce.300ms="search">
                                     <i class="ri-search-line search-icon"></i>
                                 </div>
                             </div>
                             <!--end col-->
-                            
-                           
+
+
                             <!--end col-->
                             <div class="col-xxl-2 col-sm-4">
                                 <div>
@@ -259,7 +264,7 @@
                                 </div>
                             </div>
                             <!--end col-->
-                           
+
                             <!--end col-->
                         </div>
                         <!--end row-->
@@ -269,26 +274,20 @@
                     <div>
                         <ul class="nav nav-tabs nav-tabs-custom nav-success mb-3" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link py-3 {{ $statusFilter === 'all' ? 'active' : '' }}" 
-                                   wire:click="setStatusFilter('all')" 
-                                   role="button" 
-                                   style="cursor: pointer;">
+                                <a class="nav-link py-3 {{ $statusFilter === 'all' ? 'active' : '' }}"
+                                    wire:click="setStatusFilter('all')" role="button" style="cursor: pointer;">
                                     <i class="ri-book-open-line me-1 align-bottom"></i> All Subjects
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link py-3 {{ $statusFilter === 'active' ? 'active' : '' }}" 
-                                   wire:click="setStatusFilter('active')" 
-                                   role="button" 
-                                   style="cursor: pointer;">
+                                <a class="nav-link py-3 {{ $statusFilter === 'active' ? 'active' : '' }}"
+                                    wire:click="setStatusFilter('active')" role="button" style="cursor: pointer;">
                                     <i class="ri-checkbox-circle-line me-1 align-bottom"></i> Active
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link py-3 {{ $statusFilter === 'inactive' ? 'active' : '' }}" 
-                                   wire:click="setStatusFilter('inactive')" 
-                                   role="button" 
-                                   style="cursor: pointer;">
+                                <a class="nav-link py-3 {{ $statusFilter === 'inactive' ? 'active' : '' }}"
+                                    wire:click="setStatusFilter('inactive')" role="button" style="cursor: pointer;">
                                     <i class="ri-close-circle-line me-1 align-bottom"></i> Inactive
                                 </a>
                             </li>
@@ -300,88 +299,97 @@
                                     <tr class="text-uppercase">
                                         <th scope="col" style="width: 25px;">
                                             <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" wire:model.live="selectPage">
+                                                <input class="form-check-input" type="checkbox"
+                                                    wire:model.live="selectPage">
                                             </div>
                                         </th>
-                                        <th >Code</th>
-                                        <th >Subject Name</th>
-                                        <th >Description</th>
-                                        <th >Units</th>
-                                        <th  >Year Level</th>
-                                        <th >Status</th>
-                                        <th >Action</th>
+                                        <th>Code</th>
+                                        <th>Subject Name</th>
+                                        <th>Description</th>
+                                        <th>Units</th>
+                                        <th>Year Level</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="list form-check-all">
                                     @forelse($subjects as $subject)
-                                    <tr wire:key="subject-{{ $subject->id }}">
-                                        <th scope="row">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" wire:model.live="selected" value="{{ $subject->id }}">
-                                            </div>
-                                        </th>
-                                        <td class="code">
-                                            <span class="fw-medium">{{ $subject->code ?? 'N/A' }}</span>
-                                        </td>
-                                        <td class="name">
-                                            <span class="fw-medium">{{ $subject->name }}</span>
-                                        </td>
-                                        <td class="description">
-                                            <span class="text-muted">{{ Str::limit($subject->description ?? 'N/A', 50) }}</span>
-                                        </td>
-                                        <td class="units">
-                                            <span>{{ $subject->units ?? '0.00' }}</span>
-                                        </td>
-                                        <td class="year_level">
-                                            @if($subject->year_level)
-                                                <span class="badge bg-primary-subtle text-primary">Grade {{ $subject->year_level }}</span>
-                                            @else
-                                                <span class="text-muted">N/A</span>
-                                            @endif
-                                        </td>
-                                        <td class="status">
-                                            @if($subject->is_active)
-                                                <span class="badge bg-success-subtle text-success text-uppercase">Active</span>
-                                            @else
-                                                <span class="badge bg-danger-subtle text-danger text-uppercase">Inactive</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <ul class="list-inline hstack gap-2 mb-0">
-                                                <li class="list-inline-item">
-                                                    <x-button color="info" icon="ri-eye-fill" icon-position="left" size="sm"
-                                                        :iconOnly="true" title="View"
-                                                        wire:click="viewSubject({{ $subject->id }})"
-                                                        wireTarget="viewSubject({{ $subject->id }})">
-                                                    </x-button>
-                                                </li>
-                                                <li class="list-inline-item">
-                                                    <x-button color="primary" icon="ri-pencil-fill" icon-position="left" size="sm"
-                                                        :iconOnly="true" title="Edit"
-                                                        wire:click="editSubject({{ $subject->id }})"
-                                                        wireTarget="editSubject({{ $subject->id }})">
-                                                    </x-button>
-                                                </li>
-                                                <li class="list-inline-item">
-                                                    <x-button color="danger" icon="ri-delete-bin-5-fill" icon-position="left" size="sm"
-                                                        :iconOnly="true" title="Delete"
-                                                        wire:click="deleteSubject({{ $subject->id }})"
-                                                        wireTarget="deleteSubject({{ $subject->id }})">
-                                                    </x-button>
-                                                </li>
-                                            </ul>
-                                        </td>
-                                    </tr>
+                                        <tr wire:key="subject-{{ $subject->id }}">
+                                            <th scope="row">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        wire:model.live="selected" value="{{ $subject->id }}">
+                                                </div>
+                                            </th>
+                                            <td class="code">
+                                                <span class="fw-medium">{{ $subject->code ?? 'N/A' }}</span>
+                                            </td>
+                                            <td class="name">
+                                                <span class="fw-medium">{{ $subject->name }}</span>
+                                            </td>
+                                            <td class="description">
+                                                <span
+                                                    class="text-muted">{{ Str::limit($subject->description ?? 'N/A', 50) }}</span>
+                                            </td>
+                                            <td class="units">
+                                                <span>{{ $subject->units ?? '0.00' }}</span>
+                                            </td>
+                                            <td class="year_level">
+                                                @if($subject->year_level)
+                                                    <span class="badge bg-primary-subtle text-primary">Grade
+                                                        {{ $subject->year_level }}</span>
+                                                @else
+                                                    <span class="text-muted">N/A</span>
+                                                @endif
+                                            </td>
+                                            <td class="status">
+                                                @if($subject->is_active)
+                                                    <span
+                                                        class="badge bg-success-subtle text-success text-uppercase">Active</span>
+                                                @else
+                                                    <span
+                                                        class="badge bg-danger-subtle text-danger text-uppercase">Inactive</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <ul class="list-inline hstack gap-2 mb-0">
+                                                    <li class="list-inline-item">
+                                                        <x-button color="info" icon="ri-eye-fill" icon-position="left"
+                                                            size="sm" :iconOnly="true" title="View"
+                                                            wire:click="viewSubject({{ $subject->id }})"
+                                                            wireTarget="viewSubject({{ $subject->id }})">
+                                                        </x-button>
+                                                    </li>
+                                                    <li class="list-inline-item">
+                                                        <x-button color="primary" icon="ri-pencil-fill" icon-position="left"
+                                                            size="sm" :iconOnly="true" title="Edit"
+                                                            wire:click="editSubject({{ $subject->id }})"
+                                                            wireTarget="editSubject({{ $subject->id }})">
+                                                        </x-button>
+                                                    </li>
+                                                    <li class="list-inline-item">
+                                                        <x-button color="danger" icon="ri-delete-bin-5-fill"
+                                                            icon-position="left" size="sm" :iconOnly="true" title="Delete"
+                                                            wire:click="deleteSubject({{ $subject->id }})"
+                                                            wireTarget="deleteSubject({{ $subject->id }})">
+                                                        </x-button>
+                                                    </li>
+                                                </ul>
+                                            </td>
+                                        </tr>
                                     @empty
-                                    <tr>
-                                        <td colspan="8" class="text-center py-4">
-                                            <div class="text-muted">
-                                                <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop" colors="primary:#405189,secondary:#0ab39c" style="width:75px;height:75px"></lord-icon>
-                                                <h5 class="mt-2">No Subjects Found</h5>
-                                                <p class="text-muted">There are no subjects available. Click "Add Subject" to create one.</p>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4">
+                                                <div class="text-muted">
+                                                    <lord-icon src="https://cdn.lordicon.com/msoeawqm.json" trigger="loop"
+                                                        colors="primary:#405189,secondary:#0ab39c"
+                                                        style="width:75px;height:75px"></lord-icon>
+                                                    <h5 class="mt-2">No Subjects Found</h5>
+                                                    <p class="text-muted">There are no subjects available. Click "Add
+                                                        Subject" to create one.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     @endforelse
                                 </tbody>
                             </table>
@@ -399,7 +407,7 @@
                                 You have selected all <strong>{{ $subjects->total() }}</strong> subject(s).
                             </div>
                         @endif
-                        
+
                         {{-- Pagination --}}
                         @if($subjects->hasPages())
                             <div class="mt-4">

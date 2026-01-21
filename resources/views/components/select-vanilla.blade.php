@@ -123,6 +123,39 @@
 
     let isOpen = false;
     let searchQuery = '';
+    
+    // Event listeners storage
+    const eventListeners = {
+        change: []
+    };
+
+    // Event system methods
+    function on(event, callback) {
+        if (eventListeners[event]) {
+            eventListeners[event].push(callback);
+        }
+    }
+
+    function off(event, callback) {
+        if (eventListeners[event]) {
+            const index = eventListeners[event].indexOf(callback);
+            if (index > -1) {
+                eventListeners[event].splice(index, 1);
+            }
+        }
+    }
+
+    function trigger(event, data) {
+        if (eventListeners[event]) {
+            eventListeners[event].forEach(callback => {
+                try {
+                    callback(data);
+                } catch (e) {
+                    console.error('Error in event listener:', e);
+                }
+            });
+        }
+    }
 
     // Render options based on search query
     function renderOptions() {
@@ -227,6 +260,9 @@
         } else if (hiddenInput) {
             hiddenInput.dispatchEvent(changeEvent);
         }
+        
+        // Trigger custom change event for vanillaSelect listeners
+        trigger('change', selected);
     }
 
     // Toggle dropdown
@@ -323,6 +359,7 @@
             updateDisplay();
             updateHiddenInputs();
             renderOptions();
+            // Note: updateHiddenInputs() already triggers the change event
         },
         setOptions: (newOptions) => {
             // Clear current options and selection
@@ -368,7 +405,9 @@
             close();
         },
         close: close,
-        open: toggle
+        open: toggle,
+        on: on,
+        off: off
     };
 })();
 </script>

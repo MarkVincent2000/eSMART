@@ -4,6 +4,7 @@
     'size' => 'md', // sm, md, lg, xl, fullscreen
     'centered' => false,
     'scrollable' => false,
+    'contentScrollable' => true, // Enable/disable scrollbar in modal body content
     'keyboard' => true,
     'title' => null,
     'showHeader' => true,
@@ -58,18 +59,18 @@
             show: @js($show),
         @endif
         closeOnBackdrop: @js($closeOnBackdrop),
-        bounce: false,
-        triggerBounce() {
-            // Prevent re-triggering if already bouncing
-            if (this.bounce) return;
-            
-            // Set bounce to true
-            this.bounce = true;
-            
-            // Reset after animation completes (0.3s)
-            setTimeout(() => {
-                this.bounce = false;
-            }, 300);
+        init() {
+            this.$watch('show', (value) => {
+                if (value) {
+                    this.$nextTick(() => {
+                        // Focus the modal card for accessibility
+                        const modalCard = this.$el.querySelector('.modal-card-dark');
+                        if (modalCard) {
+                            modalCard.focus();
+                        }
+                    });
+                }
+            });
         }
     }"
     x-on:close.stop="show = false"
@@ -93,11 +94,11 @@
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
         style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); cursor: pointer; pointer-events: auto;"
-        x-on:click="closeOnBackdrop ? (show = false) : triggerBounce()"
+        x-on:click="closeOnBackdrop && (show = false)"
     ></div>
 
     <!-- Modal Dialog Container -->
-    <div style="position: relative; z-index: 1; display: flex; align-items: {{ $verticalAlign === 'top' ? 'flex-start' : 'center' }}; justify-content: center; min-height: 100vh; padding: 1rem; {{ $verticalAlign === 'top' ? 'padding-top: 2rem;' : '' }} overflow-y: auto; pointer-events: none;">
+    <div style="position: relative; z-index: 1; display: flex; align-items: {{ $verticalAlign === 'top' ? 'flex-start' : 'center' }}; justify-content: center; min-height: 100vh; padding: 1rem; {{ $verticalAlign === 'top' ? 'padding-top: 2rem;' : '' }} {{ $overflow === 'visible' ? 'overflow: visible;' : 'overflow-y: auto;' }} pointer-events: none;">
         <div
             x-show="show"
             x-trap.noscroll="show"
@@ -110,14 +111,14 @@
             style="width: 100%; {{ $normalizedSize === 'sm' ? 'max-width: 24rem;' : ($normalizedSize === 'lg' ? 'max-width: 32rem;' : ($normalizedSize === 'xl' ? 'max-width: 60rem;' : ($normalizedSize === 'fullscreen' ? 'max-width: 100%;' : 'max-width: 28rem;'))) }} margin: 0 auto; {{ $maxWidth ? 'max-width: ' . $maxWidth . ';' : '' }} pointer-events: auto;"
         >
         <div 
-            x-bind:class="{ 'modal-bounce': bounce }"
-            class="card mb-0 shadow-lg overflow-{{ $overflow }} modal-card-dark" 
-            style="border-radius: 0.5rem; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;"
+            class="card mb-0 shadow-lg modal-card-dark" 
+            style="border-radius: 0.5rem; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; max-height: calc(100vh - 4rem); display: flex; flex-direction: column; overflow: {{ $overflow }}; outline: none;"
+            tabindex="-1"
             x-on:click.stop
         >
                     <!-- Modal Header -->
                 @if($showHeader)
-                    <div class="card-header border-bottom d-flex align-items-center justify-content-between" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
+                    <div class="card-header border-bottom d-flex align-items-center justify-content-between" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; flex-shrink: 0;">
                         @if(isset($header))
                             {{ $header }}
                         @else
@@ -138,13 +139,22 @@
                 @endif
 
                 <!-- Modal Body -->
-                <div class="card-body overflow-{{ $overflow }}" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
+                <div 
+                    class="card-body" 
+                    style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; {{ $contentScrollable ? 'overflow-y: auto !important;' : 'overflow-y: visible !important;' }} {{ $overflow === 'visible' ? 'overflow-x: visible !important;' : 'overflow-x: hidden !important;' }} flex: 1 1 auto; min-height: 0;"
+                    x-on:click="
+                        // Close any open select dropdowns when clicking on modal body (but not when selecting text)
+                        if (window.getSelection().toString().length === 0) {
+                            window.dispatchEvent(new CustomEvent('close-select-dropdowns'));
+                        }
+                    "
+                >
                     {{ $slot }}
                 </div>
 
                 <!-- Modal Footer -->
                 @if($showFooter || isset($footer))
-                    <div class="card-footer border-top d-flex justify-content-end gap-2" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
+                    <div class="card-footer border-top d-flex justify-content-end gap-2" style="user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; flex-shrink: 0;">
                         @if(isset($footer))
                             {{ $footer }}
                         @else
