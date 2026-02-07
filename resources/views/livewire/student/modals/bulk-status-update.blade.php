@@ -21,6 +21,17 @@
             @enderror
         </div>
 
+        <div class="mb-3">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="bulkStatusSmsNotification"
+                    wire:model="bulkStatusSmsNotification">
+                <label class="form-check-label" for="bulkStatusSmsNotification">
+                    Send SMS to students and guardians when updating status
+                </label>
+            </div>
+            <small class="text-muted d-block mt-1">Students and guardians will receive SMS about the status change</small>
+        </div>
+
         <div class="alert alert-warning">
             <i class="ri-alert-line me-2"></i>
             <strong>Warning:</strong> This action will update the status of all selected students. This cannot be

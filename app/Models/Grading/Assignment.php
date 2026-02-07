@@ -75,6 +75,7 @@ class Assignment extends Model
         'late_penalty_percentage', // Percentage deduction per day late
         'max_late_days', // Maximum days after due date that submission is accepted
         'status',
+        'sms_notification',
         'is_required',
         'is_group_assignment',
         'max_group_size',
@@ -105,6 +106,7 @@ class Assignment extends Model
         'is_required' => 'boolean',
         'is_group_assignment' => 'boolean',
         'max_group_size' => 'integer',
+        'sms_notification' => 'boolean',
         'created_by' => 'integer',
         'published_at' => 'datetime',
         'closed_at' => 'datetime',

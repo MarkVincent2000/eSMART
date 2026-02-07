@@ -148,6 +148,7 @@ class EngagementController extends Controller
             'semester_id' => 'nullable|exists:semesters,id',
             'section_id' => 'nullable', // Can be single ID, array, or null
             'all_sections' => 'nullable|boolean',
+            'sms_notification' => 'nullable|boolean',
             'status' => 'required|in:' . implode(',', Event::getStatuses()),
         ], [
             'title.required' => 'The event title is required.',
@@ -181,6 +182,7 @@ class EngagementController extends Controller
                 'location' => $request->location,
                 'semester_id' => $request->semester_id,
                 'status' => $request->status,
+                'sms_notification' => $request->sms_notification ?? false,
                 'created_by' => Auth::id(),
             ];
 
@@ -266,6 +268,7 @@ class EngagementController extends Controller
             'semester_id' => 'nullable|exists:semesters,id',
             'section_id' => 'nullable', // Can be single ID, array, or null
             'all_sections' => 'nullable|boolean',
+            'sms_notification' => 'nullable|boolean',
             'status' => 'required|in:' . implode(',', Event::getStatuses()),
         ], [
             'title.required' => 'The event title is required.',
@@ -299,6 +302,7 @@ class EngagementController extends Controller
                 'location' => $request->location,
                 'semester_id' => $request->semester_id,
                 'status' => $request->status,
+                'sms_notification' => $request->sms_notification ?? false,
             ];
 
             $event->update($eventData);
@@ -481,7 +485,7 @@ class EngagementController extends Controller
             //   ]
             // - We match students whose JSON semester array contains an element with the
             //   active semester's id.
-            $query = StudentInfo::with('user')
+            $query = StudentInfo::with(['user', 'user.personalDetails'])
                 ->whereJsonContains('semester', ['id' => $activeSemester->id]);
 
             // Handle section filtering based on sections relationship
@@ -554,6 +558,10 @@ class EngagementController extends Controller
                 'action' => $action,
             ];
 
+            // Collect phone numbers for SMS if enabled
+            $phoneNumbers = [];
+            $recipientData = [];
+            
             // Create notifications for each student
             foreach ($students as $student) {
                 // Skip if student doesn't have a user account
@@ -572,10 +580,62 @@ class EngagementController extends Controller
                     'notifiable_type' => Event::class,
                     'read_at' => null,
                 ]);
+
+                // Collect phone numbers if SMS is enabled
+                if ($event->sms_notification && $student->user->personalDetails) {
+                    $personalDetails = $student->user->personalDetails;
+                    
+                    // Add student's contact number
+                    if (!empty($personalDetails->contact_no)) {
+                        $phoneNumbers[] = $personalDetails->contact_no;
+                        $recipientData[] = [
+                            'phone_number' => $personalDetails->contact_no,
+                            'user_id' => $student->user_id,
+                            'recipient_type' => \App\Models\SmsNotification::RECIPIENT_STUDENT,
+                        ];
+                    }
+                    
+                    // Add guardian's contact number
+                    if (!empty($personalDetails->guardian_contact_no)) {
+                        $phoneNumbers[] = $personalDetails->guardian_contact_no;
+                        $recipientData[] = [
+                            'phone_number' => $personalDetails->guardian_contact_no,
+                            'user_id' => $student->user_id,
+                            'recipient_type' => \App\Models\SmsNotification::RECIPIENT_GUARDIAN,
+                        ];
+                    }
+                }
             }
 
             // Log notification count for debugging
             Log::info("Sent {$action} notifications to " . $students->count() . " students for event: {$event->title}");
+
+            // Send SMS if enabled and phone numbers collected
+            if ($event->sms_notification && !empty($phoneNumbers)) {
+                // Create concise SMS message (plain text - no emojis to avoid SMS delivery failures)
+                if ($action === 'created') {
+                    $smsMessage = "{$event->title}\n{$startDate}{$eventTime}";
+                    if ($event->location) {
+                        $smsMessage .= "\n{$event->location}";
+                    }
+                    $smsMessage .= "\nSee you there!";
+                } else {
+                    $smsMessage = "EVENT UPDATE\n{$event->title}\n{$startDate}{$eventTime}";
+                    if ($event->location) {
+                        $smsMessage .= "\n{$event->location}";
+                    }
+                }
+
+                // Use SMS service to send messages with tracking
+                $smsService = new \App\Services\SmsService();
+                $result = $smsService->sendBulkSms($phoneNumbers, $smsMessage, $event, $recipientData);
+
+                if ($result['success']) {
+                    Log::info("SMS sent successfully to {$result['sent_count']} recipients for event: {$event->title}");
+                } else {
+                    Log::warning("Failed to send SMS for event: {$event->title}. Reason: {$result['message']}");
+                }
+            }
 
         } catch (\Exception $e) {
             // Log error but don't fail the event creation/update

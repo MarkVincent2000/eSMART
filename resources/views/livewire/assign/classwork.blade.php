@@ -223,6 +223,17 @@
                     <small class="text-muted d-block mt-1">You can attach multiple files (max 10MB per file)</small>
                 </div>
 
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="assignmentSmsNotification"
+                            wire:model="sms_notification">
+                        <label class="form-check-label" for="assignmentSmsNotification">
+                            Send SMS to students and guardians when posting
+                        </label>
+                    </div>
+                    <small class="text-muted d-block mt-1">Students and guardians will receive SMS about this assignment</small>
+                </div>
+
                 @error('form')
                     <div class="alert alert-danger mt-3">{{ $message }}</div>
                 @enderror
@@ -1044,71 +1055,71 @@
                                         $user = $student->user;
                                         return $user ? ($user->last_name ?? $user->name ?? '') : '';
                                     }) as $student)
-                                                                            @php
-                                                                                $user = $student->user;
-                                                                                $photoPath = $user && $user->photo_path
-                                                                                    ? (str_starts_with($user->photo_path, 'http')
-                                                                                        ? $user->photo_path
-                                                                                        : asset('storage/' . $user->photo_path))
-                                                                                    : ($user && $user->avatar
-                                                                                        ? asset('build/images/users/' . $user->avatar)
-                                                                                        : asset('build/images/users/user-dummy-img.jpg'));
+                                                                                @php
+                                                                                    $user = $student->user;
+                                                                                    $photoPath = $user && $user->photo_path
+                                                                                        ? (str_starts_with($user->photo_path, 'http')
+                                                                                            ? $user->photo_path
+                                                                                            : asset('storage/' . $user->photo_path))
+                                                                                        : ($user && $user->avatar
+                                                                                            ? asset('build/images/users/' . $user->avatar)
+                                                                                            : asset('build/images/users/user-dummy-img.jpg'));
 
-                                                                                // Get pivot data
-                                                                                $enrollmentStatus = $student->pivot->status ?? 'enrolled';
-                                                                            @endphp
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <div class="d-flex align-items-center gap-2">
-                                                                                        <img src="{{ $photoPath }}" 
-                                                                                            alt="{{ $user->name ?? 'Student' }}" 
-                                                                                            class="rounded-circle"
-                                                                                            style="width: 2.5rem; height: 2.5rem; object-fit: cover;">
-                                                                                        <div>
-                                                                                            <h6 class="mb-0">
-                                                                                                @if($user)
-                                                                                                    @if(!empty($user->first_name) || !empty($user->last_name))
-                                                                                                        {{ trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) }}
+                                                                                    // Get pivot data
+                                                                                    $enrollmentStatus = $student->pivot->status ?? 'enrolled';
+                                                                                @endphp
+                                                                                <tr>
+                                                                                    <td>
+                                                                                        <div class="d-flex align-items-center gap-2">
+                                                                                            <img src="{{ $photoPath }}" 
+                                                                                                alt="{{ $user->name ?? 'Student' }}" 
+                                                                                                class="rounded-circle"
+                                                                                                style="width: 2.5rem; height: 2.5rem; object-fit: cover;">
+                                                                                            <div>
+                                                                                                <h6 class="mb-0">
+                                                                                                    @if($user)
+                                                                                                        @if(!empty($user->first_name) || !empty($user->last_name))
+                                                                                                            {{ trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) }}
+                                                                                                        @else
+                                                                                                            {{ $user->name ?? 'Unknown' }}
+                                                                                                        @endif
                                                                                                     @else
-                                                                                                        {{ $user->name ?? 'Unknown' }}
+                                                                                                        Unknown
                                                                                                     @endif
-                                                                                                @else
-                                                                                                    Unknown
+                                                                                                </h6>
+                                                                                                @if($user && $user->email)
+                                                                                                    <small class="text-muted">{{ $user->email }}</small>
                                                                                                 @endif
-                                                                                            </h6>
-                                                                                            @if($user && $user->email)
-                                                                                                <small class="text-muted">{{ $user->email }}</small>
-                                                                                            @endif
+                                                                                            </div>
                                                                                         </div>
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <span class="text-muted">{{ $student->student_number ?? 'N/A' }}</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    @if($student->program)
-                                                                                        <span class="badge bg-info-subtle text-info">
-                                                                                            {{ $student->program->code ?? $student->program->name }}
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <span class="text-muted">{{ $student->student_number ?? 'N/A' }}</span>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        @if($student->program)
+                                                                                            <span class="badge bg-info-subtle text-info">
+                                                                                                {{ $student->program->code ?? $student->program->name }}
+                                                                                            </span>
+                                                                                        @else
+                                                                                            <span class="text-muted">N/A</span>
+                                                                                        @endif
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        @if($student->year_level)
+                                                                                            <span class="badge bg-primary-subtle text-primary">
+                                                                                                Grade {{ $student->year_level }}
+                                                                                            </span>
+                                                                                        @else
+                                                                                            <span class="text-muted">N/A</span>
+                                                                                        @endif
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <span class="badge bg-{{ $enrollmentStatus === 'enrolled' ? 'success' : ($enrollmentStatus === 'active' ? 'primary' : 'warning') }}-subtle text-{{ $enrollmentStatus === 'enrolled' ? 'success' : ($enrollmentStatus === 'active' ? 'primary' : 'warning') }}">
+                                                                                            {{ ucfirst($enrollmentStatus) }}
                                                                                         </span>
-                                                                                    @else
-                                                                                        <span class="text-muted">N/A</span>
-                                                                                    @endif
-                                                                                </td>
-                                                                                <td>
-                                                                                    @if($student->year_level)
-                                                                                        <span class="badge bg-primary-subtle text-primary">
-                                                                                            Grade {{ $student->year_level }}
-                                                                                        </span>
-                                                                                    @else
-                                                                                        <span class="text-muted">N/A</span>
-                                                                                    @endif
-                                                                                </td>
-                                                                                <td>
-                                                                                    <span class="badge bg-{{ $enrollmentStatus === 'enrolled' ? 'success' : ($enrollmentStatus === 'active' ? 'primary' : 'warning') }}-subtle text-{{ $enrollmentStatus === 'enrolled' ? 'success' : ($enrollmentStatus === 'active' ? 'primary' : 'warning') }}">
-                                                                                        {{ ucfirst($enrollmentStatus) }}
-                                                                                    </span>
-                                                                                </td>
-                                                                            </tr>
+                                                                                    </td>
+                                                                                </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -1372,6 +1383,17 @@
                                     <small class="text-muted">This feedback will be visible to the student.</small>
                                 </div>
 
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="gradingSmsNotification"
+                                            wire:model="gradingSmsNotification">
+                                        <label class="form-check-label" for="gradingSmsNotification">
+                                            Send SMS to student, guardian, and teacher when saving grade
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">Student, guardian, and teacher will receive SMS with the grade</small>
+                                </div>
+
                                 <div class="d-flex justify-content-end gap-2">
                                     <button type="button" class="btn btn-light" wire:click="closeViewSubmissionModal">Cancel</button>
                                     <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
@@ -1573,13 +1595,13 @@
                                             @endif
                                         </strong>
                                         @if($existingSubmission->grader)
-                                                                                                                                                                                                                                                    <div class="mt-1">
-                                                                                                                                                                                                                                                        <small class="text-muted">
-                                                                                                                                                                                                                                                            by {{ !empty($existingSubmission->grader->first_name) || !empty($existingSubmission->grader->last_name)
+                                                                                                                                                                                                                                                                        <div class="mt-1">
+                                                                                                                                                                                                                                                                            <small class="text-muted">
+                                                                                                                                                                                                                                                                                by {{ !empty($existingSubmission->grader->first_name) || !empty($existingSubmission->grader->last_name)
                                             ? trim(($existingSubmission->grader->first_name ?? '') . ' ' . ($existingSubmission->grader->last_name ?? ''))
                                             : ($existingSubmission->grader->name ?? 'Unknown') }}
-                                                                                                                                                                                                                                                        </small>
-                                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                                                            </small>
+                                                                                                                                                                                                                                                                        </div>
                                         @endif
                                     </div>
                                 </div>

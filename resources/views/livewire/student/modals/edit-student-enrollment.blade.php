@@ -76,6 +76,16 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
+            <div class="col-12">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="editEnrollmentSmsNotification"
+                        wire:model="editEnrollmentSmsNotification">
+                    <label class="form-check-label" for="editEnrollmentSmsNotification">
+                        Send SMS to student and guardian when updating enrollment
+                    </label>
+                </div>
+                <small class="text-muted d-block mt-1">Student and guardian will receive SMS about the enrollment update</small>
+            </div>
         </div>
     </form>
 

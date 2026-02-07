@@ -773,6 +773,9 @@
                 // Set is_active
                 document.getElementById('attendanceIsActive').checked = attendance.is_active !== false;
 
+                // Set sms_notification (handle boolean true, 1 from DB, etc.)
+                document.getElementById('attendanceSmsNotification').checked = Boolean(attendance.sms_notification);
+
                 return true;
             } else {
                 throw new Error('Invalid attendance data');
@@ -1101,7 +1104,8 @@
                     start_time: startTime24h ? `${apiDateValue} ${startTime24h}:00` : null,
                     end_time: endTime24h ? `${apiDateValue} ${endTime24h}:00` : null,
                     location: formData.get('location') || null,
-                    is_active: document.getElementById('attendanceIsActive').checked
+                    is_active: document.getElementById('attendanceIsActive').checked,
+                    sms_notification: document.getElementById('attendanceSmsNotification').checked
                 };
 
                 // Determine if we're creating or updating
@@ -2634,12 +2638,15 @@
             if (result.isConfirmed) {
                 try {
                     const token = getCsrfToken();
+                    const sendSmsReminder = document.getElementById('sendSmsReminderOnStatusUpdate')?.checked ?? false;
                     const response = await fetch(`/attendance/students/${studentAttendanceId}/approve`, {
                         method: 'POST',
                         headers: {
+                            'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': token,
                             'Accept': 'application/json',
                         },
+                        body: JSON.stringify({ send_sms_reminder: sendSmsReminder }),
                     });
 
                     const result = await response.json();
@@ -2755,6 +2762,7 @@
                         }
                     });
 
+                    const sendSmsReminder = document.getElementById('sendSmsReminderOnStatusUpdate')?.checked ?? false;
                     const response = await fetch(`/attendance/students/${studentAttendanceId}/update-status`, {
                         method: 'POST',
                         headers: {
@@ -2763,7 +2771,8 @@
                             'Accept': 'application/json',
                         },
                         body: JSON.stringify({
-                            status: newStatus
+                            status: newStatus,
+                            send_sms_reminder: sendSmsReminder
                         })
                     });
 
@@ -2870,12 +2879,15 @@
             if (result.isConfirmed) {
                 try {
                     const token = getCsrfToken();
+                    const sendSmsReminder = document.getElementById('sendSmsReminderOnStatusUpdate')?.checked ?? false;
                     const response = await fetch(`/attendance/students/${studentAttendanceId}/disapprove`, {
                         method: 'POST',
                         headers: {
+                            'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': token,
                             'Accept': 'application/json',
                         },
+                        body: JSON.stringify({ send_sms_reminder: sendSmsReminder }),
                     });
 
                     const result = await response.json();
@@ -3049,6 +3061,7 @@
             if (result.isConfirmed) {
                 try {
                     const token = getCsrfToken();
+                    const sendSmsReminder = document.getElementById('sendSmsReminderOnStatusUpdate')?.checked ?? false;
                     const response = await fetch('/attendance/students/bulk-approve', {
                         method: 'POST',
                         headers: {
@@ -3057,7 +3070,8 @@
                             'Accept': 'application/json',
                         },
                         body: JSON.stringify({
-                            ids: eligibleIds
+                            ids: eligibleIds,
+                            send_sms_reminder: sendSmsReminder
                         }),
                     });
 
@@ -3113,6 +3127,7 @@
             if (result.isConfirmed) {
                 try {
                     const token = getCsrfToken();
+                    const sendSmsReminder = document.getElementById('sendSmsReminderOnStatusUpdate')?.checked ?? false;
                     const response = await fetch('/attendance/students/bulk-disapprove', {
                         method: 'POST',
                         headers: {
@@ -3121,7 +3136,8 @@
                             'Accept': 'application/json',
                         },
                         body: JSON.stringify({
-                            ids: eligibleIds
+                            ids: eligibleIds,
+                            send_sms_reminder: sendSmsReminder
                         }),
                     });
 

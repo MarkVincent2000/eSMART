@@ -47,6 +47,7 @@ class Attendance extends Model
         'is_active',
         'is_locked',
         'locked_at',
+        'sms_notification',
         'metadata',
         'created_by',
     ];
@@ -65,6 +66,7 @@ class Attendance extends Model
         'scheduled_duration_minutes' => 'integer',
         'is_active' => 'boolean',
         'is_locked' => 'boolean',
+        'sms_notification' => 'boolean',
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'metadata' => 'array',
@@ -259,6 +261,14 @@ class Attendance extends Model
     public function studentAttendances(): HasMany
     {
         return $this->hasMany(StudentAttendance::class);
+    }
+
+    /**
+     * Get all SMS notifications sent for this attendance session.
+     */
+    public function smsNotifications()
+    {
+        return $this->morphMany(\App\Models\SmsNotification::class, 'notifiable');
     }
 
     /**

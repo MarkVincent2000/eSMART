@@ -80,6 +80,7 @@ class ManageStudent extends Component
     // Bulk status update modal state
     public $showBulkStatusModal = false;
     public $bulkStatus = 'pending';
+    public $bulkStatusSmsNotification = false;
     
     // Print modal state
     public $showPrintModal = false;
@@ -95,6 +96,7 @@ class ManageStudent extends Component
     public $editSectionId = null;
     public $editStatus = 'pending';
     public $editEnrolledAt = null;
+    public $editEnrollmentSmsNotification = false;
     
     // Section form fields
     public $sectionName = '';
@@ -709,6 +711,7 @@ class ManageStudent extends Component
     {
         $this->showBulkStatusModal = false;
         $this->bulkStatus = 'pending';
+        $this->bulkStatusSmsNotification = false;
         $this->resetErrorBag();
     }
 
@@ -725,6 +728,7 @@ class ManageStudent extends Component
 
         $this->validate([
             'bulkStatus' => 'required|in:pending,enrolled,inactive,graduated',
+            'bulkStatusSmsNotification' => 'nullable|boolean',
         ], [
             'bulkStatus.required' => 'Status is required.',
             'bulkStatus.in' => 'Status must be one of: pending, enrolled, inactive, graduated.',
@@ -744,15 +748,19 @@ class ManageStudent extends Component
         $updatedCount = StudentInfo::whereIn('id', $selectedIds)
             ->update(['status' => $this->bulkStatus]);
 
-        // Send notifications to updated students
+        // Send notifications and SMS to updated students
         try {
             $updatedStudents = StudentInfo::whereIn('id', $selectedIds)
-                ->with('user')
+                ->with(['user', 'user.personalDetails'])
                 ->get();
             
+            /** @var StudentInfo $student */
             foreach ($updatedStudents as $student) {
                 try {
                     $this->notifyStudentEnrollmentUpdated($student);
+                    if ($this->bulkStatusSmsNotification) {
+                        $this->sendEnrollmentStatusUpdateSms($student, $this->bulkStatus);
+                    }
                 } catch (\Exception $e) {
                     Log::warning('Failed to send notification to student: ' . $e->getMessage(), [
                         'student_id' => $student->id
@@ -907,6 +915,7 @@ class ManageStudent extends Component
         $this->editSectionId = null;
         $this->editStatus = 'pending';
         $this->editEnrolledAt = null;
+        $this->editEnrollmentSmsNotification = false;
         $this->resetErrorBag();
     }
 
@@ -1001,6 +1010,7 @@ class ManageStudent extends Component
             'editSectionId' => 'nullable|exists:sections,id',
             'editStatus' => 'required|in:pending,enrolled,inactive,graduated',
             'editEnrolledAt' => 'nullable|date',
+            'editEnrollmentSmsNotification' => 'nullable|boolean',
         ];
         
         $this->validate($rules, [
@@ -1047,11 +1057,14 @@ class ManageStudent extends Component
         
         // Reload the student info with relationships
         $studentInfo->refresh();
-        $studentInfo->load(['user', 'program', 'section']);
+        $studentInfo->load(['user', 'user.personalDetails', 'program', 'section']);
         
-        // Send notification to the student
+        // Send notification and optionally SMS to the student
         try {
             $this->notifyStudentEnrollmentUpdated($studentInfo);
+            if ($this->editEnrollmentSmsNotification) {
+                $this->sendEnrollmentStatusUpdateSms($studentInfo, $this->editStatus);
+            }
         } catch (\Exception $notifyError) {
             // Log error but don't fail the update
             Log::error('Failed to send notification for student enrollment update: ' . $notifyError->getMessage());
@@ -1223,6 +1236,67 @@ class ManageStudent extends Component
         } catch (\Exception $e) {
             // Log error but don't fail the enrollment update
             Log::error("Failed to send notification for student enrollment {$studentInfo->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send SMS to student and guardian when enrollment status is updated.
+     *
+     * @param StudentInfo $studentInfo
+     * @param string $newStatus
+     * @return void
+     */
+    private function sendEnrollmentStatusUpdateSms(StudentInfo $studentInfo, string $newStatus): void
+    {
+        try {
+            if (!$studentInfo->user || !$studentInfo->user->personalDetails) {
+                return;
+            }
+
+            $personalDetails = $studentInfo->user->personalDetails;
+            $phoneNumbers = [];
+            $recipientData = [];
+
+            if (!empty($personalDetails->contact_no)) {
+                $phoneNumbers[] = $personalDetails->contact_no;
+                $recipientData[] = [
+                    'phone_number' => $personalDetails->contact_no,
+                    'user_id' => $studentInfo->user_id,
+                    'recipient_type' => \App\Models\SmsNotification::RECIPIENT_STUDENT,
+                ];
+            }
+
+            if (!empty($personalDetails->guardian_contact_no)) {
+                $phoneNumbers[] = $personalDetails->guardian_contact_no;
+                $recipientData[] = [
+                    'phone_number' => $personalDetails->guardian_contact_no,
+                    'user_id' => $studentInfo->user_id,
+                    'recipient_type' => \App\Models\SmsNotification::RECIPIENT_GUARDIAN,
+                ];
+            }
+
+            if (empty($phoneNumbers)) {
+                return;
+            }
+
+            $studentName = $studentInfo->user->name ?? trim(($studentInfo->user->first_name ?? '') . ' ' . ($studentInfo->user->last_name ?? '')) ?: 'Student';
+            $statusLabel = ucfirst($newStatus);
+            $smsMessage = "ENROLLMENT UPDATE\n{$studentName}\nStatus: {$statusLabel}\nPlease check your enrollment details.";
+
+            $smsService = new \App\Services\SmsService();
+            $result = $smsService->sendBulkSms($phoneNumbers, $smsMessage, $studentInfo, $recipientData);
+
+            if ($result['success']) {
+                Log::info("Enrollment status SMS sent to student/guardian", [
+                    'student_info_id' => $studentInfo->id,
+                    'status' => $newStatus,
+                    'recipients' => count($phoneNumbers),
+                ]);
+            } else {
+                Log::warning("Failed to send enrollment status SMS: {$result['message']}");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to send enrollment status SMS: " . $e->getMessage());
         }
     }
 

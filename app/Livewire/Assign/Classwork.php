@@ -14,6 +14,7 @@ use App\Models\CommentAttachment;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -62,6 +63,7 @@ class Classwork extends Component
     public $selectedSubmission = null;
     public $gradingPointsEarned = null;
     public $gradingFeedback = '';
+    public $gradingSmsNotification = false;
     
     // Submission modal
     public $showSubmissionModal = false;
@@ -83,6 +85,7 @@ class Classwork extends Component
     public $due_time = null;
     public $assignment_type = 'assignment';
     public $component_category = null;
+    public $sms_notification = false;
     public $attachments = [];
     public $isLoading = false;
 
@@ -154,6 +157,7 @@ class Classwork extends Component
         $this->due_time = null;
         $this->assignment_type = 'assignment';
         $this->component_category = null;
+        $this->sms_notification = false;
         $this->attachments = [];
         $this->resetErrorBag();
     }
@@ -245,6 +249,7 @@ class Classwork extends Component
         
         $this->assignment_type = $assignment->assignment_type;
         $this->component_category = $assignment->component_category;
+        $this->sms_notification = (bool) $assignment->sms_notification;
         $this->attachments = [];
         $this->showAssignmentForm = true;
     }
@@ -657,6 +662,7 @@ class Classwork extends Component
         $this->selectedSubmission = null;
         $this->gradingPointsEarned = null;
         $this->gradingFeedback = '';
+        $this->gradingSmsNotification = false;
     }
 
     public function saveGrade()
@@ -706,7 +712,7 @@ class Classwork extends Component
             DB::commit();
 
             // Create notifications for both student and teacher when grade is saved
-            $this->createGradeNotifications($this->selectedSubmission);
+            $this->createGradeNotifications($this->selectedSubmission, $this->gradingSmsNotification);
 
             $this->dispatch('show-toast', [
                 'message' => 'Grade saved successfully!',
@@ -923,6 +929,7 @@ class Classwork extends Component
             'due_time' => 'nullable|date_format:H:i',
             'assignment_type' => 'required|in:assignment,project,homework,activity,laboratory,research,presentation,other',
             'component_category' => 'nullable|in:written_works,performance_tasks',
+            'sms_notification' => 'nullable|boolean',
             'attachments.*' => 'nullable|file|max:10240', // 10MB max per file
         ], [
             'title.required' => 'Assignment title is required.',
@@ -958,6 +965,7 @@ class Classwork extends Component
             if ($isEditing) {
                 // Update existing assignment
                 $assignment = $this->editingAssignment;
+                $assignmentData['sms_notification'] = $this->sms_notification;
                 $assignment->update($assignmentData);
                 $message = 'Assignment updated successfully!';
             } else {
@@ -968,6 +976,7 @@ class Classwork extends Component
                 $assignmentData['section_id'] = $this->classroom->section_id;
                 $assignmentData['semester_id'] = $this->classroom->semester_id;
                 $assignmentData['status'] = Assignment::STATUS_PUBLISHED;
+                $assignmentData['sms_notification'] = $this->sms_notification;
                 $assignmentData['created_by'] = Auth::id();
                 $assignmentData['published_at'] = now();
                 
@@ -1083,6 +1092,7 @@ class Classwork extends Component
 
     /**
      * Create notifications for students when a new assignment is created.
+     * Sends SMS to student and guardian if assignment has sms_notification enabled.
      * 
      * @param Assignment $assignment
      * @param array $studentIds
@@ -1095,10 +1105,14 @@ class Classwork extends Component
             ? trim(($creator->first_name ?? '') . ' ' . ($creator->last_name ?? ''))
             : ($creator->name ?? 'Teacher');
 
-        // Get student info with user_id
+        // Get student info with user and personalDetails for notifications and SMS
         $students = \App\Models\StudentDetails\StudentInfo::whereIn('id', $studentIds)
             ->whereNotNull('user_id')
+            ->with(['user', 'user.personalDetails'])
             ->get();
+
+        $phoneNumbers = [];
+        $recipientData = [];
 
         foreach ($students as $student) {
             if ($student->user_id) {
@@ -1119,6 +1133,59 @@ class Classwork extends Component
                         'due_date' => $assignment->due_date ? (\Carbon\Carbon::parse($assignment->due_date)->format('Y-m-d')) : null,
                     ],
                 ]);
+
+                // Collect phone numbers for SMS if enabled
+                if ($assignment->sms_notification && $student->user && $student->user->personalDetails) {
+                    $personalDetails = $student->user->personalDetails;
+                    if (!empty($personalDetails->contact_no)) {
+                        $phoneNumbers[] = $personalDetails->contact_no;
+                        $recipientData[] = [
+                            'phone_number' => $personalDetails->contact_no,
+                            'user_id' => $student->user_id,
+                            'recipient_type' => \App\Models\SmsNotification::RECIPIENT_STUDENT,
+                        ];
+                    }
+                    if (!empty($personalDetails->guardian_contact_no)) {
+                        $phoneNumbers[] = $personalDetails->guardian_contact_no;
+                        $recipientData[] = [
+                            'phone_number' => $personalDetails->guardian_contact_no,
+                            'user_id' => $student->user_id,
+                            'recipient_type' => \App\Models\SmsNotification::RECIPIENT_GUARDIAN,
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Send SMS if enabled and phone numbers collected
+        if ($assignment->sms_notification && !empty($phoneNumbers)) {
+            try {
+                $smsMessage = $assignment->title . "\n";
+                $dueDateStr = $assignment->due_date ? \Carbon\Carbon::parse($assignment->due_date)->format('F j, Y') : '';
+                $dueTimeStr = $assignment->due_time ? \Carbon\Carbon::parse($assignment->due_time)->format('g:i A') : '';
+                if ($dueDateStr) {
+                    $smsMessage .= "Due: {$dueDateStr}";
+                    if ($dueTimeStr) {
+                        $smsMessage .= " {$dueTimeStr}";
+                    }
+                    $smsMessage .= "\n";
+                }
+                if ($assignment->points_possible !== null) {
+                    $smsMessage .= "Points: {$assignment->points_possible}\n";
+                }
+                $smsMessage .= "Submit your task!";
+                $smsMessage = trim($smsMessage);
+
+                $smsService = new \App\Services\SmsService();
+                $result = $smsService->sendBulkSms($phoneNumbers, $smsMessage, $assignment, $recipientData);
+
+                if ($result['success']) {
+                    Log::info("SMS sent to {$result['sent_count']} recipients for assignment: {$assignment->title}");
+                } else {
+                    Log::warning("Failed to send SMS for assignment: {$assignment->title}. Reason: {$result['message']}");
+                }
+            } catch (\Exception $e) {
+                Log::error("Failed to send assignment SMS: " . $e->getMessage());
             }
         }
     }
@@ -1171,11 +1238,13 @@ class Classwork extends Component
 
     /**
      * Create notifications for both student and teacher when a grade is saved.
-     * 
+     * Optionally send SMS to student, guardian, and teacher when $sendSms is true.
+     *
      * @param \App\Models\Grading\AssignmentSubmission $submission
+     * @param bool $sendSms Whether to send SMS to student, guardian, and teacher
      * @return void
      */
-    protected function createGradeNotifications($submission)
+    protected function createGradeNotifications($submission, bool $sendSms = false)
     {
         $assignment = $submission->assignment;
         $grader = Auth::user();
@@ -1183,13 +1252,13 @@ class Classwork extends Component
             ? trim(($grader->first_name ?? '') . ' ' . ($grader->last_name ?? ''))
             : ($grader->name ?? 'Teacher');
 
+        $percentage = $assignment->points_possible && $submission->points_earned !== null
+            ? round(($submission->points_earned / $assignment->points_possible) * 100, 2)
+            : null;
+
         // Notification for student
         $student = $submission->studentInfo;
         if ($student && $student->user_id) {
-            $percentage = $assignment->points_possible && $submission->points_earned !== null
-                ? round(($submission->points_earned / $assignment->points_possible) * 100, 2)
-                : null;
-
             Notification::create([
                 'user_id' => $student->user_id,
                 'type' => 'submission_graded',
@@ -1240,6 +1309,103 @@ class Classwork extends Component
                     'classroom_id' => $assignment->classroom_id,
                 ],
             ]);
+        }
+
+        // Send SMS to student, guardian, and teacher if requested
+        if ($sendSms) {
+            $this->sendGradeSmsNotifications($submission, $percentage);
+        }
+    }
+
+    /**
+     * Send SMS to student, guardian, and teacher when a grade is saved.
+     *
+     * @param \App\Models\Grading\AssignmentSubmission $submission
+     * @param float|null $percentage
+     * @return void
+     */
+    protected function sendGradeSmsNotifications($submission, $percentage = null)
+    {
+        try {
+            $assignment = $submission->assignment;
+            $submission->load(['studentInfo.user.personalDetails', 'grader.personalDetails']);
+            $student = $submission->studentInfo;
+            $grader = Auth::user();
+            if ($grader && !$grader->relationLoaded('personalDetails')) {
+                $grader->load('personalDetails');
+            }
+
+            $phoneNumbers = [];
+            $recipientData = [];
+
+            // Student and guardian
+            if ($student && $student->user && $student->user->personalDetails) {
+                $pd = $student->user->personalDetails;
+                if (!empty($pd->contact_no)) {
+                    $phoneNumbers[] = $pd->contact_no;
+                    $recipientData[] = [
+                        'phone_number' => $pd->contact_no,
+                        'user_id' => $student->user_id,
+                        'recipient_type' => \App\Models\SmsNotification::RECIPIENT_STUDENT,
+                    ];
+                }
+                if (!empty($pd->guardian_contact_no)) {
+                    $phoneNumbers[] = $pd->guardian_contact_no;
+                    $recipientData[] = [
+                        'phone_number' => $pd->guardian_contact_no,
+                        'user_id' => $student->user_id,
+                        'recipient_type' => \App\Models\SmsNotification::RECIPIENT_GUARDIAN,
+                    ];
+                }
+            }
+
+            // Teacher (grader)
+            if ($grader && $grader->personalDetails && !empty($grader->personalDetails->contact_no)) {
+                $teacherPhone = $grader->personalDetails->contact_no;
+                if (!in_array($teacherPhone, $phoneNumbers)) {
+                    $phoneNumbers[] = $teacherPhone;
+                    $recipientData[] = [
+                        'phone_number' => $teacherPhone,
+                        'user_id' => $grader->id,
+                        'recipient_type' => null,
+                    ];
+                }
+            }
+
+            // Also add assignment creator if different from grader
+            if ($assignment->created_by && $assignment->created_by !== $grader->id) {
+                $creator = \App\Models\User::with('personalDetails')->find($assignment->created_by);
+                if ($creator && $creator->personalDetails && !empty($creator->personalDetails->contact_no)) {
+                    $creatorPhone = $creator->personalDetails->contact_no;
+                    if (!in_array($creatorPhone, $phoneNumbers)) {
+                        $phoneNumbers[] = $creatorPhone;
+                        $recipientData[] = [
+                            'phone_number' => $creatorPhone,
+                            'user_id' => $creator->id,
+                            'recipient_type' => null,
+                        ];
+                    }
+                }
+            }
+
+            if (empty($phoneNumbers)) {
+                return;
+            }
+
+            $pointsStr = "{$submission->points_earned}/{$assignment->points_possible} points";
+            $percentageStr = $percentage !== null ? " ({$percentage}%)" : '';
+            $smsMessage = "Assignment graded: {$assignment->title}\n{$pointsStr}{$percentageStr}";
+
+            $smsService = new \App\Services\SmsService();
+            $result = $smsService->sendBulkSms($phoneNumbers, $smsMessage, $submission, $recipientData);
+
+            if ($result['success']) {
+                Log::info("Grade SMS sent to {$result['sent_count']} recipients for assignment: {$assignment->title}");
+            } else {
+                Log::warning("Failed to send grade SMS: {$result['message']}");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to send grade SMS: " . $e->getMessage());
         }
     }
 }

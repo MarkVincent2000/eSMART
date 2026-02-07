@@ -192,6 +192,18 @@
                                 </div>
                             </div>
 
+                            <!-- SMS Notification Switch -->
+                            <div class="col-lg-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="attendanceSmsNotification"
+                                        name="sms_notification" value="1">
+                                    <label class="form-check-label" for="attendanceSmsNotification">
+                                        📱 Send SMS Notification to Students
+                                    </label>
+                                    <small class="text-muted d-block">Students will receive SMS about this attendance session</small>
+                                </div>
+                            </div>
+
                             <!-- Form Actions -->
                             <div class="col-lg-12">
                                 <div class="hstack gap-2 justify-content-end">
@@ -478,11 +490,18 @@
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2 align-items-center mb-2">
+                        <div class="d-flex gap-2 align-items-center mb-2 flex-wrap">
                             <button type="button" class="btn btn-sm btn-soft-primary" id="refreshStudentsTableBtn"
                                 onclick="refreshStudentsTable()" title="Refresh Table">
                                 <i class="ri-refresh-line align-bottom"></i> Refresh
                             </button>
+                            <div class="form-check form-switch ms-2">
+                                <input class="form-check-input" type="checkbox" id="sendSmsReminderOnStatusUpdate"
+                                    name="send_sms_reminder">
+                                <label class="form-check-label" for="sendSmsReminderOnStatusUpdate">
+                                    Send SMS reminder to student and guardian when updating status
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Students Table -->

@@ -332,6 +332,14 @@ class AttendanceController extends Controller
         // Handle "Add All Sections" option first to determine validation rules
         $addAllSections = $request->boolean('add_all_sections', false);
         
+        // Debug: Log all request data to see what's being received
+        Log::info('Attendance Store Request Data:', [
+            'all_data' => $request->all(),
+            'has_sms_notification' => $request->has('sms_notification'),
+            'sms_notification_value' => $request->sms_notification,
+            'is_active' => $request->is_active,
+        ]);
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -348,6 +356,7 @@ class AttendanceController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'is_active' => 'boolean',
+            'sms_notification' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -416,7 +425,8 @@ class AttendanceController extends Controller
                 'location',
                 'latitude',
                 'longitude',
-                'is_active'
+                'is_active',
+                'sms_notification'
             ]);
 
             // Handle start_time and end_time - extract time portion only (H:i:s) for TIME data type
@@ -439,7 +449,8 @@ class AttendanceController extends Controller
             }
 
             $data['created_by'] = Auth::id();
-            $data['is_active'] = $request->has('is_active') ? (bool) $request->is_active : true;
+            $data['is_active'] = $request->boolean('is_active', true);
+            $data['sms_notification'] = $request->boolean('sms_notification');
 
             // Calculate scheduled duration if times are provided
             if ($data['start_time'] && $data['end_time'] && $data['date']) {
@@ -704,6 +715,7 @@ class AttendanceController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'is_active' => 'boolean',
+            'sms_notification' => 'boolean',
         ]);
 
         if ($validator->fails()) {
@@ -763,7 +775,8 @@ class AttendanceController extends Controller
                 'location',
                 'latitude',
                 'longitude',
-                'is_active'
+                'is_active',
+                'sms_notification'
             ]);
 
             // Handle start_time and end_time - extract time portion only (H:i:s) for TIME data type
@@ -791,6 +804,10 @@ class AttendanceController extends Controller
                 $endDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $data['date'] . ' ' . $data['end_time'], 'Asia/Manila');
                 $data['scheduled_duration_minutes'] = $startDateTime->diffInMinutes($endDateTime);
             }
+
+            // Handle checkbox fields explicitly (unchecked checkboxes don't send values)
+            $data['is_active'] = $request->boolean('is_active', false);
+            $data['sms_notification'] = $request->boolean('sms_notification');
 
             $attendance->update($data);
 
@@ -938,10 +955,11 @@ class AttendanceController extends Controller
     /**
      * Approve a student attendance
      * 
+     * @param \Illuminate\Http\Request $request
      * @param int $id Student attendance ID
      * @return \Illuminate\Http\JsonResponse
      */
-    public function approveStudentAttendance($id)
+    public function approveStudentAttendance(Request $request, $id)
     {
         try {
             $studentAttendance = StudentAttendance::with('attendance')->findOrFail($id);
@@ -1030,6 +1048,11 @@ class AttendanceController extends Controller
                 'is_late' => $isLate,
             ]);
 
+            // Send SMS reminder to student and guardian if requested
+            if ($request->boolean('send_sms_reminder')) {
+                $this->sendStatusUpdateSmsReminder($studentAttendance->fresh(['user', 'user.personalDetails', 'attendance']), $status);
+            }
+
             // Determine message based on status
             $statusMessage = $status === 'late' 
                 ? 'Student attendance approved and marked as late.' 
@@ -1061,6 +1084,7 @@ class AttendanceController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'status' => 'required|string|in:' . implode(',', StudentAttendance::getStatuses()),
+                'send_sms_reminder' => 'nullable|boolean',
             ]);
 
             if ($validator->fails()) {
@@ -1071,7 +1095,7 @@ class AttendanceController extends Controller
                 ], 422);
             }
 
-            $studentAttendance = StudentAttendance::findOrFail($id);
+            $studentAttendance = StudentAttendance::with(['user', 'user.personalDetails', 'attendance'])->findOrFail($id);
             $newStatus = $request->input('status');
             $oldStatus = $studentAttendance->status;
 
@@ -1088,6 +1112,11 @@ class AttendanceController extends Controller
                     'approved_at' => null,
                     'is_late' => false,
                 ]);
+            }
+
+            // Send SMS reminder to student and guardian if requested
+            if ($request->boolean('send_sms_reminder')) {
+                $this->sendStatusUpdateSmsReminder($studentAttendance->fresh(['user', 'user.personalDetails', 'attendance']), $newStatus);
             }
 
             return response()->json([
@@ -1152,13 +1181,14 @@ class AttendanceController extends Controller
     /**
      * Disapprove a student attendance
      * 
+     * @param \Illuminate\Http\Request $request
      * @param int $id Student attendance ID
      * @return \Illuminate\Http\JsonResponse
      */
-    public function disapproveStudentAttendance($id)
+    public function disapproveStudentAttendance(Request $request, $id)
     {
         try {
-            $studentAttendance = StudentAttendance::findOrFail($id);
+            $studentAttendance = StudentAttendance::with(['user', 'user.personalDetails', 'attendance'])->findOrFail($id);
 
             // Check if not approved
             if (!$studentAttendance->isApproved()) {
@@ -1170,6 +1200,11 @@ class AttendanceController extends Controller
 
             // Disapprove the attendance
             $studentAttendance->unapprove();
+
+            // Send SMS reminder to student and guardian if requested
+            if ($request->boolean('send_sms_reminder')) {
+                $this->sendStatusUpdateSmsReminder($studentAttendance->fresh(['user', 'user.personalDetails', 'attendance']), StudentAttendance::STATUS_PENDING);
+            }
 
             return response()->json([
                 'success' => true,
@@ -1196,6 +1231,7 @@ class AttendanceController extends Controller
         $validator = Validator::make($request->all(), [
             'ids' => 'required|array|min:1',
             'ids.*' => 'required|integer|exists:student_attendances,id',
+            'send_sms_reminder' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -1208,6 +1244,7 @@ class AttendanceController extends Controller
 
         try {
             $ids = $request->input('ids', []);
+            $sendSmsReminder = $request->boolean('send_sms_reminder');
             $approvedCount = 0;
             $skippedCount = 0;
             $errors = [];
@@ -1265,6 +1302,11 @@ class AttendanceController extends Controller
                         'is_late' => $isLate,
                     ]);
 
+                    // Send SMS reminder to student and guardian if requested
+                    if ($sendSmsReminder) {
+                        $this->sendStatusUpdateSmsReminder($studentAttendance->fresh(['user', 'user.personalDetails', 'attendance']), $status);
+                    }
+
                     $approvedCount++;
                 } catch (\Exception $e) {
                     $errors[] = "Failed to approve attendance ID {$id}: " . $e->getMessage();
@@ -1300,6 +1342,7 @@ class AttendanceController extends Controller
         $validator = Validator::make($request->all(), [
             'ids' => 'required|array|min:1',
             'ids.*' => 'required|integer|exists:student_attendances,id',
+            'send_sms_reminder' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -1312,13 +1355,14 @@ class AttendanceController extends Controller
 
         try {
             $ids = $request->input('ids', []);
+            $sendSmsReminder = $request->boolean('send_sms_reminder');
             $disapprovedCount = 0;
             $skippedCount = 0;
             $errors = [];
 
             foreach ($ids as $id) {
                 try {
-                    $studentAttendance = StudentAttendance::find($id);
+                    $studentAttendance = StudentAttendance::with(['user', 'user.personalDetails', 'attendance'])->find($id);
                     
                     if (!$studentAttendance) {
                         $skippedCount++;
@@ -1333,6 +1377,12 @@ class AttendanceController extends Controller
 
                     // Disapprove the attendance
                     $studentAttendance->unapprove();
+
+                    // Send SMS reminder to student and guardian if requested
+                    if ($sendSmsReminder) {
+                        $this->sendStatusUpdateSmsReminder($studentAttendance->fresh(['user', 'user.personalDetails', 'attendance']), StudentAttendance::STATUS_PENDING);
+                    }
+
                     $disapprovedCount++;
                 } catch (\Exception $e) {
                     $errors[] = "Failed to disapprove attendance ID {$id}: " . $e->getMessage();
@@ -1402,7 +1452,7 @@ class AttendanceController extends Controller
             $students = StudentInfo::whereIn('section_id', $sectionIds)
                 ->whereIn('status', ['enrolled', 'enroll'])
                 ->whereJsonContains('semester', ['id' => $attendance->semester_id])
-                ->with('user')
+                ->with(['user', 'user.personalDetails'])
                 ->get();
 
             if ($students->isEmpty()) {
@@ -1410,40 +1460,28 @@ class AttendanceController extends Controller
                 return;
             }
 
-            // Format attendance date and time for notification
-            // Date is stored as date-only, interpreted in local (Manila) timezone
+            // Format attendance date and time for notification (same pattern as EngagementController)
+            // Use Carbon::parse on raw values to avoid accessor issues
             $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
             $attendanceTime = '';
 
-            // NOTE: start_time and end_time are stored as TIME (H:i:s) and the Attendance model
-            // accessors already combine them with the date in Asia/Manila timezone, returning
-            // Carbon instances. We should rely on those accessors instead of manually parsing
-            // the raw string values to avoid timezone and formatting issues.
-            try {
-                // Use accessors (may return null)
-                $startDateTime = $attendance->start_time; // Carbon|null (Asia/Manila)
-                $endDateTime = $attendance->end_time;     // Carbon|null (Asia/Manila)
-
-                if ($startDateTime instanceof Carbon) {
-                    // Example format: 8:00 AM
-                    $startTime = $startDateTime->format('g:i A');
-
-                    if ($endDateTime instanceof Carbon) {
-                        // Example format: 12:00 PM
-                        $endTime = $endDateTime->format('g:i A');
-                        $attendanceTime = " from {$startTime} to {$endTime}";
+            $startTimeRaw = $attendance->getRawOriginal('start_time');
+            $endTimeRaw = $attendance->getRawOriginal('end_time');
+            if (!empty($startTimeRaw)) {
+                try {
+                    $startFormatted = Carbon::parse($startTimeRaw)->format('g:i A');
+                    if (!empty($endTimeRaw)) {
+                        $endFormatted = Carbon::parse($endTimeRaw)->format('g:i A');
+                        $attendanceTime = " from {$startFormatted} to {$endFormatted}";
                     } else {
-                        $attendanceTime = " at {$startTime}";
+                        $attendanceTime = " at {$startFormatted}";
                     }
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to format attendance time for SMS', [
+                        'attendance_id' => $attendance->id,
+                        'error' => $e->getMessage(),
+                    ]);
                 }
-            } catch (\Throwable $e) {
-                // Fallback: do not break notification if formatting fails; just log it
-                Log::warning('Failed to format attendance time for notification', [
-                    'attendance_id' => $attendance->id,
-                    'start_time_raw' => $attendance->getRawOriginal('start_time'),
-                    'end_time_raw' => $attendance->getRawOriginal('end_time'),
-                    'error' => $e->getMessage(),
-                ]);
             }
 
             // Build notification title and body based on action
@@ -1493,6 +1531,9 @@ class AttendanceController extends Controller
 
             // Create notifications for each student
             $notificationCount = 0;
+            $phoneNumbers = [];
+            $recipientData = [];
+            
             foreach ($students as $student) {
                 // Skip if student doesn't have a user account
                 if (!$student->user || !$student->user_id) {
@@ -1516,15 +1557,137 @@ class AttendanceController extends Controller
                     // Log error but continue with other students
                     Log::error("Failed to create notification for student {$student->user_id}: " . $e->getMessage());
                 }
+                
+                // Collect phone numbers for SMS if enabled (student contact_no only)
+                if ($attendance->sms_notification && $student->user->personalDetails) {
+                    $personalDetails = $student->user->personalDetails;
+                    
+                    // Add student's contact number only (NO guardian contact)
+                    if (!empty($personalDetails->contact_no)) {
+                        $phoneNumbers[] = $personalDetails->contact_no;
+                        $recipientData[] = [
+                            'phone_number' => $personalDetails->contact_no,
+                            'user_id' => $student->user_id,
+                            'recipient_type' => \App\Models\SmsNotification::RECIPIENT_STUDENT,
+                        ];
+                    }
+                }
             }
 
             // Log notification count for debugging
             $actionText = $action === 'created' ? 'creation' : 'update';
             Log::info("Sent attendance {$actionText} notifications to {$notificationCount} students for attendance: {$attendance->title} (ID: {$attendance->id})");
 
+            // Send SMS if enabled and phone numbers collected
+            if ($attendance->sms_notification && !empty($phoneNumbers)) {
+                // Create concise SMS message (same pattern as EngagementController)
+                $title = $attendance->title ?: 'Attendance Session';
+                if ($action === 'created') {
+                    $smsMessage = "{$title}\n{$attendanceDate}{$attendanceTime}";
+                    if ($attendance->location) {
+                        $smsMessage .= "\n{$attendance->location}";
+                    }
+                    $smsMessage .= "\nCheck in now!";
+                } else {
+                    $smsMessage = "ATTENDANCE UPDATE\n{$title}\n{$attendanceDate}{$attendanceTime}";
+                    if ($attendance->location) {
+                        $smsMessage .= "\n{$attendance->location}";
+                    }
+                }
+
+                // Ensure message is never empty (SMS API rejects empty body)
+                $smsMessage = trim($smsMessage);
+                if ($smsMessage === '') {
+                    $smsMessage = "Attendance: {$title} - Check in now!";
+                }
+
+                // Use SMS service to send messages with tracking
+                $smsService = new \App\Services\SmsService();
+                $result = $smsService->sendBulkSms($phoneNumbers, $smsMessage, $attendance, $recipientData);
+
+                if ($result['success']) {
+                    Log::info("SMS sent successfully to {$result['sent_count']} recipients for attendance: {$attendance->title}");
+                } else {
+                    Log::warning("Failed to send SMS for attendance: {$attendance->title}. Reason: {$result['message']}");
+                }
+            }
+
         } catch (\Exception $e) {
             // Log error but don't fail the attendance creation
             Log::error("Failed to send notifications for attendance {$attendance->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send SMS reminder to student and guardian when attendance status is updated
+     *
+     * @param StudentAttendance $studentAttendance Must have user, user.personalDetails, attendance loaded
+     * @param string $newStatus The new status (present, late, pending, absent, etc.)
+     * @return void
+     */
+    private function sendStatusUpdateSmsReminder(StudentAttendance $studentAttendance, string $newStatus): void
+    {
+        try {
+            $user = $studentAttendance->user;
+            $attendance = $studentAttendance->attendance;
+
+            if (!$user || !$user->personalDetails || !$attendance) {
+                return;
+            }
+
+            $personalDetails = $user->personalDetails;
+            $phoneNumbers = [];
+            $recipientData = [];
+
+            if (!empty($personalDetails->contact_no)) {
+                $phoneNumbers[] = $personalDetails->contact_no;
+                $recipientData[] = [
+                    'phone_number' => $personalDetails->contact_no,
+                    'user_id' => $user->id,
+                    'recipient_type' => \App\Models\SmsNotification::RECIPIENT_STUDENT,
+                ];
+            }
+
+            if (!empty($personalDetails->guardian_contact_no)) {
+                $phoneNumbers[] = $personalDetails->guardian_contact_no;
+                $recipientData[] = [
+                    'phone_number' => $personalDetails->guardian_contact_no,
+                    'user_id' => $user->id,
+                    'recipient_type' => \App\Models\SmsNotification::RECIPIENT_GUARDIAN,
+                ];
+            }
+
+            if (empty($phoneNumbers)) {
+                return;
+            }
+
+            $studentName = $user->name ?? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) ?: 'Student';
+            $title = $attendance->title ?: 'Attendance';
+            $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
+            $statusLabel = ucfirst($newStatus);
+
+            $checkInTimeStr = '';
+            $checkInRaw = $studentAttendance->getRawOriginal('check_in_time') ?? null;
+            if (!empty($checkInRaw)) {
+                $checkInTimeStr = "\nCheck-in: " . Carbon::parse($checkInRaw)->format('g:i A');
+            }
+
+            $smsMessage = "ATTENDANCE UPDATE\n{$studentName}\n{$title}\n{$attendanceDate}\nStatus: {$statusLabel}{$checkInTimeStr}";
+
+            $smsService = new \App\Services\SmsService();
+            $result = $smsService->sendBulkSms($phoneNumbers, $smsMessage, $attendance, $recipientData);
+
+            if ($result['success']) {
+                Log::info("SMS reminder sent to student/guardian for attendance status update", [
+                    'student_attendance_id' => $studentAttendance->id,
+                    'status' => $newStatus,
+                    'recipients' => count($phoneNumbers),
+                ]);
+            } else {
+                Log::warning("Failed to send SMS reminder for status update: {$result['message']}");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to send status update SMS reminder: " . $e->getMessage());
         }
     }
 

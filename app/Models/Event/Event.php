@@ -43,6 +43,7 @@ class Event extends Model
         'location',
         'semester_id',
         'status',
+        'sms_notification',
         'image',
         'metadata',
         'created_by',
@@ -61,6 +62,7 @@ class Event extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
         'semester_id' => 'integer',
+        'sms_notification' => 'boolean',
         'created_by' => 'integer',
         'approved_by' => 'integer',
         'approved_at' => 'datetime',
@@ -141,6 +143,14 @@ class Event extends Model
     public function notifications(): MorphMany
     {
         return $this->morphMany(Notification::class, 'notifiable');
+    }
+
+    /**
+     * Get all SMS notifications sent for this event.
+     */
+    public function smsNotifications(): MorphMany
+    {
+        return $this->morphMany(\App\Models\SmsNotification::class, 'notifiable');
     }
 
     /**

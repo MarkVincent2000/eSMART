@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance\AttendanceCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * AttendanceCategoryController
- * 
+ *
  * This controller manages all CRUD operations for attendance categories.
  * Attendance categories are used to classify different types of attendance sessions
  * (e.g., Class, Laboratory, Lecture, Exam, Event, etc.)
@@ -28,7 +28,7 @@ class AttendanceCategoryController extends Controller
 
     /**
      * Display a listing of attendance categories
-     * 
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function index()
@@ -37,17 +37,17 @@ class AttendanceCategoryController extends Controller
             $userId = Auth::id();
             $user = Auth::user();
             $isUserRole = $user && $user->hasRole('user');
-            
-            $categories = AttendanceCategory::with(['attendances' => function($query) use ($userId, $isUserRole) {
+
+            $categories = AttendanceCategory::with(['attendances' => function ($query) use ($userId, $isUserRole) {
                 $query->with(['semester', 'sections', 'creator']);
-                
+
                 // If user has "user" role, eager load their student attendance
                 if ($isUserRole && $userId) {
-                    $query->with(['studentAttendances' => function($q) use ($userId) {
+                    $query->with(['studentAttendances' => function ($q) use ($userId) {
                         $q->where('user_id', $userId);
                     }]);
                 }
-                
+
                 $query->orderBy('date', 'desc')
                     ->orderBy('created_at', 'desc'); // Sort by newest first
             }])
@@ -60,21 +60,22 @@ class AttendanceCategoryController extends Controller
                 'data' => $categories,
                 'meta' => [
                     'user_id' => $userId,
-                    'is_user_role' => $isUserRole
-                ]
+                    'is_user_role' => $isUserRole,
+                ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching attendance categories: ' . $e->getMessage());
+            Log::error('Error fetching attendance categories: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch categories.'
+                'message' => 'Failed to fetch categories.',
             ], 500);
         }
     }
 
     /**
      * Get all active attendance categories
-     * 
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function getActiveCategories()
@@ -86,21 +87,21 @@ class AttendanceCategoryController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $categories
+                'data' => $categories,
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching active categories: ' . $e->getMessage());
+            Log::error('Error fetching active categories: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch active categories.'
+                'message' => 'Failed to fetch active categories.',
             ], 500);
         }
     }
 
     /**
      * Store a newly created attendance category
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
@@ -119,7 +120,7 @@ class AttendanceCategoryController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed.',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -131,7 +132,7 @@ class AttendanceCategoryController extends Controller
                 'color',
                 'icon',
                 'is_active',
-                'display_order'
+                'display_order',
             ]);
 
             // Set defaults
@@ -144,22 +145,23 @@ class AttendanceCategoryController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Category created successfully.',
-                'data' => $category
+                'data' => $category,
             ], 201);
 
         } catch (\Exception $e) {
-            Log::error('Error creating attendance category: ' . $e->getMessage());
+            Log::error('Error creating attendance category: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create category.'
+                'message' => 'Failed to create category.',
             ], 500);
         }
     }
 
     /**
      * Display the specified attendance category
-     * 
-     * @param int $id
+     *
+     * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function show($id)
@@ -172,39 +174,39 @@ class AttendanceCategoryController extends Controller
                 'data' => [
                     'category' => $category,
                     'attendance_count' => $category->getAttendanceCount(),
-                    'active_attendance_count' => $category->getActiveAttendanceCount()
-                ]
+                    'active_attendance_count' => $category->getActiveAttendanceCount(),
+                ],
             ]);
         } catch (\Exception $e) {
-            Log::error('Error fetching category: ' . $e->getMessage());
+            Log::error('Error fetching category: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Category not found.'
+                'message' => 'Category not found.',
             ], 404);
         }
     }
 
     /**
      * Update the specified attendance category
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @param int $id
+     *
+     * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, $id)
     {
         $category = AttendanceCategory::find($id);
 
-        if (!$category) {
+        if (! $category) {
             return response()->json([
                 'success' => false,
-                'message' => 'Category not found.'
+                'message' => 'Category not found.',
             ], 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:attendance_categories,name,' . $id,
-            'slug' => 'nullable|string|max:255|unique:attendance_categories,slug,' . $id,
+            'name' => 'required|string|max:255|unique:attendance_categories,name,'.$id,
+            'slug' => 'nullable|string|max:255|unique:attendance_categories,slug,'.$id,
             'description' => 'nullable|string',
             'color' => 'nullable|string|max:7|regex:/^#[0-9A-Fa-f]{6}$/',
             'icon' => 'nullable|string|max:255',
@@ -216,7 +218,7 @@ class AttendanceCategoryController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed.',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -228,7 +230,7 @@ class AttendanceCategoryController extends Controller
                 'color',
                 'icon',
                 'is_active',
-                'display_order'
+                'display_order',
             ]);
 
             $category->update($data);
@@ -236,22 +238,23 @@ class AttendanceCategoryController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Category updated successfully.',
-                'data' => $category->fresh()
+                'data' => $category->fresh(),
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error updating attendance category: ' . $e->getMessage());
+            Log::error('Error updating attendance category: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update category.'
+                'message' => 'Failed to update category.',
             ], 500);
         }
     }
 
     /**
      * Remove the specified attendance category
-     * 
-     * @param int $id
+     *
+     * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function destroy($id)
@@ -263,7 +266,7 @@ class AttendanceCategoryController extends Controller
             if ($category->attendances()->count() > 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cannot delete category with existing attendances. Please reassign or delete attendances first.'
+                    'message' => 'Cannot delete category with existing attendances. Please reassign or delete attendances first.',
                 ], 400);
             }
 
@@ -271,22 +274,23 @@ class AttendanceCategoryController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Category deleted successfully.'
+                'message' => 'Category deleted successfully.',
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error deleting category: ' . $e->getMessage());
+            Log::error('Error deleting category: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete category.'
+                'message' => 'Failed to delete category.',
             ], 500);
         }
     }
 
     /**
      * Activate a category
-     * 
-     * @param int $id
+     *
+     * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function activate($id)
@@ -298,21 +302,22 @@ class AttendanceCategoryController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Category activated successfully.',
-                'data' => $category->fresh()
+                'data' => $category->fresh(),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error activating category: ' . $e->getMessage());
+            Log::error('Error activating category: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to activate category.'
+                'message' => 'Failed to activate category.',
             ], 500);
         }
     }
 
     /**
      * Deactivate a category
-     * 
-     * @param int $id
+     *
+     * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
     public function deactivate($id)
@@ -324,21 +329,21 @@ class AttendanceCategoryController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Category deactivated successfully.',
-                'data' => $category->fresh()
+                'data' => $category->fresh(),
             ]);
         } catch (\Exception $e) {
-            Log::error('Error deactivating category: ' . $e->getMessage());
+            Log::error('Error deactivating category: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to deactivate category.'
+                'message' => 'Failed to deactivate category.',
             ], 500);
         }
     }
 
     /**
      * Bulk update display order of categories
-     * 
-     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function updateOrder(Request $request)
@@ -353,7 +358,7 @@ class AttendanceCategoryController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed.',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -365,14 +370,15 @@ class AttendanceCategoryController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Category order updated successfully.'
+                'message' => 'Category order updated successfully.',
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error updating category order: ' . $e->getMessage());
+            Log::error('Error updating category order: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update category order.'
+                'message' => 'Failed to update category order.',
             ], 500);
         }
     }

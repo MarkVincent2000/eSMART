@@ -185,7 +185,7 @@
                                 </div>
                                 <!--end col-->
 
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="mb-3">
                                         <label class="form-label">Notify All Sections</label>
                                         <div class="form-check form-switch mb-2">
@@ -195,8 +195,8 @@
                                     </div>
                                 </div>
 
-
-                                <div class="col-md-8">
+                                
+                                <div class="col-md-6">
                                     <div class="mb-3">
                                         <x-select-vanilla :options="[]" name="section_id" id="eventSection"
                                             label="Section" placeholder="Select sections" :searchable="true"
@@ -207,6 +207,18 @@
                                         </small>
                                     </div>
                                 </div>
+
+
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Send SMS Notification</label>
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                id="sms-notification-switch">
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!--end col-->
                                 <div class="col-md-6">
                                     <div class="mb-3">

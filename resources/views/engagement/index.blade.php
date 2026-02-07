@@ -1963,9 +1963,9 @@
                     // Set loading state
                     saveBtn.disabled = true;
                     saveBtn.innerHTML = `
-                                                                                                              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                                                                                 ${isUpdate ? 'Updating...' : 'Saving...'}
-                                                                                                              `;
+                                                                                                                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                                                                                     ${isUpdate ? 'Updating...' : 'Saving...'}
+                                                                                                                  `;
 
                     // Get Flatpickr date range value
                     var dateRangeValue = start_date.value;
@@ -1979,6 +1979,7 @@
 
                     // Build form data
                     const allSectionsChecked = document.getElementById('all-sections-switch')?.checked || false;
+                    const smsNotificationChecked = document.getElementById('sms-notification-switch')?.checked || false;
 
                     const data = {
                         eventid: document.getElementById('eventid').value || '',
@@ -1994,6 +1995,7 @@
                         semester_id: document.getElementById('event-semester').value || null,
                         section_id: allSectionsChecked ? null : (window.vanillaSelect_eventSection ? (window.vanillaSelect_eventSection.getValue() || []) : []),
                         all_sections: allSectionsChecked,
+                        sms_notification: smsNotificationChecked,
                         status: document.getElementById('event-status').value
                     };
 

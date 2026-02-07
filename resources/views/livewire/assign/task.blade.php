@@ -5,13 +5,13 @@
     <div class="row g-4 mb-3">
         @if(!$isStudent)
             @can('manage-assignments')
-            <div class="col-sm-auto">
-                <div>
-                    <button type="button" wire:click="openCreateModal" class="btn btn-success">
-                        <i class="ri-add-line align-bottom me-1"></i> Create Class
-                    </button>
+                <div class="col-sm-auto">
+                    <div>
+                        <button type="button" wire:click="openCreateModal" class="btn btn-success">
+                            <i class="ri-add-line align-bottom me-1"></i> Create Class
+                        </button>
+                    </div>
                 </div>
-            </div>
             @endcan
         @endif
         <div class="col-sm">
