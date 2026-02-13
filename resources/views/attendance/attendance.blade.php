@@ -200,7 +200,8 @@
                                     <label class="form-check-label" for="attendanceSmsNotification">
                                         📱 Send SMS Notification to Students
                                     </label>
-                                    <small class="text-muted d-block">Students will receive SMS about this attendance session</small>
+                                    <small class="text-muted d-block">Students will receive SMS about this attendance
+                                        session</small>
                                 </div>
                             </div>
 

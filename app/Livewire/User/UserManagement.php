@@ -773,13 +773,14 @@ class UserManagement extends Component
     {
         $currentUser = Auth::user();
         $isSuperAdmin = $currentUser && $currentUser->hasRole('super-admin');
-        
+
         return $this->roles
-            ->filter(function($role) use ($isSuperAdmin) {
-                // If user is super-admin, only show super-admin and admin roles
+            ->filter(function ($role) use ($isSuperAdmin) {
+                // If user is super-admin, show all roles
                 if ($isSuperAdmin) {
-                    return in_array($role->name, ['super-admin', 'admin']);
+                    return true;
                 }
+
                 // If user is not super-admin, hide super-admin and admin roles
                 return !in_array($role->name, ['super-admin', 'admin']);
             })

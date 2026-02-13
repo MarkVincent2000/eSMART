@@ -100,5 +100,41 @@ class Notification extends Model
     {
         return is_null($this->read_at);
     }
+
+    /**
+     * Create a notification for a student when their grade is saved.
+     *
+     * @param int $userId The student's user ID (recipient of the notification).
+     * @param \App\Models\Grading\StudentInfoGrade $studentInfoGrade The grade record that was saved.
+     * @param string|null $teacherName Name of the teacher who saved the grade.
+     * @return self
+     */
+    public static function notifyStudentGradeSaved(int $userId, \App\Models\Grading\StudentInfoGrade $studentInfoGrade, ?string $teacherName = null): self
+    {
+        $teacherName = $teacherName ?? $studentInfoGrade->teacher_name ?? 'Your teacher';
+        $title = 'Grade record updated';
+        $body = sprintf(
+            '%s has saved your grade record for School Year %s (Grade %s). You can view your grades in the grading section.',
+            $teacherName,
+            $studentInfoGrade->school_year ?? 'N/A',
+            $studentInfoGrade->grade ?? 'N/A'
+        );
+
+        return self::create([
+            'user_id' => $userId,
+            'type' => 'grade_saved',
+            'title' => $title,
+            'body' => $body,
+            'url' => '/teacher.index-grade',
+            'data' => [
+                'student_info_grade_id' => $studentInfoGrade->id,
+                'school_year' => $studentInfoGrade->school_year,
+                'grade' => $studentInfoGrade->grade,
+                'teacher_name' => $teacherName,
+            ],
+            'notifiable_id' => $studentInfoGrade->id,
+            'notifiable_type' => \App\Models\Grading\StudentInfoGrade::class,
+        ]);
+    }
 }
 

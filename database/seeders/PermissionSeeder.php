@@ -27,6 +27,9 @@ class PermissionSeeder extends Seeder
             'manage-assignments' => ['super-admin','admin'],
             'view-subject-management' => ['super-admin','admin'],
             'view-system-settings' => ['super-admin'],
+            'view-teacher-management' => ['super-admin'],
+            'view-workload-management' => ['super-admin','admin'],
+            'view-grading-management' => ['super-admin','admin', 'user'],
         ];
 
         foreach ($permissionMatrix as $permissionName => $roleNames) {

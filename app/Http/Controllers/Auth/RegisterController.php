@@ -61,7 +61,15 @@ class RegisterController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->whereNull('deleted_at'), // Allow email if user is soft deleted
             ],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/',
+            ],
+        ], [
+            'password.regex' => 'Password must be at least 8 characters and include uppercase, lowercase, and a number.',
         ]);
     }
 

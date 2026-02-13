@@ -25,7 +25,9 @@ var password = document.getElementById("password-input"),
     confirm_password = document.getElementById("confirm-password-input");
 
 function validatePassword() {
-    if (password.value != confirm_password.value) {
+    if (!password || !confirm_password) return;
+
+    if (password.value !== confirm_password.value) {
         confirm_password.setCustomValidity("Passwords Don't Match");
     } else {
         confirm_password.setCustomValidity("");
@@ -33,7 +35,11 @@ function validatePassword() {
 }
 
 //Password validation
-password.onchange = validatePassword;
+if (password && confirm_password) {
+    password.onchange = validatePassword;
+    confirm_password.onkeyup = validatePassword;
+    confirm_password.onchange = validatePassword;
+}
 
 var myInput = document.getElementById("password-input");
 var letter = document.getElementById("pass-lower");

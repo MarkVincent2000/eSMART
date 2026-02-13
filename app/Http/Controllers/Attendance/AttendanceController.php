@@ -1666,13 +1666,21 @@ class AttendanceController extends Controller
             $attendanceDate = Carbon::parse($attendance->date)->format('F j, Y');
             $statusLabel = ucfirst($newStatus);
 
+            // Build optional check-in time line
             $checkInTimeStr = '';
             $checkInRaw = $studentAttendance->getRawOriginal('check_in_time') ?? null;
             if (!empty($checkInRaw)) {
                 $checkInTimeStr = "\nCheck-in: " . Carbon::parse($checkInRaw)->format('g:i A');
             }
 
-            $smsMessage = "ATTENDANCE UPDATE\n{$studentName}\n{$title}\n{$attendanceDate}\nStatus: {$statusLabel}{$checkInTimeStr}";
+            // Build optional check-out time line
+            $checkOutTimeStr = '';
+            $checkOutRaw = $studentAttendance->getRawOriginal('check_out_time') ?? null;
+            if (!empty($checkOutRaw)) {
+                $checkOutTimeStr = "\nCheck-out: " . Carbon::parse($checkOutRaw)->format('g:i A');
+            }
+
+            $smsMessage = "ATTENDANCE UPDATE\n{$studentName}\n{$title}\n{$attendanceDate}\nStatus: {$statusLabel}{$checkInTimeStr}{$checkOutTimeStr}";
 
             $smsService = new \App\Services\SmsService();
             $result = $smsService->sendBulkSms($phoneNumbers, $smsMessage, $attendance, $recipientData);

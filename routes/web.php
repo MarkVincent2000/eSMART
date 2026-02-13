@@ -44,9 +44,12 @@ require __DIR__.'/attendance/web.php';
 // Academic Routes
 require __DIR__.'/academic/web.php';
 
-// Student Routes
+// Student & Teacher Print Routes
 Route::middleware('auth')->group(function () {
     Route::get('/students/print', [App\Http\Controllers\Student\StudentController::class, 'print'])->name('students.print');
+    Route::get('/teacher/workloads/print', [App\Http\Controllers\Teacher\WorkloadPrintController::class, 'print'])->name('teacher.workloads.print');
+    Route::get('/teacher/grading/print/{id}', [App\Http\Controllers\Teacher\GradePrintController::class, 'print'])->name('teacher.grading.print')->where('id', '[0-9]+');
+    Route::get('/teacher/grading/pdf/{id}', [App\Http\Controllers\Teacher\GradePrintController::class, 'pdf'])->name('teacher.grading.pdf')->where('id', '[0-9]+');
 });
 
 Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->name('index');

@@ -108,17 +108,32 @@
 
 
                 @can('view-student-management')
-                    <x-sidebar.title title="Student Management" />
+                    <x-sidebar.title title="School Management" />
 
                     @can('view-enrollment-management')
                         <x-sidebar.nav-link href="enrollment.manage-enroll-index" icon="ri-user-star-line" title="Students" />
                     @endcan
+
+                    @can('view-teacher-management')
+                        <x-sidebar.nav-link href="teacher.index" icon="ri-user-settings-line" title="Teachers" />
+                    @endcan
+
+                    @can('view-workload-management')
+                        <x-sidebar.nav-link href="teacher.index-workload" icon="ri-task-line" title="Workload" />
+                    @endcan
+
+
                     @can('view-semester-management')
                         <x-sidebar.nav-link href="academic.academic-index" icon="ri-calendar-line" title="Academic Timeline" />
                     @endcan
                     @can('view-subject-management')
                         <x-sidebar.nav-link href="academic.subject-index" icon="ri-book-open-line" title="Subjects" />
                     @endcan
+                @endcan
+
+
+                @can('view-grading-management')
+                    <x-sidebar.nav-link href="teacher.index-grade" icon="ri-file-list-line" title="Report Card" />
                 @endcan
 
 

@@ -102,12 +102,12 @@
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <label for="userpassword" class="form-label">Password <span
+                                                    <label for="password-input" class="form-label">Password <span
                                                             class="text-danger">*</span></label>
                                                     <div class="position-relative auth-pass-inputgroup">
                                                         <input type="password"
                                                             class="form-control pe-5 password-input material-shadow-none @error('password') is-invalid @enderror"
-                                                            name="password" id="userpassword" placeholder="Enter password"
+                                                            name="password" id="password-input" placeholder="Enter password"
                                                             onpaste="return false"
                                                             pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" required>
                                                         <button
@@ -120,18 +120,18 @@
                                                             </span>
                                                         @enderror
                                                         <div class="invalid-feedback">
-                                                            Please enter password
+                                                            Password must be at least 8 characters and include uppercase, lowercase, and a number
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <label for="input-password" class="form-label">Confirm Password <span
+                                                    <label for="confirm-password-input" class="form-label">Confirm Password <span
                                                             class="text-danger">*</span></label>
                                                     <div class="position-relative auth-pass-inputgroup">
                                                         <input type="password"
                                                             class="form-control pe-5 password-input material-shadow-none @error('password_confirmation') is-invalid @enderror"
-                                                            name="password_confirmation" id="input-password"
+                                                            name="password_confirmation" id="confirm-password-input"
                                                             placeholder="Enter Confirm Password" onpaste="return false"
                                                             required>
                                                         <button
@@ -139,7 +139,7 @@
                                                             type="button" id="password-confirm-addon"><i
                                                                 class="ri-eye-fill align-middle"></i></button>
                                                         <div class="invalid-feedback">
-                                                            Please enter confirm password
+                                                            Password confirmation must match the password
                                                         </div>
                                                     </div>
                                                 </div>
@@ -336,24 +336,4 @@
 @section('script')
     <script src="{{ URL::asset('build/js/pages/form-validation.init.js') }}"></script>
     <script src="{{ URL::asset('build/js/pages/passowrd-create.init.js') }}"></script>
-    <script>
-        // Password visibility toggle for confirm password
-        document.addEventListener('DOMContentLoaded', function () {
-            const passwordConfirmAddon = document.getElementById('password-confirm-addon');
-            const passwordConfirmInput = document.getElementById('input-password');
-
-            if (passwordConfirmAddon && passwordConfirmInput) {
-                passwordConfirmAddon.addEventListener('click', function () {
-                    const type = passwordConfirmInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordConfirmInput.setAttribute('type', type);
-
-                    const icon = this.querySelector('i');
-                    if (icon) {
-                        icon.classList.toggle('ri-eye-fill');
-                        icon.classList.toggle('ri-eye-off-fill');
-                    }
-                });
-            }
-        });
-    </script>
 @endsection

@@ -92,4 +92,12 @@ class User extends Authenticatable
     {
         return $this->hasOne(\App\Models\StudentDetails\StudentInfo::class);
     }
+
+    /**
+     * Get the teacher profile for the user (if this user is a teacher).
+     */
+    public function teacher()
+    {
+        return $this->hasOne(\App\Models\Teacher\Teacher::class);
+    }
 }

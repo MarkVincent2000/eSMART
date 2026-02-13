@@ -106,7 +106,8 @@
                     <option value="" disabled {{ empty($sex) ? 'selected' : '' }}>Select Sex</option>
                     @foreach($this->sexOptions as $sexOption)
                         <option value="{{ $sexOption->value }}" {{ $sex === $sexOption->value ? 'selected' : '' }}>
-                            {{ ucfirst($sexOption->value) }}</option>
+                            {{ ucfirst($sexOption->value) }}
+                        </option>
                     @endforeach
                 </select>
                 @error('sex')
