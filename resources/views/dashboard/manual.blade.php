@@ -134,8 +134,8 @@
 
         .page-content canvas {
             /* Zoom in to crop margins */
-            width: 108% !important; 
-            height: auto !important;
+            width: 100% !important; 
+            height: 100% !important;
             
             /* Center the zoomed canvas */
             position: absolute;
@@ -143,7 +143,9 @@
             left: 50%;
             transform: translate(-50%, -50%);
             
-            object-fit: unset;
+            object-fit: contain;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         /* Loading Overlay */
@@ -283,11 +285,11 @@
                 const isSmall = window.innerWidth < 768;
                 // On mobile: width is screen width minus padding
                 // On desktop: fixed reasonable width or scaled based on container
-                let w = isSmall ? $(window).width() - 20 : 960; // -20 for padding
+                let w = isSmall ? $(window).width() - 40 : 960; // Increased margin for mobile
                 // Maintain aspect ratio. 
-                // Mobile: Use 1.25 (Shorter than A4 1.414) to crop top/bottom whitespace
+                // Mobile: Use 1.414 (Standard A4)
                 // Desktop: Use 600px height default
-                let h = isSmall ? (w * 1.25) : 600; 
+                let h = isSmall ? (w * 1.414) : 600; 
                 
                 return { width: w, height: h, display: isSmall ? 'single' : 'double' };
             }
@@ -330,8 +332,8 @@
 
                     // Render PDF page to canvas
                     const page = await pdfDoc.getPage(i);
-                    // Increased scale to 2.5 to support CSS zooming (cropping margins)
-                    const viewport = page.getViewport({ scale: 2.5 }); 
+                    // Standard scale for rendering
+                    const viewport = page.getViewport({ scale: 2.0 }); 
                     const context = canvas.getContext('2d');
                     
                     canvas.height = viewport.height;
