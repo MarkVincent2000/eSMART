@@ -1,5 +1,5 @@
 <x-modal id="edit-student-modal" wire:model="showEditStudentModal" title="Edit Student Enrollment" size="lg"
-    :centered="false" vertical-align="center" overflow="visible" :show-footer="true" :contentScrollable="true">
+    :centered="true" overflow="visible" :show-footer="true" :contentScrollable="true">
     <form wire:submit.prevent="saveEditStudent">
         <div class="row g-3">
             <div class="col-md-6">
@@ -84,7 +84,8 @@
                         Send SMS to student and guardian when updating enrollment
                     </label>
                 </div>
-                <small class="text-muted d-block mt-1">Student and guardian will receive SMS about the enrollment update</small>
+                <small class="text-muted d-block mt-1">Student and guardian will receive SMS about the enrollment
+                    update</small>
             </div>
         </div>
     </form>

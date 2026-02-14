@@ -12,7 +12,7 @@
 <head>
     <meta charset="utf-8" />
     <title>@yield('title') | {{ \App\Models\SystemSetting::getValue('site.short_name', 'smart') }}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta content="eSMART Campus - Student Management System" name="description" />
     <meta content="eSMART Campus Team" name="author" />
     <!-- App favicon -->
@@ -175,6 +175,32 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             text-rendering: optimizeLegibility;
+        }
+
+        /* Mobile Viewport Fixes */
+        .custom-modal-overlay {
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        .custom-modal-overlay > div[style*="min-height: 100vh"] {
+            min-height: 100vh !important;
+            min-height: 100dvh !important;
+        }
+
+        .modal-card-dark {
+            max-height: calc(100vh - 2rem) !important;
+            max-height: calc(100dvh - 2rem) !important;
+        }
+
+        @media (max-width: 576px) {
+            .custom-modal-overlay > div {
+                padding: 0.5rem !important;
+            }
+            .modal-card-dark {
+                max-height: calc(100vh - 1rem) !important;
+                max-height: calc(100dvh - 1rem) !important;
+            }
         }
     </style>
 
