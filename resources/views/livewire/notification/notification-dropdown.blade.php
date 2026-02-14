@@ -305,11 +305,16 @@
             background: #555;
         }
 
-        /* Responsive */
         @media (max-width: 576px) {
             .notification-panel-menu {
-                min-width: 280px;
-                right: 0;
+                position: fixed;
+                top: 70px;
+                left: 10px;
+                right: 10px;
+                width: auto;
+                min-width: auto;
+                max-width: none;
+                margin: 0;
             }
         }
 

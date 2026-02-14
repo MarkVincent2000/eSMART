@@ -50,6 +50,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/teacher/workloads/print', [App\Http\Controllers\Teacher\WorkloadPrintController::class, 'print'])->name('teacher.workloads.print');
     Route::get('/teacher/grading/print/{id}', [App\Http\Controllers\Teacher\GradePrintController::class, 'print'])->name('teacher.grading.print')->where('id', '[0-9]+');
     Route::get('/teacher/grading/pdf/{id}', [App\Http\Controllers\Teacher\GradePrintController::class, 'pdf'])->name('teacher.grading.pdf')->where('id', '[0-9]+');
+    
+    // Manual PDF Route
+    Route::get('/manual/pdf', function () {
+        $path = resource_path('views/dashboard/pdf/Smart-Campus-User-Manual.pdf');
+        if (!file_exists($path)) {
+            abort(404, 'Manual file not found.');
+        }
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Smart-Campus-User-Manual.pdf"'
+        ]);
+    })->name('manual.show.pdf');
 });
 
 Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->name('index');

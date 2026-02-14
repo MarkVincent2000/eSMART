@@ -23,8 +23,8 @@
                     <small class="text-muted">Select a grade to filter the student list below.</small>
                 </div>
 
-                {{-- Student Selection (filtered by grade) --}}
-                <div class="col-12" wire:key="student-options-{{ $selectedGradeLevel ?? 'all' }}">
+                {{-- Student Selection (filtered by grade; excludes students who already have a grade for that school year and grade level) --}}
+                <div class="col-12" wire:key="student-options-{{ $selectedGradeLevel ?? 'all' }}-{{ $editingGradeId ?? 'new' }}">
                     <x-select label="Student" wire:model.live="studentInfoId" :options="$this->studentOptions"
                         placeholder="Select student..." :searchable="true" />
                     @if($selectedGradeLevel)
@@ -998,6 +998,38 @@
         </x-slot:footer>
     </x-modal>
 
+    {{-- SMS Confirmation Modal --}}
+    <x-modal id="sms-confirm-modal" wire:model="showSmsModal" title="Send SMS - Grade Update" size="md"
+        :centered="true" :show-footer="true">
+        <div>
+            <p class="text-muted mb-3">
+                Send grade update SMS to student and guardian for <strong>{{ $smsGradeLabel ?? 'this student' }}</strong>.
+            </p>
+            <div class="mb-3">
+                <label for="smsMessage" class="form-label">Message <span class="badge bg-light text-muted">Max 200 chars</span></label>
+                <textarea id="smsMessage" class="form-control @error('smsMessage') is-invalid @enderror"
+                    wire:model.live="smsMessage" rows="4" maxlength="200" placeholder="Edit message (max 200 characters to save credits)..."></textarea>
+                <div class="d-flex justify-content-between mt-1">
+                    <small class="text-muted">{{ mb_strlen($smsMessage ?? '') }}/200 characters</small>
+                </div>
+                @error('smsMessage')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="alert alert-info py-2 mb-0">
+                <i class="ri-information-line me-2"></i>
+                <small>Keeping the message under 200 characters saves SMS credits (single segment).</small>
+            </div>
+        </div>
+        <x-slot:footer>
+            <button type="button" class="btn btn-light" wire:click="closeSmsModal">Cancel</button>
+            <x-button color="primary" wire:click="confirmSendSms" wireTarget="confirmSendSms">
+                <span wire:loading.remove wire:target="confirmSendSms"><i class="ri-send-plane-line me-1"></i>Confirm & Send</span>
+                <span wire:loading wire:target="confirmSendSms">Sending...</span>
+            </x-button>
+        </x-slot:footer>
+    </x-modal>
+
     <div class="row g-4 mb-3">
         <div class="col-sm-auto">
             <div>
@@ -1098,6 +1130,9 @@
                                             <a class="dropdown-item" href="#"
                                                 wire:click.prevent="openPrintModal({{ $grade->id }})"><i
                                                     class="ri-printer-line align-bottom me-2 text-muted"></i> Print</a>
+                                            <a class="dropdown-item" href="#"
+                                                wire:click.prevent="openSmsModal({{ $grade->id }})"><i
+                                                    class="ri-send-plane-line align-bottom me-2 text-muted"></i> Send SMS</a>
 
                                             @if($canManage)
                                                 <div class="dropdown-divider"></div>

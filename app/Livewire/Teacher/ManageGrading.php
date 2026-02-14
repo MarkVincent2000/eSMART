@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Models\Grading\StudentInfoGrade;
 use App\Models\Grading\SubjectGrade;
 use App\Models\Teacher\Teacher;
@@ -80,6 +82,39 @@ class ManageGrading extends Component
      * @var int|null
      */
     public $printGradeId = null;
+
+    /**
+     * SMS confirmation modal state.
+     *
+     * @var bool
+     */
+    public $showSmsModal = false;
+
+    /**
+     * Grade record ID for SMS.
+     *
+     * @var int|null
+     */
+    public $smsGradeId = null;
+
+    /**
+     * SMS message (max 200 chars to save credits).
+     *
+     * @var string
+     */
+    public $smsMessage = '';
+
+    /**
+     * Grade label for SMS modal display.
+     *
+     * @var string|null
+     */
+    public $smsGradeLabel = null;
+
+    /**
+     * Max SMS message length to save credits (single segment).
+     */
+    private const SMS_MAX_CHARS = 200;
 
     /**
      * Grade level selected for filtering students (displayed first in form).
@@ -304,6 +339,7 @@ class ManageGrading extends Component
 
     /**
      * Get student options with section information, filtered by selected grade level.
+     * Excludes students who already have a grade record for their school year and grade level.
      */
     #[Computed]
     public function studentOptions(): array
@@ -316,6 +352,20 @@ class ManageGrading extends Component
         if ($this->selectedGradeLevel !== null && $this->selectedGradeLevel !== '') {
             $query->where('year_level', (int) $this->selectedGradeLevel);
         }
+
+        // Exclude students who already have a grade for their school year and grade level
+        $query->whereNotExists(function ($q) {
+            $q->select(DB::raw(1))
+                ->from('student_info_grades')
+                ->whereColumn('student_info_grades.student_info_id', 'student_infos.id')
+                ->whereColumn('student_info_grades.school_year', 'student_infos.school_year')
+                ->whereColumn('student_info_grades.grade', 'student_infos.year_level')
+                ->whereNull('student_info_grades.deleted_at');
+            // When editing, allow the current record's student to appear
+            if ($this->editingGradeId) {
+                $q->where('student_info_grades.id', '!=', $this->editingGradeId);
+            }
+        });
 
         return $query->get()
             ->map(function ($student) {
@@ -675,6 +725,196 @@ class ManageGrading extends Component
     {
         $this->showPrintModal = false;
         $this->printGradeId = null;
+    }
+
+    /**
+     * Open SMS confirmation modal for a grade record.
+     */
+    public function openSmsModal(int $gradeId): void
+    {
+        $gradeRecord = StudentInfoGrade::with([
+            'studentInfo.user.personalDetails',
+            'studentInfo.user',
+            'studentInfo.section',
+        ])->find($gradeId);
+
+        if (!$gradeRecord) {
+            $this->dispatch('show-toast', [
+                'message' => 'Grade record not found.',
+                'type' => 'error',
+                'title' => 'Error',
+            ]);
+            return;
+        }
+
+        $user = Auth::user();
+        if (!$user) {
+            return;
+        }
+
+        $isSuperAdmin = $user instanceof User && $user->hasRole('super-admin');
+        $teacher = Teacher::where('user_id', $user->id)->first();
+        if (!$isSuperAdmin && (!$teacher || (int) $gradeRecord->teacher_id !== (int) $teacher->id)) {
+            $this->dispatch('show-toast', [
+                'message' => 'You are not allowed to send SMS for this grade.',
+                'type' => 'error',
+                'title' => 'Unauthorized',
+            ]);
+            return;
+        }
+
+        $defaultMessage = $this->buildDefaultSmsMessage($gradeRecord);
+        $this->smsGradeId = $gradeRecord->id;
+        $this->smsGradeLabel = $gradeRecord->name . ' (' . ($gradeRecord->school_year ?? 'N/A') . ')';
+        $this->smsMessage = $defaultMessage;
+        $this->showSmsModal = true;
+    }
+
+    /**
+     * Close SMS confirmation modal.
+     */
+    public function closeSmsModal(): void
+    {
+        $this->showSmsModal = false;
+        $this->smsGradeId = null;
+        $this->smsMessage = '';
+        $this->smsGradeLabel = null;
+    }
+
+    /**
+     * Confirm and send SMS to student and guardian.
+     */
+    public function confirmSendSms(): void
+    {
+        if (!$this->smsGradeId) {
+            return;
+        }
+
+        $gradeRecord = StudentInfoGrade::with(['studentInfo.user.personalDetails', 'studentInfo.user'])
+            ->find($this->smsGradeId);
+
+        if (!$gradeRecord) {
+            $this->closeSmsModal();
+            $this->dispatch('show-toast', [
+                'message' => 'Grade record not found.',
+                'type' => 'error',
+                'title' => 'Error',
+            ]);
+            return;
+        }
+
+        $message = mb_substr(trim($this->smsMessage), 0, self::SMS_MAX_CHARS);
+        if (empty($message)) {
+            $this->dispatch('show-toast', [
+                'message' => 'SMS message cannot be empty.',
+                'type' => 'error',
+                'title' => 'Validation Error',
+            ]);
+            return;
+        }
+
+        $result = $this->sendGradeUpdateSms($gradeRecord, $message);
+        $this->closeSmsModal();
+
+        if ($result['success']) {
+            $this->dispatch('show-toast', [
+                'message' => 'SMS sent successfully to ' . $result['recipients'] . ' recipient(s).',
+                'type' => 'success',
+                'title' => 'Success',
+            ]);
+        } else {
+            $this->dispatch('show-toast', [
+                'message' => $result['message'] ?? 'Failed to send SMS.',
+                'type' => 'error',
+                'title' => 'Error',
+            ]);
+        }
+    }
+
+    /**
+     * Build default SMS message for grade update (max 200 chars).
+     */
+    private function buildDefaultSmsMessage(StudentInfoGrade $grade): string
+    {
+        $name = $grade->name ?? 'Student';
+        $sy = $grade->school_year ?? 'N/A';
+        $gradeLevel = $grade->grade ? "Grade {$grade->grade}" : 'N/A';
+        $avg = null;
+        if ($grade->general_average && is_array($grade->general_average) && !empty($grade->general_average)) {
+            $vals = array_values($grade->general_average);
+            $avg = number_format(array_sum($vals) / count($vals), 1);
+        }
+        $avgText = $avg !== null ? "Avg: {$avg}" : '';
+
+        $msg = "GRADE UPDATE: {$name}. SY: {$sy}, {$gradeLevel}";
+        if ($avgText !== '') {
+            $msg .= ". {$avgText}";
+        }
+        $msg .= '. Check your grades.';
+
+        return mb_substr($msg, 0, self::SMS_MAX_CHARS);
+    }
+
+    /**
+     * Send SMS to student and guardian for grade update.
+     *
+     * @param StudentInfoGrade $grade
+     * @param string $message Message already truncated to max 200 chars
+     * @return array{success: bool, message?: string, recipients?: int}
+     */
+    private function sendGradeUpdateSms(StudentInfoGrade $grade, string $message): array
+    {
+        try {
+            $studentInfo = $grade->studentInfo;
+            if (!$studentInfo || !$studentInfo->user || !$studentInfo->user->personalDetails) {
+                return ['success' => false, 'message' => 'Student contact details not found.'];
+            }
+
+            $personalDetails = $studentInfo->user->personalDetails;
+            $phoneNumbers = [];
+            $recipientData = [];
+
+            if (!empty($personalDetails->contact_no)) {
+                $phoneNumbers[] = $personalDetails->contact_no;
+                $recipientData[] = [
+                    'phone_number' => $personalDetails->contact_no,
+                    'user_id' => $studentInfo->user_id,
+                    'recipient_type' => \App\Models\SmsNotification::RECIPIENT_STUDENT,
+                ];
+            }
+
+            if (!empty($personalDetails->guardian_contact_no)) {
+                $phoneNumbers[] = $personalDetails->guardian_contact_no;
+                $recipientData[] = [
+                    'phone_number' => $personalDetails->guardian_contact_no,
+                    'user_id' => $studentInfo->user_id,
+                    'recipient_type' => \App\Models\SmsNotification::RECIPIENT_GUARDIAN,
+                ];
+            }
+
+            if (empty($phoneNumbers)) {
+                return ['success' => false, 'message' => 'No valid phone numbers for student or guardian.'];
+            }
+
+            $smsService = new \App\Services\SmsService();
+            $result = $smsService->sendBulkSms($phoneNumbers, $message, $grade, $recipientData);
+
+            if ($result['success']) {
+                Log::info('Grade update SMS sent', [
+                    'student_info_grade_id' => $grade->id,
+                    'recipients' => count($phoneNumbers),
+                ]);
+                return ['success' => true, 'recipients' => $result['sent_count'] ?? count($phoneNumbers)];
+            }
+
+            return [
+                'success' => false,
+                'message' => $result['message'] ?? 'SMS sending failed.',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to send grade update SMS: ' . $e->getMessage());
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
     /**

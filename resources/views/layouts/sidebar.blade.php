@@ -98,6 +98,7 @@
 
                 <x-sidebar.title title="Menu" />
                 <x-sidebar.nav-link href="dashboard.index" icon="ri-dashboard-2-line" title="Dashboard" />
+                <x-sidebar.nav-link href="dashboard.manual" icon="ri-book-open-line" title="Manual System" />
 
 
                 <x-sidebar.title title="Activities" />
