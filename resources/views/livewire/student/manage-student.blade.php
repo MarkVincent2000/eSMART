@@ -271,20 +271,20 @@
             <div>
                 <div class="card">
                     <div class="card-header border-0">
-                        <div class="row g-4">
+                        <div class="row g-3">
                             <div class="col-sm">
-                                <div class="d-flex justify-content-sm-end align-items-center gap-2">
-                                    <div class="search-box ms-2">
+                                <div class="d-flex flex-column flex-sm-row justify-content-sm-end align-items-stretch align-items-sm-center gap-2">
+                                    <div class="search-box">
                                         <input type="text" class="form-control" id="searchStudentList"
                                             placeholder="Search Students..."
                                             wire:model.live.debounce.300ms="studentSearch">
                                         <i class="ri-search-line search-icon"></i>
                                     </div>
                                     <x-button color="primary" icon="ri-printer-line" icon-position="left"
-                                        wire:click="printStudents" wire-target="printStudents">
+                                        wire:click="printStudents" wire-target="printStudents"
+                                        class="w-100 w-sm-auto">
                                         Print
                                     </x-button>
-
                                 </div>
                             </div>
                         </div>
