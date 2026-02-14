@@ -1,5 +1,5 @@
 <x-modal id="edit-student-modal" wire:model="showEditStudentModal" title="Edit Student Enrollment" size="lg"
-    :centered="false" vertical-align="center" overflow="visible" :show-footer="true" :contentScrollable="false">
+    :centered="false" vertical-align="center" overflow="visible" :show-footer="true" :contentScrollable="true">
     <form wire:submit.prevent="saveEditStudent">
         <div class="row g-3">
             <div class="col-md-6">

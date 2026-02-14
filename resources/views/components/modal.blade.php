@@ -98,7 +98,7 @@
     ></div>
 
     <!-- Modal Dialog Container -->
-    <div style="position: relative; z-index: 1; display: flex; align-items: {{ $verticalAlign === 'top' ? 'flex-start' : 'center' }}; justify-content: center; min-height: 100vh; padding: 1rem; {{ $verticalAlign === 'top' ? 'padding-top: 2rem;' : '' }} {{ $overflow === 'visible' ? 'overflow: visible;' : 'overflow-y: auto;' }} pointer-events: none;">
+    <div style="position: relative; z-index: 1;" class="d-flex {{ $verticalAlign === 'top' ? 'align-items-start pt-5' : '' }} min-vh-100 p-3 overflow-y-auto pointer-events-none">
         <div
             x-show="show"
             x-trap.noscroll="show"
@@ -108,11 +108,12 @@
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 transform -translate-y-12 scale-95"
-            style="width: 100%; {{ $normalizedSize === 'sm' ? 'max-width: 24rem;' : ($normalizedSize === 'lg' ? 'max-width: 32rem;' : ($normalizedSize === 'xl' ? 'max-width: 60rem;' : ($normalizedSize === 'fullscreen' ? 'max-width: 100%;' : 'max-width: 28rem;'))) }} margin: 0 auto; {{ $maxWidth ? 'max-width: ' . $maxWidth . ';' : '' }} pointer-events: auto;"
+            class="w-full {{ $normalizedSize === 'sm' ? 'sm:max-w-sm' : ($normalizedSize === 'lg' ? 'sm:max-w-lg' : ($normalizedSize === 'xl' ? 'sm:max-w-xl' : ($normalizedSize === 'fullscreen' ? 'max-w-full h-full' : 'sm:max-w-md'))) }} m-auto pointer-events-auto"
+            style="{{ $maxWidth ? 'max-width: ' . $maxWidth . ';' : '' }}"
         >
         <div 
             class="card mb-0 shadow-lg modal-card-dark" 
-            style="border-radius: 0.5rem; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; max-height: calc(100vh - 4rem); display: flex; flex-direction: column; overflow: {{ $overflow }}; outline: none;"
+            style="border-radius: 0.5rem; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; max-height: calc(100dvh - 2rem); display: flex; flex-direction: column; overflow: {{ $overflow }}; outline: none;"
             tabindex="-1"
             x-on:click.stop
         >
