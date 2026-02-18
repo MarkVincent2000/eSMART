@@ -23,7 +23,7 @@
         <div class="row g-4">
             <div class="col-auto">
                 <div class="avatar-lg">
-                    <img src="{{ $photoPath }}" alt="user-img" class="img-thumbnail rounded-circle" />
+                    <img src="{{ $photoPath }}" alt="user-img" class="img-thumbnail rounded-circle" style="aspect-ratio: 1/1; object-fit: cover; width: 100%; height: 100%; cursor: pointer;" wire:click="$set('showProfileModal', true)" />
                 </div>
             </div>
             <!--end col-->
@@ -477,4 +477,10 @@
         <!--end col-->
     </div>
     <!--end row-->
+    <!-- Profile Photo Modal -->
+    <x-modal wire:model="showProfileModal" title="Profile Photo" centered>
+        <div class="d-flex justify-content-center">
+            <img src="{{ $photoPath }}" alt="Profile Photo" class="img-fluid rounded" style="max-height: 80vh;">
+        </div>
+    </x-modal>
 </div>

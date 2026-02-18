@@ -22,6 +22,7 @@ class UserProfile extends Component
     public $activitiesPerPage = 5;
     public $usersPerPage = 10;
     public $userSearch = '';
+    public $showProfileModal = false;
 
     public function mount($userId = null)
     {
