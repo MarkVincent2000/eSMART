@@ -455,7 +455,7 @@
                                     </table>
                                 </div>
                                 @if($users instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
-                            <div class="mt-3">
+                            <div class="mt-5">
                                 <x-pagination :paginator="$users" :show-summary="true" />
                             </div>
                             @endif
