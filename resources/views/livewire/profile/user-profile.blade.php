@@ -454,14 +454,14 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                
-                               
-                            </div>
-                            @if($users instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
+                                @if($users instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
                             <div class="mt-3">
                                 <x-pagination :paginator="$users" :show-summary="true" />
                             </div>
                             @endif
+                               
+                            </div>
+                            
                             <!--end card-body-->
                         </div>
                         <!--end card-->
