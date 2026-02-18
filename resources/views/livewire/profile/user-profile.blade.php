@@ -16,7 +16,7 @@
     @endphp
     <div class="profile-foreground position-relative mx-n4 mt-n4">
         <div class="profile-wid-bg">
-            <img src="{{ $coverPhotoPath }}" alt="profile cover" class="profile-wid-img" />
+            <img src="{{ $coverPhotoPath }}" alt="profile cover" class="profile-wid-img" style="cursor: pointer;" wire:click="$set('showCoverPhotoModal', true)" />
         </div>
     </div>
     <div class="pt-4 mb-4 mb-lg-3 pb-lg-4 profile-wrapper">
@@ -481,6 +481,13 @@
     <x-modal wire:model="showProfileModal" title="Profile Photo" centered>
         <div class="d-flex justify-content-center">
             <img src="{{ $photoPath }}" alt="Profile Photo" class="img-fluid rounded" style="max-height: 80vh;">
+        </div>
+    </x-modal>
+
+    <!-- Cover Photo Modal -->
+    <x-modal wire:model="showCoverPhotoModal" title="Cover Photo" centered size="xl">
+        <div class="d-flex justify-content-center">
+            <img src="{{ $coverPhotoPath }}" alt="Cover Photo" class="img-fluid rounded" style="max-height: 80vh; width: 100%; object-fit: contain;">
         </div>
     </x-modal>
 </div>
