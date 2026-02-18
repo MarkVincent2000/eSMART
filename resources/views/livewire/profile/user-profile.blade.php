@@ -14,9 +14,9 @@
                 : asset('storage/' . ltrim($photo, '/')))
             : asset('build/images/users/user-dummy-img.jpg');
     @endphp
-    <div class="profile-foreground position-relative mx-n4 mt-n4">
-        <div class="profile-wid-bg">
-            <img src="{{ $coverPhotoPath }}" alt="profile cover" class="profile-wid-img" style="cursor: pointer;" wire:click="$set('showCoverPhotoModal', true)" />
+    <div class="profile-foreground position-relative mx-n4 mt-n4 cursor-pointer" wire:click="$set('showCoverPhotoModal', true)">
+        <div class="profile-wid-bg ">
+            <img src="{{ $coverPhotoPath }}" alt="profile cover" class="profile-wid-img" style="cursor: pointer;"  />
         </div>
     </div>
     <div class="pt-4 mb-4 mb-lg-3 pb-lg-4 profile-wrapper">
