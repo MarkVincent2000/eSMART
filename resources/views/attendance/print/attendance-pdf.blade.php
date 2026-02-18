@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -193,6 +194,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1>Attendance Report</h1>
@@ -214,39 +216,39 @@
                             }
                         @endphp
                     </td>
-                
-                
-                @if($attendance->start_time || $attendance->end_time)
-              
-                    <td class="info-label">Time:</td>
-                    <td class="info-value">
-                        @php
-                            try {
-                                if($attendance->start_time && $attendance->end_time) {
-                                    $startTime = is_string($attendance->start_time) 
-                                        ? \Carbon\Carbon::parse($attendance->date . ' ' . $attendance->start_time)
-                                        : $attendance->start_time;
-                                    $endTime = is_string($attendance->end_time) 
-                                        ? \Carbon\Carbon::parse($attendance->date . ' ' . $attendance->end_time)
-                                        : $attendance->end_time;
-                                    echo $startTime->format('g:i A') . ' - ' . $endTime->format('g:i A');
-                                } elseif($attendance->start_time) {
-                                    $startTime = is_string($attendance->start_time) 
-                                        ? \Carbon\Carbon::parse($attendance->date . ' ' . $attendance->start_time)
-                                        : $attendance->start_time;
-                                    echo $startTime->format('g:i A');
+
+
+                    @if($attendance->start_time || $attendance->end_time)
+
+                        <td class="info-label">Time:</td>
+                        <td class="info-value">
+                            @php
+                                try {
+                                    if ($attendance->start_time && $attendance->end_time) {
+                                        $startTime = is_string($attendance->start_time)
+                                            ? \Carbon\Carbon::parse($attendance->date . ' ' . $attendance->start_time)
+                                            : $attendance->start_time;
+                                        $endTime = is_string($attendance->end_time)
+                                            ? \Carbon\Carbon::parse($attendance->date . ' ' . $attendance->end_time)
+                                            : $attendance->end_time;
+                                        echo $startTime->format('g:i A') . ' - ' . $endTime->format('g:i A');
+                                    } elseif ($attendance->start_time) {
+                                        $startTime = is_string($attendance->start_time)
+                                            ? \Carbon\Carbon::parse($attendance->date . ' ' . $attendance->start_time)
+                                            : $attendance->start_time;
+                                        echo $startTime->format('g:i A');
+                                    }
+                                } catch (\Exception $e) {
+                                    echo ($attendance->start_time ?? '') . ($attendance->end_time ? ' - ' . $attendance->end_time : '');
                                 }
-                            } catch (\Exception $e) {
-                                echo ($attendance->start_time ?? '') . ($attendance->end_time ? ' - ' . $attendance->end_time : '');
-                            }
-                        @endphp
-                    </td>
+                            @endphp
+                        </td>
                     @endif
                 </tr>
-               
+
                 <tr>
                     @if($attendance->location || $attendance->semester)
-                
+
                         @if($attendance->location)
                             <td class="info-label">Location:</td>
                             <td class="info-value">{{ $attendance->location }}</td>
@@ -254,31 +256,32 @@
 
                         @if($attendance->semester)
                             <td class="info-label">Semester:</td>
-                            <td class="info-value">{{ $attendance->semester->name ?? 'N/A' }} ({{ $attendance->semester->school_year ?? '' }})</td>
+                            <td class="info-value">{{ $attendance->semester->name ?? 'N/A' }}
+                                ({{ $attendance->semester->school_year ?? '' }})</td>
                         @endif
-                    
+
                     @endif
                 </tr>
                 <tr>
                     @if($attendance->sections && $attendance->sections->count() > 0 || $attendance->category)
-                    
+
                         <td class="info-label">Section(s):</td>
                         <td class="info-value">{{ $attendance->sections->pluck('name')->join(', ') }}</td>
-                    
+
                         <td class="info-label">Category:</td>
                         <td class="info-value">{{ $attendance->category->name ?? 'N/A' }}</td>
-                    
+
                     @endif
                 </tr>
                 <tr>
                     @if($attendance->attendance_type || $attendance->description)
-                    
+
                         <td class="info-label">Type:</td>
                         <td class="info-value">{{ ucfirst($attendance->attendance_type) }}</td>
-                    
+
                         <td class="info-label">Description:</td>
                         <td class="info-value">{{ $attendance->description }}</td>
-                    
+
                     @endif
                 </tr>
             </tbody>
@@ -286,109 +289,111 @@
     </div>
 
     @if($studentAttendances && $studentAttendances->count() > 0)
-    <div class="table-container">
-        <h2 style="margin-bottom: 15px; font-size: 16px;">Student Attendance List</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Student Name</th>
-                    <th>Student ID</th>
-                    <th>Status</th>
-                    <th>Check-In Time</th>
-                    <th>Check-Out Time</th>
-                    <th>Duration</th>
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($studentAttendances as $index => $studentAttendance)
-                @php
-                    $student = $studentAttendance->user ?? null;
-                    $studentInfo = $student->studentInfo ?? $student->student_info ?? null;
-                    $studentName = $student->name ?? 
-                        (($student->first_name ?? $student->firstName ?? '') . ' ' . ($student->last_name ?? $student->lastName ?? '')) ?? 
-                        'N/A';
-                    $studentId = $studentInfo->student_number ?? 
-                        $studentInfo->studentNumber ?? 
-                        $studentInfo->student_id ?? 
-                        $studentInfo->studentId ?? 
-                        $studentInfo->id_number ?? 
-                        $studentInfo->idNumber ?? 
-                        'N/A';
-                @endphp
-                <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ $studentName }}</td>
-                    <td>{{ $studentId }}</td>
-                    <td>
-                        <span class="status-badge status-{{ strtolower($studentAttendance->status ?? 'pending') }}">
-                            {{ ucfirst($studentAttendance->status ?? 'Pending') }}
-                        </span>
-                    </td>
-                    <td>
-                        @if($studentAttendance->check_in_time)
-                            @php
-                                try {
-                                    $checkIn = $studentAttendance->check_in_time instanceof \Carbon\Carbon 
-                                        ? $studentAttendance->check_in_time 
-                                        : \Carbon\Carbon::parse($studentAttendance->check_in_time);
-                                    echo $checkIn->format('M j, Y g:i A');
-                                } catch (\Exception $e) {
-                                    echo $studentAttendance->check_in_time;
-                                }
-                            @endphp
-                        @else
-                            -
-                        @endif
-                    </td>
-                    <td>
-                        @if($studentAttendance->check_out_time)
-                            @php
-                                try {
-                                    $checkOut = $studentAttendance->check_out_time instanceof \Carbon\Carbon 
-                                        ? $studentAttendance->check_out_time 
-                                        : \Carbon\Carbon::parse($studentAttendance->check_out_time);
-                                    echo $checkOut->format('M j, Y g:i A');
-                                } catch (\Exception $e) {
-                                    echo $studentAttendance->check_out_time;
-                                }
-                            @endphp
-                        @else
-                            -
-                        @endif
-                    </td>
-                    <td>
-                        @if($studentAttendance->duration_minutes)
-                            @php
-                                $hours = floor($studentAttendance->duration_minutes / 60);
-                                $minutes = $studentAttendance->duration_minutes % 60;
-                            @endphp
-                            @if($hours > 0)
-                                {{ $hours }}h {{ $minutes }}m
-                            @else
-                                {{ $minutes }}m
-                            @endif
-                        @else
-                            -
-                        @endif
-                    </td>
-                    <td>{{ $studentAttendance->remarks ?? $studentAttendance->notes ?? '-' }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+        <div class="table-container">
+            <h2 style="margin-bottom: 15px; font-size: 16px;">Student Attendance List</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <!-- <th>#</th> -->
+                        <th>Student ID</th>
+                        <th>Student Name</th>
+                        <th>Status</th>
+                        <th>Check-In Time</th>
+                        <th>Check-Out Time</th>
+                        <th>Duration</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($studentAttendances as $index => $studentAttendance)
+                        @php
+                            $student = $studentAttendance->user ?? null;
+                            $studentInfo = $student->studentInfo ?? $student->student_info ?? null;
+                            $studentName = $student->name ??
+                                (($student->first_name ?? $student->firstName ?? '') . ' ' . ($student->last_name ?? $student->lastName ?? '')) ??
+                                'N/A';
+                            $studentId = $studentInfo->student_number ??
+                                $studentInfo->studentNumber ??
+                                $studentInfo->student_id ??
+                                $studentInfo->studentId ??
+                                $studentInfo->id_number ??
+                                $studentInfo->idNumber ??
+                                'N/A';
+                        @endphp
+                        <tr>
+                            <!-- <td>{{ $index + 1 }}</td> -->
+                            <td>{{ $studentId }}</td>
+                            <td>{{ $studentName }}</td>
+                            <td>
+                                <span class="status-badge status-{{ strtolower($studentAttendance->status ?? 'pending') }}">
+                                    {{ ucfirst($studentAttendance->status ?? 'Pending') }}
+                                </span>
+                            </td>
+                            <td>
+                                @if($studentAttendance->check_in_time)
+                                    @php
+                                        try {
+                                            $checkIn = $studentAttendance->check_in_time instanceof \Carbon\Carbon
+                                                ? $studentAttendance->check_in_time
+                                                : \Carbon\Carbon::parse($studentAttendance->check_in_time);
+                                            echo $checkIn->format('M j, Y g:i A');
+                                        } catch (\Exception $e) {
+                                            echo $studentAttendance->check_in_time;
+                                        }
+                                    @endphp
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>
+                                @if($studentAttendance->check_out_time)
+                                    @php
+                                        try {
+                                            $checkOut = $studentAttendance->check_out_time instanceof \Carbon\Carbon
+                                                ? $studentAttendance->check_out_time
+                                                : \Carbon\Carbon::parse($studentAttendance->check_out_time);
+                                            echo $checkOut->format('M j, Y g:i A');
+                                        } catch (\Exception $e) {
+                                            echo $studentAttendance->check_out_time;
+                                        }
+                                    @endphp
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>
+                                @if($studentAttendance->duration_minutes)
+                                    @php
+                                        $hours = floor($studentAttendance->duration_minutes / 60);
+                                        $minutes = $studentAttendance->duration_minutes % 60;
+                                    @endphp
+                                    @if($hours > 0)
+                                        {{ $hours }}h {{ $minutes }}m
+                                    @else
+                                        {{ $minutes }}m
+                                    @endif
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>{{ $studentAttendance->remarks ?? $studentAttendance->notes ?? '-' }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     @else
-    <div class="no-data">
-        <p>No student attendance records found for this session.</p>
-    </div>
+        <div class="no-data">
+            <p>No student attendance records found for this session.</p>
+        </div>
     @endif
 
     <div class="footer">
         <p>This is a system-generated attendance report.</p>
-        <p>Report generated by: {{ $attendance->creator->name ?? 'System' }} | Date: {{ now()->format('F j, Y \a\t g:i A') }}</p>
+        <p>Report generated by: {{ $attendance->creator->name ?? 'System' }} | Date:
+            {{ now()->format('F j, Y \a\t g:i A') }}
+        </p>
     </div>
 </body>
-</html>
 
+</html>
