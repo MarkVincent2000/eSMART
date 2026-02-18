@@ -367,18 +367,16 @@
         >
             <div class="card-body p-0 d-flex flex-column" style="max-height: 300px;">
                 @if($searchable)
-                    <div class="p-2 border-bottom bg-light">
-                        <div class="position-relative">
-                            <i class="ri-search-line position-absolute top-50 start-0 translate-middle-y ms-2 text-muted" style="z-index: 1;"></i>
-                            <input 
-                                x-ref="searchInput"
-                                x-model="search" 
-                                type="text" 
-                                class="form-control form-control-sm ps-5" 
+                    <div class="p-2 border-bottom">
+
+                        <div class="search-box">
+                            <input type="text" class="form-control search"
                                 placeholder="Search..."
-                                style="border: 1px solid #ced4da; border-radius: 0.375rem;"
-                            >
+                                x-ref="searchInput"
+                                x-model="search">
+                            <i class="ri-search-line search-icon"></i>
                         </div>
+                        
                     </div>
                 @endif
 

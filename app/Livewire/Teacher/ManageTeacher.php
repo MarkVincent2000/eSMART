@@ -229,7 +229,8 @@ class ManageTeacher extends Component
 
         $teachers = $query->latest()->paginate(10);
 
-        $userOptions = User::orderBy('name')
+        $userOptions = User::role('admin')
+            ->orderBy('name')
             ->select('id', 'name', 'email')
             ->get()
             ->map(function ($user) {
