@@ -55,9 +55,10 @@ class UserProfile extends Component
         $this->resetPage('usersPage');
     }
 
-    public function loadMoreActivities(): void
+    public function updatedActiveTab(): void
     {
-        $this->activitiesPerPage += 5;
+        $this->resetPage('activitiesPage');
+        $this->resetPage('usersPage');
     }
 
     /**
@@ -134,48 +135,36 @@ class UserProfile extends Component
     {
         $user = $this->userProfile ?? Auth::user();
         $activityLogs = collect();
-        $hasMoreActivityLogs = false;
 
         if ($user) {
             $query = ActivityLog::where('causer_type', get_class($user))
                 ->where('causer_id', $user->getKey())
                 ->latest();
 
-            $totalLogs = (clone $query)->count();
-
-            $activityLogs = $query
-                ->limit($this->activitiesPerPage)
-                ->get();
-
-            $hasMoreActivityLogs = $totalLogs > $activityLogs->count();
+            $activityLogs = $query->paginate($this->activitiesPerPage, pageName: 'activitiesPage');
         }
 
         $personalDetails = $user ? $user->personalDetails : null;
 
-        // Get users for the users tab
-        $users = collect();
-        if ($this->activeTab === 'users') {
-            $usersQuery = User::query()
-                ->select('id', 'name', 'first_name', 'last_name', 'middle_name', 'name_extension', 'email', 'active_status', 'created_at', 'photo_path', 'avatar')
-                ->with('roles');
-            
-            if (!empty($this->userSearch)) {
-                $usersQuery->where(function($q) {
-                    $q->where('name', 'like', '%' . $this->userSearch . '%')
-                      ->orWhere('first_name', 'like', '%' . $this->userSearch . '%')
-                      ->orWhere('last_name', 'like', '%' . $this->userSearch . '%')
-                      ->orWhere('middle_name', 'like', '%' . $this->userSearch . '%')
-                      ->orWhere('email', 'like', '%' . $this->userSearch . '%');
-                });
-            }
-            
-            $users = $usersQuery->latest()->paginate($this->usersPerPage, pageName: 'usersPage');
+        $usersQuery = User::query()
+            ->select('id', 'name', 'first_name', 'last_name', 'middle_name', 'name_extension', 'email', 'active_status', 'created_at', 'photo_path', 'avatar')
+            ->with('roles');
+
+        if (!empty($this->userSearch)) {
+            $usersQuery->where(function ($q) {
+                $q->where('name', 'like', '%' . $this->userSearch . '%')
+                    ->orWhere('first_name', 'like', '%' . $this->userSearch . '%')
+                    ->orWhere('last_name', 'like', '%' . $this->userSearch . '%')
+                    ->orWhere('middle_name', 'like', '%' . $this->userSearch . '%')
+                    ->orWhere('email', 'like', '%' . $this->userSearch . '%');
+            });
         }
+
+        $users = $usersQuery->latest()->paginate($this->usersPerPage, pageName: 'usersPage');
 
         return view('livewire.profile.user-profile', [
             'user' => $user,
             'activityLogs' => $activityLogs,
-            'hasMoreActivityLogs' => $hasMoreActivityLogs,
             'personalDetails' => $personalDetails,
             'users' => $users,
         ]);

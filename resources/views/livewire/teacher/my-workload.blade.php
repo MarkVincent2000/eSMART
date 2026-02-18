@@ -580,11 +580,11 @@
                         </table>
                     </div>
 
-                    @if($workloads->hasPages())
+                   
                         <div class="mt-2">
                             <x-pagination :paginator="$workloads" :show-summary="true" />
                         </div>
-                    @endif
+                   
                 </div>
             </div>
         </div>

@@ -323,18 +323,13 @@
                                             <p class="text-muted">No activity logs found</p>
                                         </div>
                                     @endforelse
-
-                                    @if($hasMoreActivityLogs)
-                                        <div class="text-center mt-3">
-                                            <x-button size="sm" variant="soft" color="secondary"
-                                                icon="ri-arrow-down-double-line" wire:click="loadMoreActivities"
-                                                wire:loading.attr="disabled">
-                                                <span wire:loading.remove wire:target="loadMoreActivities">Load More</span>
-                                                <span wire:loading wire:target="loadMoreActivities">Loading...</span>
-                                            </x-button>
-                                        </div>
-                                    @endif
                                 </div>
+
+                                @if($activityLogs instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
+                                    <div class="mt-3">
+                                        <x-pagination :paginator="$activityLogs" :show-summary="true" />
+                                    </div>
+                                @endif
                             </div>
                             <!--end card-body-->
                         </div>
@@ -460,12 +455,13 @@
                                     </table>
                                 </div>
                                 
-                                @if(isset($users) && $users instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator && $users->hasPages())
-                                    <div class="mt-3">
-                                        {{ $users->links() }}
-                                    </div>
-                                @endif
+                               
                             </div>
+                            @if($users instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
+                            <div class="mt-3">
+                                <x-pagination :paginator="$users" :show-summary="true" />
+                            </div>
+                            @endif
                             <!--end card-body-->
                         </div>
                         <!--end card-->
