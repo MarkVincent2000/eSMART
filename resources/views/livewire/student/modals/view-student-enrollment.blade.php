@@ -5,7 +5,7 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label text-muted">Student Number</label>
-                <div class="fw-semibold">{{ $this->selectedStudentInfo->student_number }}</div>
+                <div class="fw-semibold text-wrap">{{ $this->selectedStudentInfo->student_number }}</div>
             </div>
             <div class="col-md-6">
                 <label class="form-label text-muted">Status</label>
@@ -27,18 +27,18 @@
             @if($this->selectedStudentInfo->user)
                 <div class="col-md-6">
                     <label class="form-label text-muted">Student Name</label>
-                    <div class="fw-semibold">{{ $this->selectedStudentInfo->user->name }}</div>
+                    <div class="fw-semibold text-wrap">{{ $this->selectedStudentInfo->user->name }}</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label text-muted">Email</label>
-                    <div>{{ $this->selectedStudentInfo->user->email }}</div>
+                    <div class="text-wrap text-break">{{ $this->selectedStudentInfo->user->email }}</div>
                 </div>
             @endif
             <div class="col-md-6">
                 <label class="form-label text-muted">Program</label>
                 <div>
                     @if($this->selectedStudentInfo->program)
-                        <span class="badge bg-primary-subtle text-primary">
+                        <span class="badge bg-primary-subtle text-primary text-wrap text-start">
                             {{ $this->selectedStudentInfo->program->code }} -
                             {{ $this->selectedStudentInfo->program->name }}
                         </span>
@@ -67,9 +67,9 @@
                     @endphp
                     @if($section)
                         @if(is_object($section) && isset($section->name))
-                            <span>{{ $section->name }}</span>
+                            <span class="text-wrap">{{ $section->name }}</span>
                         @elseif(is_array($section) && isset($section['name']))
-                            <span>{{ $section['name'] }}</span>
+                            <span class="text-wrap">{{ $section['name'] }}</span>
                         @else
                             <span class="text-muted">Section ID: {{ $this->selectedStudentInfo->section_id }}</span>
                         @endif
@@ -82,7 +82,7 @@
                 <label class="form-label text-muted">Semester(s)</label>
                 <div>
                     @if($this->selectedStudentInfo->semester && !empty($this->selectedStudentInfo->semester))
-                        <span>{{ $this->selectedStudentInfo->semester_names }}</span>
+                        <span class="text-wrap">{{ $this->selectedStudentInfo->semester_names }}</span>
                     @else
                         <span class="text-muted">Not assigned</span>
                     @endif
