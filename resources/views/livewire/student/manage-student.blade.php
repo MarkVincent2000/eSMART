@@ -430,7 +430,7 @@
                                             <td>
                                                 <strong>{{ $studentInfo->student_number }}</strong>
                                             </td>
-                                            <td>
+                                            <td class="text-wrap">
                                                 <div class="d-flex align-items-center">
                                                     <div>
                                                         <h6 class="mb-0">{{ $studentInfo->user->name ?? 'N/A' }}</h6>
@@ -439,7 +439,7 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td class="text-wrap">
                                                 @if($studentInfo->program)
                                                     <span class="badge bg-primary-subtle text-primary">
                                                         {{ $studentInfo->program->code }} - {{ $studentInfo->program->name }}
