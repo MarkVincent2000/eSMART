@@ -820,11 +820,11 @@
                                             </div>
                                         </div>
                                         <div class="py-4 text-center">
-                                            <h1 class="month"><sup><small>$</small></sup><span
+                                            <h1 class="month"><sup><small>₱</small></sup><span
                                                     class="ff-secondary fw-bold">{{ \App\Models\SystemSetting::getValue('landing.plan_1_price_monthly', '19') }}</span>
                                                 <span class="fs-13 text-muted">/Month</span>
                                             </h1>
-                                            <h1 class="annual"><sup><small>$</small></sup><span
+                                            <h1 class="annual"><sup><small>₱</small></sup><span
                                                     class="ff-secondary fw-bold">{{ \App\Models\SystemSetting::getValue('landing.plan_1_price_annual', '171') }}</span>
                                                 <span class="fs-13 text-muted">/Year</span>
                                             </h1>
@@ -943,11 +943,11 @@
                                             </div>
                                         </div>
                                         <div class="py-4 text-center">
-                                            <h1 class="month"><sup><small>$</small></sup><span
+                                            <h1 class="month"><sup><small>₱</small></sup><span
                                                     class="ff-secondary fw-bold">{{ \App\Models\SystemSetting::getValue('landing.plan_2_price_monthly', '29') }}</span>
                                                 <span class="fs-13 text-muted">/Month</span>
                                             </h1>
-                                            <h1 class="annual"><sup><small>$</small></sup><span
+                                            <h1 class="annual"><sup><small>₱</small></sup><span
                                                     class="ff-secondary fw-bold">{{ \App\Models\SystemSetting::getValue('landing.plan_2_price_annual', '261') }}</span>
                                                 <span class="fs-13 text-muted">/Year</span>
                                             </h1>
@@ -1059,11 +1059,11 @@
                                             </div>
                                         </div>
                                         <div class="py-4 text-center">
-                                            <h1 class="month"><sup><small>$</small></sup><span
+                                            <h1 class="month"><sup><small>₱</small></sup><span
                                                     class="ff-secondary fw-bold">{{ \App\Models\SystemSetting::getValue('landing.plan_3_price_monthly', '39') }}</span>
                                                 <span class="fs-13 text-muted">/Month</span>
                                             </h1>
-                                            <h1 class="annual"><sup><small>$</small></sup><span
+                                            <h1 class="annual"><sup><small>₱</small></sup><span
                                                     class="ff-secondary fw-bold">{{ \App\Models\SystemSetting::getValue('landing.plan_3_price_annual', '351') }}</span>
                                                 <span class="fs-13 text-muted">/Year</span>
                                             </h1>
