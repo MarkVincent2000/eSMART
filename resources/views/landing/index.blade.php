@@ -1734,6 +1734,14 @@
                             </div>
                         </div>
                         <!-- end row -->
+
+                        <div class="row mt-5">
+                            <div class="col-lg-12">
+                                <div class="rounded-3 overflow-hidden shadow-lg">
+                                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3959.8733279900575!2d125.12097357570651!3d7.024172617141272!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32f8f95479b3541d%3A0xe4d5fc216849e674!2sManongol%20National%20High%20School%20Basketball%20Court!5e0!3m2!1sen!2sph!4v1771512211867!5m2!1sen!2sph" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <!-- end container -->
                 </section>

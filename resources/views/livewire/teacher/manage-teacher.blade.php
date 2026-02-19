@@ -7,7 +7,7 @@
         overflow="visible">
         <form wire:submit.prevent="saveTeacher">
             <div class="row g-3" style="overflow: visible;">
-                <div class="col-12" style="overflow: visible; position: relative; z-index: 1;">
+                <div class="col-12" style="overflow: visible; position: relative; z-index: 1;" wire:key="teacher-user-select-{{ $showCreateModal ? md5(json_encode($userOptions)) : 'closed' }}">
                     <x-select label="Teacher User" wire:model="userId" :options="$userOptions"
                         placeholder="Select user..." :searchable="true" />
                     @error('userId')

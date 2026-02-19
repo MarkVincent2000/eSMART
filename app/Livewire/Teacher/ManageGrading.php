@@ -340,6 +340,7 @@ class ManageGrading extends Component
     /**
      * Get student options with section information, filtered by selected grade level.
      * Excludes students who already have a grade record for their school year and grade level.
+     * When user is a teacher, only shows students in sections from their workload.
      */
     #[Computed]
     public function studentOptions(): array
@@ -347,6 +348,25 @@ class ManageGrading extends Component
         $query = StudentInfo::with(['user', 'section'])
             ->where('status', 'enrolled')
             ->orderBy('student_number');
+
+        // Filter by authenticated teacher's workload sections (only students in sections the teacher handles)
+        $user = Auth::user();
+        if ($user) {
+            $teacher = Teacher::where('user_id', $user->id)->first();
+            if ($teacher) {
+                $workloadSectionIds = Workload::where('teacher_id', $teacher->id)
+                    ->whereNotNull('section_id')
+                    ->pluck('section_id')
+                    ->unique()
+                    ->values()
+                    ->toArray();
+                if (empty($workloadSectionIds)) {
+                    $query->whereRaw('1 = 0'); // No workload sections = no students to show
+                } else {
+                    $query->whereIn('section_id', $workloadSectionIds);
+                }
+            }
+        }
 
         // Filter by selected grade level when set
         if ($this->selectedGradeLevel !== null && $this->selectedGradeLevel !== '') {

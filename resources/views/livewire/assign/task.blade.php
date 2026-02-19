@@ -219,19 +219,17 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Subject</label>
-                <input type="text" class="form-control @error('subject_name') is-invalid @enderror"
-                    wire:model="subject_name" placeholder="Search or enter subject name" list="subjects-list">
-                <datalist id="subjects-list">
+                <label class="form-label">Subject <span class="text-danger">*</span></label>
+                <select class="form-select @error('subject_id') is-invalid @enderror" wire:model.live="subject_id">
+                    <option value="">Select Subject</option>
                     @foreach($availableSubjects as $subject)
-                        <option value="{{ $subject->name }}" data-id="{{ $subject->id }}">
-                            {{ $subject->display_name }}
+                        <option value="{{ $subject->id }}">
+                            {{ $subject->display_name ?? $subject->name }}
                         </option>
                     @endforeach
-                </datalist>
-                <input type="hidden" wire:model="subject_id">
-                <input type="hidden" wire:model="subject_type" value="{{ \App\Models\Subject::class }}">
-                @error('subject_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </select>
+                @error('subject_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <small class="text-muted">Select a section first to see available subjects.</small>
             </div>
 
             <div class="mb-3">

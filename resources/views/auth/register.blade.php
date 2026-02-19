@@ -79,12 +79,52 @@
                                             </p>
                                         </div>
 
-                                        <div class="mt-4">
-                                            <form class="needs-validation" novalidate method="POST"
+                                        <div class="mt-4 position-relative">
+                                            {{-- Loading overlay (shown after form submit) --}}
+                                            <div id="register-loading-overlay" class="position-absolute top-0 start-0 end-0 bottom-0 d-none align-items-center justify-content-center bg-white bg-opacity-90 rounded" style="z-index: 10;">
+                                                <div class="text-center">
+                                                    <div class="spinner-border text-success mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                    <p class="text-muted mb-0">Creating your account...</p>
+                                                    <p class="text-muted small mt-1">Redirecting to sign in</p>
+                                                </div>
+                                            </div>
+
+                                            <form id="register-form" class="needs-validation" novalidate method="POST"
                                                 action="{{ route('register') }}">
                                                 @csrf
 
-                                                <div class="mb-3">
+                                                <div class="row g-2">
+                                                    <div class="col-md-6">
+                                                        <label for="first_name" class="form-label">First Name <span
+                                                                class="text-danger">*</span></label>
+                                                        <input type="text"
+                                                            class="form-control @error('first_name') is-invalid @enderror"
+                                                            name="first_name" value="{{ old('first_name') }}"
+                                                            id="first_name" placeholder="First name" required>
+                                                        @error('first_name')
+                                                            <span class="invalid-feedback" role="alert">
+                                                                <strong>{{ $message }}</strong>
+                                                            </span>
+                                                        @enderror
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="last_name" class="form-label">Last Name <span
+                                                                class="text-danger">*</span></label>
+                                                        <input type="text"
+                                                            class="form-control @error('last_name') is-invalid @enderror"
+                                                            name="last_name" value="{{ old('last_name') }}" id="last_name"
+                                                            placeholder="Last name" required>
+                                                        @error('last_name')
+                                                            <span class="invalid-feedback" role="alert">
+                                                                <strong>{{ $message }}</strong>
+                                                            </span>
+                                                        @enderror
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3 mt-3">
                                                     <label for="useremail" class="form-label">Email <span
                                                             class="text-danger">*</span></label>
                                                     <input type="email"
@@ -99,6 +139,19 @@
                                                     <div class="invalid-feedback">
                                                         Please enter email
                                                     </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label for="contact_no" class="form-label">Contact Number</label>
+                                                    <input type="text"
+                                                        class="form-control @error('contact_no') is-invalid @enderror"
+                                                        name="contact_no" value="{{ old('contact_no') }}" id="contact_no"
+                                                        placeholder="e.g., 09XXXXXXXXX">
+                                                    @error('contact_no')
+                                                        <span class="invalid-feedback" role="alert">
+                                                            <strong>{{ $message }}</strong>
+                                                        </span>
+                                                    @enderror
                                                 </div>
 
                                                 <div class="mb-3">
@@ -120,14 +173,15 @@
                                                             </span>
                                                         @enderror
                                                         <div class="invalid-feedback">
-                                                            Password must be at least 8 characters and include uppercase, lowercase, and a number
+                                                            Password must be at least 8 characters and include uppercase,
+                                                            lowercase, and a number
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <label for="confirm-password-input" class="form-label">Confirm Password <span
-                                                            class="text-danger">*</span></label>
+                                                    <label for="confirm-password-input" class="form-label">Confirm Password
+                                                        <span class="text-danger">*</span></label>
                                                     <div class="position-relative auth-pass-inputgroup">
                                                         <input type="password"
                                                             class="form-control pe-5 password-input material-shadow-none @error('password_confirmation') is-invalid @enderror"
@@ -165,7 +219,13 @@
                                                 </div>
 
                                                 <div class="mt-4">
-                                                    <button class="btn btn-success w-100" type="submit">Sign Up</button>
+                                                    <button id="register-submit-btn" class="btn btn-success w-100" type="submit">
+                                                        <span class="btn-text"><i class="ri-user-add-line me-1"></i> Sign Up</span>
+                                                        <span class="btn-loading d-none">
+                                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                            Creating account...
+                                                        </span>
+                                                    </button>
                                                 </div>
                                             </form>
                                         </div>
@@ -336,4 +396,25 @@
 @section('script')
     <script src="{{ URL::asset('build/js/pages/form-validation.init.js') }}"></script>
     <script src="{{ URL::asset('build/js/pages/passowrd-create.init.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('register-form');
+            var overlay = document.getElementById('register-loading-overlay');
+            var btn = document.getElementById('register-submit-btn');
+            var btnText = btn ? btn.querySelector('.btn-text') : null;
+            var btnLoading = btn ? btn.querySelector('.btn-loading') : null;
+
+            if (form && overlay && btn) {
+                form.addEventListener('submit', function(e) {
+                    if (!form.checkValidity()) return;
+
+                    btn.disabled = true;
+                    if (btnText) btnText.classList.add('d-none');
+                    if (btnLoading) btnLoading.classList.remove('d-none');
+                    overlay.classList.remove('d-none');
+                    overlay.classList.add('d-flex');
+                });
+            }
+        });
+    </script>
 @endsection

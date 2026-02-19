@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use App\Models\User;
+use App\Models\UserPersonalDetails;
 use App\Models\Notification;
 use App\Models\Role;
 use Illuminate\Foundation\Auth\RegistersUsers;
@@ -54,6 +55,9 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'contact_no' => ['nullable', 'string', 'max:20'],
             'email' => [
                 'required',
                 'string',
@@ -81,29 +85,38 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        // Generate a default name from email (part before @)
-        $name = explode('@', $data['email'])[0];
+        // Build full name from first and last
+        $name = trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? '')) ?: explode('@', $data['email'])[0];
 
         // Check if a soft-deleted user exists with this email
         $existingUser = User::withTrashed()->where('email', $data['email'])->first();
 
+        $userData = [
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
+            'name' => $name,
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'active_status' => false,
+        ];
+
         if ($existingUser && $existingUser->trashed()) {
             // Restore and update the soft-deleted user
             $existingUser->restore();
-            $existingUser->update([
-                'name' => $name,
-                'password' => Hash::make($data['password']),
-                'active_status' => false, // Reset to inactive
-            ]);
+            $existingUser->update($userData);
             $newUser = $existingUser;
         } else {
             // Create a new user
-            $newUser = User::create([
-                'name' => $name,
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'active_status' => false, // New users are inactive by default
-            ]);
+            $newUser = User::create($userData);
+        }
+
+        // Create or update UserPersonalDetails with contact number
+        $contactNo = $data['contact_no'] ?? null;
+        if ($contactNo !== null && $contactNo !== '') {
+            UserPersonalDetails::updateOrCreate(
+                ['user_id' => $newUser->id],
+                ['contact_no' => $contactNo]
+            );
         }
 
         // Notify all super-admin and admin users about the new registration
@@ -163,7 +176,7 @@ class RegisterController extends Controller
                 'user_id' => $admin->id,
                 'type' => 'alert',
                 'title' => 'New User Registration',
-                'body' => "A new user ({$newUser->email}) has registered and is waiting for activation.",
+                'body' => "A new user ({$newUser->name}) has registered and is waiting for activation.",
                 'data' => [
                     'user_id' => $newUser->id,
                     'user_email' => $newUser->email,

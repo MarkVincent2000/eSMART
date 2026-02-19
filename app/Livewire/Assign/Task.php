@@ -10,6 +10,8 @@ use App\Models\Subject;
 use App\Models\StudentDetails\Semester;
 use App\Models\StudentDetails\Section;
 use App\Models\StudentDetails\StudentInfo;
+use App\Models\Teacher\Teacher;
+use App\Models\Teacher\Workload;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -84,10 +86,38 @@ class Task extends Component
 
     public function loadSubjects()
     {
-        $this->availableSubjects = Subject::active()
-            ->orderBy('code')
-            ->orderBy('name')
-            ->get();
+        $query = Subject::active()->orderBy('code')->orderBy('name');
+
+        // When user is a teacher, filter subjects by workload (semester + section)
+        $user = Auth::user();
+        if ($user) {
+            $teacher = Teacher::where('user_id', $user->id)->first();
+            if ($teacher) {
+                if (!$this->semester_id || !$this->section_id) {
+                    $query->whereRaw('1 = 0'); // Require semester and section to show subjects
+                } else {
+                    $workloadSubjectIds = Workload::where('teacher_id', $teacher->id)
+                        ->where('semester_id', $this->semester_id)
+                        ->where('section_id', $this->section_id)
+                        ->whereNotNull('subject_id')
+                        ->whereHas('semester', function ($q) {
+                            $q->where('is_active', true);
+                        })
+                        ->pluck('subject_id')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+
+                    if (!empty($workloadSubjectIds)) {
+                        $query->whereIn('id', $workloadSubjectIds);
+                    } else {
+                        $query->whereRaw('1 = 0');
+                    }
+                }
+            }
+        }
+
+        $this->availableSubjects = $query->get();
     }
 
     public function loadActiveSemester()
@@ -104,7 +134,9 @@ class Task extends Component
 
     public function loadSemesters()
     {
+        // Only load semesters with active status for section/workload filtering
         $this->semesters = Semester::where('is_display', true)
+            ->where('is_active', true)
             ->orderBy('school_year', 'desc')
             ->orderBy('name', 'asc')
             ->get();
@@ -113,35 +145,74 @@ class Task extends Component
     public function updatedSemesterId()
     {
         $this->loadSections();
+        $this->loadSubjects();
+    }
+
+    public function updatedSectionId()
+    {
+        $this->subject_id = null;
+        $this->loadSubjects();
     }
 
     public function loadSections()
     {
-        if ($this->semester_id) {
-            $this->sections = Section::where('active', true)
-                ->orderBy('name', 'asc')
-                ->get();
-        } else {
+        if (!$this->semester_id) {
             $this->sections = [];
-        }
-        if (!$this->section_id) {
             $this->section_id = null;
+            return;
         }
+
+        $query = Section::where('active', true)->orderBy('name', 'asc');
+
+        // When user is a teacher, only load sections from their workload for the selected (active) semester
+        $user = Auth::user();
+        if ($user) {
+            $teacher = Teacher::where('user_id', $user->id)->first();
+            if ($teacher) {
+                // Only consider workloads for semesters with active status
+                $workloadSectionIds = Workload::where('teacher_id', $teacher->id)
+                    ->where('semester_id', $this->semester_id)
+                    ->whereNotNull('section_id')
+                    ->whereHas('semester', function ($q) {
+                        $q->where('is_active', true);
+                    })
+                    ->pluck('section_id')
+                    ->unique()
+                    ->values()
+                    ->toArray();
+
+                if (!empty($workloadSectionIds)) {
+                    $query->whereIn('id', $workloadSectionIds);
+                } else {
+                    $query->whereRaw('1 = 0'); // No workload sections = no sections to show
+                }
+            }
+        }
+
+        $this->sections = $query->get();
+
+        // Clear section and subject if section is no longer in the filtered list
+        $sectionIds = collect($this->sections)->pluck('id')->toArray();
+        if ($this->section_id && !in_array($this->section_id, $sectionIds)) {
+            $this->section_id = null;
+            $this->subject_id = null;
+            $this->subject_name = '';
+        }
+
+        $this->loadSubjects();
     }
 
-    public function updatedSubjectName()
+    public function updatedSubjectId()
     {
-        // Find subject by name when user types
-        if ($this->subject_name) {
-            $subject = Subject::where('name', 'like', '%' . $this->subject_name . '%')
-                ->orWhere('code', 'like', '%' . $this->subject_name . '%')
-                ->first();
-            
+        if ($this->subject_id) {
+            $subject = Subject::find($this->subject_id);
             if ($subject) {
-                $this->subject_id = $subject->id;
-                $this->subject_type = Subject::class;
                 $this->subject_name = $subject->name;
+                $this->subject_type = Subject::class;
             }
+        } else {
+            $this->subject_name = '';
+            $this->subject_type = null;
         }
     }
 
@@ -201,6 +272,7 @@ class Task extends Component
         // Load related data
         $this->loadSemesters();
         $this->loadSections();
+        $this->loadSubjects();
 
         $this->resetErrorBag();
         $this->showCreateModal = true;
@@ -235,26 +307,25 @@ class Task extends Component
         // Validate form
         $this->validate([
             'name' => 'required|string|max:255',
-            'subject_name' => 'required|string|min:2|max:255',
+            'subject_id' => 'required|exists:subjects,id',
             'section_id' => 'required|exists:sections,id',
             'semester_id' => 'required|exists:semesters,id',
             'room' => 'nullable|string|max:50',
             'description' => 'nullable|string',
         ], [
             'name.required' => 'Class name is required.',
-            'subject_name.required' => 'Please select a subject.',
+            'subject_id.required' => 'Please select a subject.',
             'section_id.required' => 'Please select a section.',
             'semester_id.required' => 'Please select a semester.',
         ]);
 
-        // Find or create subject
-        if ($this->subject_name && !$this->subject_id) {
-            $subject = Subject::firstOrCreate(
-                ['name' => $this->subject_name],
-                ['code' => strtoupper(substr($this->subject_name, 0, 3)) . '001', 'is_active' => true]
-            );
-            $this->subject_id = $subject->id;
-            $this->subject_type = Subject::class;
+        // Sync subject_name and subject_type for storage
+        if ($this->subject_id) {
+            $subject = Subject::find($this->subject_id);
+            if ($subject) {
+                $this->subject_name = $subject->name;
+                $this->subject_type = Subject::class;
+            }
         }
 
         $this->isLoading = true;

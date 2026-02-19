@@ -154,7 +154,12 @@ class ManageTeacher extends Component
         $isEditing = !is_null($this->teacherId);
 
         $rules = [
-            'userId' => ['required', 'integer', 'exists:users,id'],
+            'userId' => [
+                'required',
+                'integer',
+                'exists:users,id',
+                Rule::unique('teachers', 'user_id')->ignore($this->teacherId)->whereNull('deleted_at'),
+            ],
             'employeeNo' => [
                 'nullable',
                 'string',
@@ -169,18 +174,6 @@ class ManageTeacher extends Component
         $this->validate($rules);
 
         $user = User::findOrFail($this->userId);
-
-        // Ensure a user can only have one teacher profile
-        $existingForUser = Teacher::where('user_id', $user->id)
-            ->when($isEditing, function ($q) {
-                $q->where('id', '!=', $this->teacherId);
-            })
-            ->exists();
-
-        if ($existingForUser) {
-            $this->addError('userId', 'This user already has a teacher profile.');
-            return;
-        }
 
         $data = [
             'user_id' => $user->id,
@@ -229,7 +222,18 @@ class ManageTeacher extends Component
 
         $teachers = $query->latest()->paginate(10);
 
+        // Exclude users who already have a teacher profile (prevent duplicates).
+        // When editing, include the current teacher's user_id so it remains selectable.
+        $existingTeacherUserIds = Teacher::pluck('user_id')->toArray();
+        if ($this->teacherId) {
+            $currentTeacher = Teacher::find($this->teacherId);
+            if ($currentTeacher) {
+                $existingTeacherUserIds = array_values(array_diff($existingTeacherUserIds, [$currentTeacher->user_id]));
+            }
+        }
+
         $userOptions = User::role('admin')
+            ->whereNotIn('id', $existingTeacherUserIds)
             ->orderBy('name')
             ->select('id', 'name', 'email')
             ->get()

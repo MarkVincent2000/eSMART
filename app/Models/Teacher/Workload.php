@@ -42,7 +42,7 @@ class Workload extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
+    protected $fillable = [ 
         'teacher_id',
         'classroom_id',
         'subject_id',

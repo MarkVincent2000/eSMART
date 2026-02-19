@@ -300,7 +300,7 @@
     </div>
 
     <x-modal id="enroll-modal" wire:model="showEnrollModal" title="Enroll Now" size="lg" :centered="false"
-        vertical-align="top" overflow="visible" :show-footer="true">
+        :centered="true" overflow="visible" :show-footer="true" :contentScrollable="false">
         <form wire:submit.prevent="saveEnrollment">
             @if($activeSemester)
                 <div class="mb-4 p-3 bg-light rounded">
