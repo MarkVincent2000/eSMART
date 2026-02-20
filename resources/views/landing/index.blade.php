@@ -1694,14 +1694,110 @@
                         </div>
                         <!-- end row -->
 
+                        <!-- start researcher sub-section -->
+                        <div class="row justify-content-center mt-5">
+                            <div class="col-lg-8">
+                                <div class="text-center mb-5 mt-4">
+                                    <h4 class="mb-3 fw-semibold">{{ \App\Models\SystemSetting::getValue('landing.researcher_title', 'Our') }} <span class="text-danger">{{ \App\Models\SystemSetting::getValue('landing.researcher_title_highlight', 'Researchers') }}</span></h4>
+                                    <p class="text-muted mb-4 ff-secondary">
+                                        {{ \App\Models\SystemSetting::getValue('landing.researcher_description', 'Our dedicated researchers drive innovation and explore new possibilities. They are passionate about uncovering insights that shape the future.') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end row -->
+                        <div class="row">
+                            <div class="col-lg-3 col-sm-6">
+                                <div class="card">
+                                    <div class="card-body text-center p-4">
+                                        <div class="avatar-xl mx-auto mb-4 position-relative">
+                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}" alt=""
+                                                class="img-fluid rounded-circle">
+                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_1_email', 'mailto:jane@example.com') }}"
+                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
+                                                <div class="avatar-title bg-transparent">
+                                                    <i class="ri-mail-fill align-bottom"></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <!-- end card body -->
+                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_1_email', 'mailto:jane@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.researcher_1_name', 'Jane Doe') }}</a>
+                                        </h5>
+                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.researcher_1_role', 'Lead Researcher') }}</p>
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                            </div>
+                            <!-- end col -->
+                            <div class="col-lg-3 col-sm-6">
+                                <div class="card">
+                                    <div class="card-body text-center p-4">
+                                        <div class="avatar-xl mx-auto mb-4 position-relative">
+                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_2_image', URL::asset('build/images/users/mark.png')) }}" alt=""
+                                                class="img-fluid rounded-circle">
+                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_2_email', 'mailto:john@example.com') }}"
+                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
+                                                <div class="avatar-title bg-transparent">
+                                                    <i class="ri-mail-fill align-bottom"></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <!-- end card body -->
+                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_2_email', 'mailto:john@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.researcher_2_name', 'John Smith') }}</a></h5>
+                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.researcher_2_role', 'Data Scientist') }}</p>
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                            </div>
+                            <!-- end col -->
+                            <div class="col-lg-3 col-sm-6">
+                                <div class="card">
+                                    <div class="card-body text-center p-4">
+                                        <div class="avatar-xl mx-auto mb-4 position-relative">
+                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_3_image', URL::asset('build/images/users/kit.png')) }}" alt=""
+                                                class="img-fluid rounded-circle">
+                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_3_email', 'mailto:alice@example.com') }}"
+                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
+                                                <div class="avatar-title bg-transparent">
+                                                    <i class="ri-mail-fill align-bottom"></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <!-- end card body -->
+                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_3_email', 'mailto:alice@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.researcher_3_name', 'Alice Johnson') }}</a></h5>
+                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.researcher_3_role', 'Research Assistant') }}</p>
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                            </div>
+                            <!-- end col -->
 
+                            <div class="col-lg-3 col-sm-6">
+                                <div class="card">
+                                    <div class="card-body text-center p-4">
+                                        <div class="avatar-xl mx-auto mb-4 position-relative">
+                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_4_image', URL::asset('build/images/users/cuyag.png')) }}" alt=""
+                                                class="img-fluid rounded-circle">
+                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_4_email', 'mailto:bob@example.com') }}"
+                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
+                                                <div class="avatar-title bg-transparent">
+                                                    <i class="ri-mail-fill align-bottom"></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <!-- end card body -->
+                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_4_email', 'mailto:bob@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.researcher_4_name', 'Bob Williams') }}</a></h5>
+                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.researcher_4_role', 'Analyst') }}</p>
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                            </div>
 
+                        </div>
+                        <!-- end row -->
+                        <!-- end researcher sub-section -->
 
                     </div>
-                    <!-- end row -->
-
-                    <!-- end row -->
-
                     <!-- end container -->
                 </section>
                 <!-- end team -->
