@@ -1593,116 +1593,9 @@
                 <!-- start team -->
                 <section class="section bg-light" id="team">
                     <div class="container text-center">
-                        <div class="row justify-content-center">
-                            <div class="col-lg-8">
-                                <div class="text-center mb-5">
-                                    <h3 class="mb-3 fw-semibold">{{ \App\Models\SystemSetting::getValue('landing.team_title', 'Our') }} <span class="text-danger">{{ \App\Models\SystemSetting::getValue('landing.team_title_highlight', 'Team') }}</span></h3>
-                                    <p class="text-muted mb-4 ff-secondary">
-                                        {{ \App\Models\SystemSetting::getValue('landing.team_description', 'Our talented team combines expertise in education and technology to build a smart, efficient system that empowers users. We are dedicated to continuous innovation, ensuring our platform makes enrollment and information management seamless, reliable, and easy for everyone.') }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end row -->
-                        <div class="row">
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}')">
-                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}" alt=""
-                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
-                                            </a>
-                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_1_email', 'mailto:nancy@example.com') }}"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_1_email', 'mailto:nancy@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.team_member_1_name', 'Nancy Martino') }}</a>
-                                        </h5>
-                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.team_member_1_role', 'Team Leader') }}</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_2_image', URL::asset('build/images/users/mark.png')) }}')">
-                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_2_image', URL::asset('build/images/users/mark.png')) }}" alt=""
-                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
-                                            </a>
-                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_2_email', 'mailto:mark@example.com') }}"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_2_email', 'mailto:mark@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.team_member_2_name', 'Mark Vincent Quiao') }}</a></h5>
-                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.team_member_2_role', 'Full Stack Developer') }}</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_3_image', URL::asset('build/images/users/kit.png')) }}')">
-                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_3_image', URL::asset('build/images/users/kit.png')) }}" alt=""
-                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
-                                            </a>
-                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_3_email', 'mailto:kit@example.com') }}"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_3_email', 'mailto:kit@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.team_member_3_name', 'Kit Benedic Aguing') }}</a></h5>
-                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.team_member_3_role', 'Project Manager') }}</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
-                            <!-- end col -->
 
-                            <div class="col-lg-3 col-sm-6">
-                                <div class="card">
-                                    <div class="card-body text-center p-4">
-                                        <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_4_image', URL::asset('build/images/users/cuyag.png')) }}')">
-                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_4_image', URL::asset('build/images/users/cuyag.png')) }}" alt=""
-                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
-                                            </a>
-                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_4_email', 'mailto:saturnino@example.com') }}"
-                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
-                                                <div class="avatar-title bg-transparent">
-                                                    <i class="ri-mail-fill align-bottom"></i>
-                                                </div>
-                                            </a>
-                                        </div>
-                                        <!-- end card body -->
-                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_4_email', 'mailto:saturnino@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.team_member_4_name', 'Saturnino JR E Cuyag') }}</a></h5>
-                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.team_member_4_role', 'System Analyst') }}</p>
-                                    </div>
-                                </div>
-                                <!-- end card -->
-                            </div>
 
-                        </div>
-                        <!-- end row -->
-
-                        <!-- start researcher sub-section -->
+                           <!-- start researcher sub-section -->
                         <div class="row justify-content-center mt-5">
                             <div class="col-lg-8">
                                 <div class="text-center mb-5 mt-4">
@@ -1812,6 +1705,117 @@
                         </div>
                         <!-- end row -->
                         <!-- end researcher sub-section -->
+
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="text-center mb-5">
+                                    <h3 class="mb-3 fw-semibold">{{ \App\Models\SystemSetting::getValue('landing.team_title', 'Our') }} <span class="text-danger">{{ \App\Models\SystemSetting::getValue('landing.team_title_highlight', 'Team') }}</span></h3>
+                                    <p class="text-muted mb-4 ff-secondary">
+                                        {{ \App\Models\SystemSetting::getValue('landing.team_description', 'Our talented team combines expertise in education and technology to build a smart, efficient system that empowers users. We are dedicated to continuous innovation, ensuring our platform makes enrollment and information management seamless, reliable, and easy for everyone.') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end row -->
+                        <div class="row">
+                            <div class="col-lg-3 col-sm-6">
+                                <div class="card">
+                                    <div class="card-body text-center p-4">
+                                        <div class="avatar-xl mx-auto mb-4 position-relative">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
+                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_1_email', 'mailto:nancy@example.com') }}"
+                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
+                                                <div class="avatar-title bg-transparent">
+                                                    <i class="ri-mail-fill align-bottom"></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <!-- end card body -->
+                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_1_email', 'mailto:nancy@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.team_member_1_name', 'Nancy Martino') }}</a>
+                                        </h5>
+                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.team_member_1_role', 'Team Leader') }}</p>
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                            </div>
+                            <!-- end col -->
+                            <div class="col-lg-3 col-sm-6">
+                                <div class="card">
+                                    <div class="card-body text-center p-4">
+                                        <div class="avatar-xl mx-auto mb-4 position-relative">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_2_image', URL::asset('build/images/users/mark.png')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_2_image', URL::asset('build/images/users/mark.png')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
+                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_2_email', 'mailto:mark@example.com') }}"
+                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
+                                                <div class="avatar-title bg-transparent">
+                                                    <i class="ri-mail-fill align-bottom"></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <!-- end card body -->
+                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_2_email', 'mailto:mark@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.team_member_2_name', 'Mark Vincent Quiao') }}</a></h5>
+                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.team_member_2_role', 'Full Stack Developer') }}</p>
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                            </div>
+                            <!-- end col -->
+                            <div class="col-lg-3 col-sm-6">
+                                <div class="card">
+                                    <div class="card-body text-center p-4">
+                                        <div class="avatar-xl mx-auto mb-4 position-relative">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_3_image', URL::asset('build/images/users/kit.png')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_3_image', URL::asset('build/images/users/kit.png')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
+                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_3_email', 'mailto:kit@example.com') }}"
+                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
+                                                <div class="avatar-title bg-transparent">
+                                                    <i class="ri-mail-fill align-bottom"></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <!-- end card body -->
+                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_3_email', 'mailto:kit@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.team_member_3_name', 'Kit Benedic Aguing') }}</a></h5>
+                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.team_member_3_role', 'Project Manager') }}</p>
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                            </div>
+                            <!-- end col -->
+
+                            <div class="col-lg-3 col-sm-6">
+                                <div class="card">
+                                    <div class="card-body text-center p-4">
+                                        <div class="avatar-xl mx-auto mb-4 position-relative">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_4_image', URL::asset('build/images/users/cuyag.png')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_4_image', URL::asset('build/images/users/cuyag.png')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
+                                            <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_4_email', 'mailto:saturnino@example.com') }}"
+                                                class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
+                                                <div class="avatar-title bg-transparent">
+                                                    <i class="ri-mail-fill align-bottom"></i>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <!-- end card body -->
+                                        <h5 class="mb-1"><a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_4_email', 'mailto:saturnino@example.com') }}" class="text-body">{{ \App\Models\SystemSetting::getValue('landing.team_member_4_name', 'Saturnino JR E Cuyag') }}</a></h5>
+                                        <p class="text-muted mb-0 ff-secondary">{{ \App\Models\SystemSetting::getValue('landing.team_member_4_role', 'System Analyst') }}</p>
+                                    </div>
+                                </div>
+                                <!-- end card -->
+                            </div>
+
+                        </div>
+                        <!-- end row -->
+
+                     
 
                     </div>
                     <!-- end container -->
