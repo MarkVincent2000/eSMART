@@ -1609,8 +1609,10 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}" alt=""
-                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_1_email', 'mailto:nancy@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1631,8 +1633,10 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_2_image', URL::asset('build/images/users/mark.png')) }}" alt=""
-                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_2_image', URL::asset('build/images/users/mark.png')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_2_image', URL::asset('build/images/users/mark.png')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_2_email', 'mailto:mark@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1652,8 +1656,10 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_3_image', URL::asset('build/images/users/kit.png')) }}" alt=""
-                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_3_image', URL::asset('build/images/users/kit.png')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_3_image', URL::asset('build/images/users/kit.png')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_3_email', 'mailto:kit@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1674,8 +1680,10 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_4_image', URL::asset('build/images/users/cuyag.png')) }}" alt=""
-                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.team_member_4_image', URL::asset('build/images/users/cuyag.png')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_4_image', URL::asset('build/images/users/cuyag.png')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_4_email', 'mailto:saturnino@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1711,8 +1719,10 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}" alt=""
-                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.researcher_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_1_email', 'mailto:jane@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1733,8 +1743,10 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_2_image', URL::asset('build/images/users/mark.png')) }}" alt=""
-                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.researcher_2_image', URL::asset('build/images/users/mark.png')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_2_image', URL::asset('build/images/users/mark.png')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_2_email', 'mailto:john@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1754,8 +1766,10 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_3_image', URL::asset('build/images/users/kit.png')) }}" alt=""
-                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.researcher_3_image', URL::asset('build/images/users/kit.png')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_3_image', URL::asset('build/images/users/kit.png')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_3_email', 'mailto:alice@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1776,8 +1790,10 @@
                                 <div class="card">
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
-                                            <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_4_image', URL::asset('build/images/users/cuyag.png')) }}" alt=""
-                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#imageModal" onclick="showImageInModal('{{ \App\Models\SystemSetting::getAsset('landing.researcher_4_image', URL::asset('build/images/users/cuyag.png')) }}')">
+                                                <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_4_image', URL::asset('build/images/users/cuyag.png')) }}" alt=""
+                                                    class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
+                                            </a>
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_4_email', 'mailto:bob@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1987,6 +2003,20 @@
                 </footer>
                 <!-- end footer -->
 
+                <!-- Image Modal -->
+                <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content bg-transparent border-0">
+                            <div class="modal-header border-0 pb-0">
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-center pt-0">
+                                <img id="modalImage" src="" alt="Profile Image" class="img-fluid rounded shadow-lg" style="max-height: 80vh; object-fit: contain;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!--start back-to-top-->
                 <button onclick="topFunction()" class="btn btn-danger btn-icon landing-back-top" id="back-to-top">
                     <i class="ri-arrow-up-line"></i>
@@ -2001,4 +2031,9 @@
     @section('script')
         <script src="{{ URL::asset('build/libs/swiper/swiper-bundle.min.js') }}"></script>
         <script src="{{ URL::asset('build/js/pages/landing.init.js') }}"></script>
+        <script>
+            function showImageInModal(imageSrc) {
+                document.getElementById('modalImage').src = imageSrc;
+            }
+        </script>
     @endsection
