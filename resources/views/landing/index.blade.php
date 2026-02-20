@@ -1610,7 +1610,7 @@
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
                                             <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}" alt=""
-                                                class="img-fluid rounded-circle">
+                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_1_email', 'mailto:nancy@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1632,7 +1632,7 @@
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
                                             <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_2_image', URL::asset('build/images/users/mark.png')) }}" alt=""
-                                                class="img-fluid rounded-circle">
+                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_2_email', 'mailto:mark@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1653,7 +1653,7 @@
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
                                             <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_3_image', URL::asset('build/images/users/kit.png')) }}" alt=""
-                                                class="img-fluid rounded-circle">
+                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_3_email', 'mailto:kit@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1675,7 +1675,7 @@
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
                                             <img src="{{ \App\Models\SystemSetting::getAsset('landing.team_member_4_image', URL::asset('build/images/users/cuyag.png')) }}" alt=""
-                                                class="img-fluid rounded-circle">
+                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.team_member_4_email', 'mailto:saturnino@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1712,7 +1712,7 @@
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
                                             <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_1_image', URL::asset('build/images/users/avatar-2.jpg')) }}" alt=""
-                                                class="img-fluid rounded-circle">
+                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_1_email', 'mailto:jane@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1734,7 +1734,7 @@
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
                                             <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_2_image', URL::asset('build/images/users/mark.png')) }}" alt=""
-                                                class="img-fluid rounded-circle">
+                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_2_email', 'mailto:john@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1755,7 +1755,7 @@
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
                                             <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_3_image', URL::asset('build/images/users/kit.png')) }}" alt=""
-                                                class="img-fluid rounded-circle">
+                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_3_email', 'mailto:alice@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
@@ -1777,7 +1777,7 @@
                                     <div class="card-body text-center p-4">
                                         <div class="avatar-xl mx-auto mb-4 position-relative">
                                             <img src="{{ \App\Models\SystemSetting::getAsset('landing.researcher_4_image', URL::asset('build/images/users/cuyag.png')) }}" alt=""
-                                                class="img-fluid rounded-circle">
+                                                class="img-fluid rounded-circle" style="aspect-ratio: 1/1; object-fit: cover;">
                                             <a href="{{ \App\Models\SystemSetting::getValue('landing.researcher_4_email', 'mailto:bob@example.com') }}"
                                                 class="btn btn-success btn-sm position-absolute bottom-0 end-0 rounded-circle avatar-xs">
                                                 <div class="avatar-title bg-transparent">
