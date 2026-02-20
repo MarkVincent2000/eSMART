@@ -2006,11 +2006,11 @@
                 <!-- Image Modal -->
                 <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content bg-transparent border-0">
+                        <div class="modal-content">
                             <div class="modal-header border-0 pb-0">
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
-                            <div class="modal-body text-center pt-0">
+                            <div class="modal-body text-center pt-0 pb-4">
                                 <img id="modalImage" src="" alt="Profile Image" class="img-fluid rounded shadow-lg" style="max-height: 80vh; object-fit: contain;">
                             </div>
                         </div>
