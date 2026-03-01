@@ -131,20 +131,21 @@
                         <h5 class="card-title mb-0 flex-grow-1">Users</h5>
                         <div class="flex-shrink-0">
                             <div class="d-flex flex-wrap gap-2">
-                                <x-button color="primary" icon="ri-add-line" icon-position="left"
-                                    wire:click="openInviteModal" wire-target="openInviteModal">
-                                    Invite User
-                                </x-button>
                                 @if (!empty($selected))
                                     <x-button color="info" icon="ri-user-settings-line" icon-position="left"
                                         wire:click="openUpdateRolesModal" wire-target="openUpdateRolesModal">
-                                        Update Roles ({{ count($selected) }})
+                                        <span class="d-none d-sm-inline-block">Update Roles</span> ({{ count($selected) }})
                                     </x-button>
                                     <x-button color="danger" icon="ri-delete-bin-line" icon-position="left"
                                         wire:click="deleteMultiple" wire-target="deleteMultiple">
-                                        Delete ({{ count($selected) }})
+                                        <span class="d-none d-sm-inline-block">Delete</span> ({{ count($selected) }})
                                     </x-button>
                                 @endif
+                                <x-button color="primary" icon="ri-add-line" icon-position="left"
+                                    wire:click="openInviteModal" wire-target="openInviteModal">
+                                    <span class="d-none d-sm-inline-block">Invite User</span>
+                                </x-button>
+                                
                             </div>
                         </div>
                     </div>

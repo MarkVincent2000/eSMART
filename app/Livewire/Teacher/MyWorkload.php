@@ -381,19 +381,15 @@ class MyWorkload extends Component
         $workload = Workload::with(['subject', 'section', 'semester', 'classroom', 'teacher'])
             ->findOrFail($workloadId);
 
-        // $isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole('super-admin');
-
-        // if (!$isSuperAdmin) {
-        //     $teacher = Teacher::where('user_id', $user->id)->first();
-        //     if (!$teacher || $workload->teacher_id !== $teacher->id) {
-        //         $this->dispatch('show-toast', [
-        //             'message' => 'You are not allowed to edit this workload.',
-        //             'type' => 'error',
-        //             'title' => 'Unauthorized',
-        //         ]);
-        //         return;
-        //     }
-        // }
+        $teacher = Teacher::where('user_id', $user->id)->first();
+        if (!$teacher || $workload->teacher_id !== $teacher->id) {
+            $this->dispatch('show-toast', [
+                'message' => 'You are not allowed to edit this workload.',
+                'type' => 'error',
+                'title' => 'Unauthorized',
+            ]);
+            return;
+        }
 
         $this->resetForm();
 
@@ -440,17 +436,12 @@ class MyWorkload extends Component
 
         // $isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole('super-admin');
 
-        $teacher = null;
-
         $teacher = Teacher::where('user_id', $user->id)->first();
-        // if (!$isSuperAdmin) {
-        //     
 
-        //     if (!$teacher) {
-        //         $this->addError('subjectId', 'No teacher profile found for your account.');
-        //         return;
-        //     }
-        // }
+        if (!$teacher) {
+            $this->addError('subjectId', 'No teacher profile found for your account.');
+            return;
+        }
 
         $rules = [
             'subjectId' => ['required', 'integer', 'exists:subjects,id'],
@@ -547,19 +538,15 @@ class MyWorkload extends Component
             return;
         }
 
-        // $isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole('super-admin');
-
-        // if (!$isSuperAdmin) {
-        //     $teacher = Teacher::where('user_id', $user->id)->first();
-        //     if (!$teacher || $workload->teacher_id !== $teacher->id) {
-        //         $this->dispatch('show-toast', [
-        //             'message' => 'You are not allowed to delete this workload.',
-        //             'type' => 'error',
-        //             'title' => 'Unauthorized',
-        //         ]);
-        //         return;
-        //     }
-        // }
+        $teacher = Teacher::where('user_id', $user->id)->first();
+        if (!$teacher || $workload->teacher_id !== $teacher->id) {
+            $this->dispatch('show-toast', [
+                'message' => 'You are not allowed to delete this workload.',
+                'type' => 'error',
+                'title' => 'Unauthorized',
+            ]);
+            return;
+        }
 
         $subjectLabel = $workload->subject->name ?? 'Subject';
         $teacherName = $workload->teacher->user->name ?? 'Teacher';
@@ -585,19 +572,15 @@ class MyWorkload extends Component
 
         $workload = Workload::with('teacher')->findOrFail($this->deleteWorkloadId);
 
-        // $isSuperAdmin = method_exists($user, 'hasRole') && $user->hasRole('super-admin');
-
-        // if (!$isSuperAdmin) {
-        //     $teacher = Teacher::where('user_id', $user->id)->first();
-        //     if (!$teacher || $workload->teacher_id !== $teacher->id) {
-        //         $this->dispatch('show-toast', [
-        //             'message' => 'You are not allowed to delete this workload.',
-        //             'type' => 'error',
-        //             'title' => 'Unauthorized',
-        //         ]);
-        //         return;
-        //     }
-        // }
+        $teacher = Teacher::where('user_id', $user->id)->first();
+        if (!$teacher || $workload->teacher_id !== $teacher->id) {
+            $this->dispatch('show-toast', [
+                'message' => 'You are not allowed to delete this workload.',
+                'type' => 'error',
+                'title' => 'Unauthorized',
+            ]);
+            return;
+        }
 
         $workload->delete();
 
@@ -690,7 +673,7 @@ class MyWorkload extends Component
     {
         $user = Auth::user();
         // Check if user has both 'super admin' and 'admin' roles
-        $isSuperAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('super-admin') && $user->hasRole('admin');
+        $isSuperAdmin = $user && method_exists($user, 'hasRole') && $user->hasRole('super-admin');
 
         // Default: empty paginator
         $workloads = Workload::whereRaw('1 = 0')->paginate(10);
@@ -727,7 +710,7 @@ class MyWorkload extends Component
                 }
 
                 $workloads = $query->latest()->paginate(10);
-                $canAddWorkload = true; // super-admin views only here
+                $canAddWorkload = Teacher::where('user_id', $user->id)->exists();
             } else {
                 // Regular teacher: see and add only their own workloads
                 $teacher = Teacher::where('user_id', $user->id)->first();
@@ -758,7 +741,7 @@ class MyWorkload extends Component
                     }
 
                     $workloads = $query->latest()->paginate(10);
-                    $canAddWorkload = false;
+                    $canAddWorkload = true;
                 }
             }
         }
